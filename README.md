@@ -27,7 +27,7 @@ xrdcp root://eosuser.cern.ch//eos/user/j/junghyun/public/TTH.tar.gz .
 wget https://cernbox.cern.ch/remote.php/dav/public-files/xPBQqigATEjgFQb/TTH.tar.gz
 
 tar -zxvf TTH.tar.gz && rm -rf TTH.tar.gz
-mv TTH  ttHH_SLeptonic_Analyzer/.
+mv TTH  ttHH_SLeptonic_Analyzer_RunIII/.
 ```
 
 ## Compilation to make execution file
