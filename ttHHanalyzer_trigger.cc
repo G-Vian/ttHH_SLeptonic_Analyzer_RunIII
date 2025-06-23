@@ -100,6 +100,7 @@ void ttHHanalyzer::loop(sysName sysType, bool up) {
 
         events.push_back(currentEvent);
     }
+  }
 }
 
     // events.back()->summarize();
