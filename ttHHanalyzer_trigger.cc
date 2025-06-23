@@ -6,6 +6,7 @@
 #include "TVector3.h"
 #include "ttHHanalyzer_trigger.h"
 #include <iostream>
+#include "TH2.h"//Trigger SF for electron
 using namespace std;
  
 void ttHHanalyzer::performAnalysis(){
