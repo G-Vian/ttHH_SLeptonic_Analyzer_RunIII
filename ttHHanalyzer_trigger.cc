@@ -577,21 +577,16 @@ void ttHHanalyzer::analyze(event *thisEvent){
     float triggerSF = 1.0;
     float totalSFUnc = 0.0;
 
-   for (const auto& ele : *selectedElectrons) {
+for (objectLep* ele : *selectedElectrons) {
     float sf_unc = 0.0;
-    float sf = getEleTrigSF(ele->Eta(), ele->Pt(), sf_unc);
+    float sf = getEleTrigSF(ele->getp4()->Eta(), ele->getp4()->Pt(), sf_unc);
 
     triggerSF *= sf;
     totalSFUnc += sf_unc * sf_unc;
 }
 
-    totalSFUnc = sqrt(totalSFUnc);
-
-    // Aplicar o fator de escala ao peso do evento
+    triggerSFUncertainty = sqrt(totalSFUnc);
     _weight *= triggerSF;
-
-    // Opcional: guardar a incerteza do Trigger SF (caso queira usar depois)
-    triggerSFUncertainty = totalSFUnc;
 ///////////////////////////////////////
 
 	
