@@ -572,26 +572,26 @@ void ttHHanalyzer::diMotherReco(const TLorentzVector & dPar1p4,const TLorentzVec
 
 void ttHHanalyzer::analyze(event *thisEvent){
 ///////////////electron trigger scale factor 
-    std::vector<electron> selectedElectrons = thisEvent->getSelElectrons();
+    std::vector<objectLep*>* selectedElectrons = thisEvent->getSelElectrons();
 
     float triggerSF = 1.0;
     float totalSFUnc = 0.0;
 
-    for (const auto& ele : selectedElectrons) {
-        float sf_unc = 0.0;
-        float sf = getEleTrigSF(ele.Eta(), ele.Pt(), sf_unc);
+   for (const auto& ele : *selectedElectrons) {
+    float sf_unc = 0.0;
+    float sf = getEleTrigSF(ele->Eta(), ele->Pt(), sf_unc);
 
-        triggerSF *= sf;
-        totalSFUnc += sf_unc * sf_unc;
-    }
+    triggerSF *= sf;
+    totalSFUnc += sf_unc * sf_unc;
+}
 
     totalSFUnc = sqrt(totalSFUnc);
 
-    // Aplicar o fator de escala no peso do evento
-    _weight[thisEvent] *= triggerSF;
+    // Aplicar o fator de escala ao peso do evento
+    _weight *= triggerSF;
 
-    // Opcional: Se quiser guardar a incerteza separadamente: 
-    eventTriggerSFUncertainty[thisEvent] = totalSFUnc;
+    // Opcional: guardar a incerteza do Trigger SF (caso queira usar depois)
+    triggerSFUncertainty = totalSFUnc;
 ///////////////////////////////////////
 
 	
