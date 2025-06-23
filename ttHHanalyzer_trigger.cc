@@ -36,7 +36,6 @@ void ttHHanalyzer::performAnalysis(){
 }
 void ttHHanalyzer::loop(sysName sysType, bool up) {
     int nevents = _ev->size();
-    ////int nevents = 1000;
 
     std::cout << std::endl;
     std::cout << "[WARNING] This analyzer commented out [ \"WTF\" log ] in the header, Please check if you want!!!" << std::endl;
@@ -73,9 +72,26 @@ void ttHHanalyzer::loop(sysName sysType, bool up) {
 
     for (int entry = 0; entry < nevents; entry++) {
         event *currentEvent = new event;
-        ////std::cout << "Processed events: " << entry << std::endl;
-        _ev->read(entry);  // read an event into event buffer
+        _ev->read(entry);  // Read event into buffer
+
+        // Backup original weight
+        float weight_before_trigger = _weight;
+
+        // Process the event (this is where trigger SFs get applied)
         process(currentEvent, sysType, up);
+
+        // After process(), _weight should already include trigger SF
+        float weight_after_trigger = _weight;
+
+        // Assuming you saved the trigger SF value somewhere during process(), for example:
+        float ele_trigger_sf = currentEvent->getEleTriggerSF();  // You must implement this getter if not existing yet.
+
+        // Print info for each event
+        std::cout << "[EVENT INFO] Event entry: " << entry 
+                  << " | Electron Trigger SF: " << ele_trigger_sf 
+                  << " | Weight before trigger SF: " << weight_before_trigger 
+                  << " | Weight after trigger SF: " << weight_after_trigger 
+                  << std::endl;
 
         if (entry % 1000 == 0) {
             std::cout << "[INFO] Processed events of " << analysisInfo << ": " << entry << std::endl;
@@ -84,6 +100,8 @@ void ttHHanalyzer::loop(sysName sysType, bool up) {
 
         events.push_back(currentEvent);
     }
+}
+
     // events.back()->summarize();
 
     writeHistos();
@@ -502,40 +520,45 @@ void ttHHanalyzer::initTriggerSF() {
         return;
     }
 
-    eleTrigSFFile = TFile::Open(sfFilePath, "READ");
-    if (!eleTrigSFFile || eleTrigSFFile->IsZombie()) {
+    TFile* tempFile = TFile::Open(sfFilePath, "READ");
+    if (!tempFile || tempFile->IsZombie()) {
         std::cerr << "Failed to open electron trigger SF file: " << sfFilePath << std::endl;
-        eleTrigSFFile = nullptr;
+        if (tempFile) delete tempFile;
         return;
     }
 
-    // Histograma principal para SF
-    h2_eleTrigSF = dynamic_cast<TH2F*>(eleTrigSFFile->Get("EGamma_SF2D"));
-    if (!h2_eleTrigSF) {
+    // Clone the main SF histogram
+    TH2F* tempSF = dynamic_cast<TH2F*>(tempFile->Get("EGamma_SF2D"));
+    if (!tempSF) {
         std::cerr << "Failed to get EGamma_SF2D histogram from SF file: " << sfFilePath << std::endl;
+        tempFile->Close();
+        delete tempFile;
         return;
     }
+    h2_eleTrigSF = (TH2F*)tempSF->Clone("h2_eleTrigSF");
+    h2_eleTrigSF->SetDirectory(0);  // Detach from file
 
-    // Escolher histograma de incerteza conforme DataOrMC
-    if (_DataOrMC == "Data") {
-        h2_eleTrigSF_unc = dynamic_cast<TH2F*>(eleTrigSFFile->Get("statData"));
-        if (!h2_eleTrigSF_unc) {
-            std::cerr << "Failed to get statData histogram for Data uncertainties from SF file." << std::endl;
+    // Select and clone the uncertainty histogram
+    TString uncHistName = (_DataOrMC == "Data") ? "statData" : (_DataOrMC == "MC") ? "statMC" : "";
+    if (uncHistName != "") {
+        TH2F* tempUnc = dynamic_cast<TH2F*>(tempFile->Get(uncHistName));
+        if (!tempUnc) {
+            std::cerr << "Failed to get " << uncHistName << " histogram for uncertainties from SF file." << std::endl;
             h2_eleTrigSF_unc = nullptr;
+        } else {
+            h2_eleTrigSF_unc = (TH2F*)tempUnc->Clone("h2_eleTrigSF_unc");
+            h2_eleTrigSF_unc->SetDirectory(0);
         }
-    } 
-    else if (_DataOrMC == "MC") {
-        h2_eleTrigSF_unc = dynamic_cast<TH2F*>(eleTrigSFFile->Get("statMC"));
-        if (!h2_eleTrigSF_unc) {
-            std::cerr << "Failed to get statMC histogram for MC uncertainties from SF file." << std::endl;
-            h2_eleTrigSF_unc = nullptr;
-        }
-    }
-    else {
+    } else {
         std::cerr << "Unknown DataOrMC option: " << _DataOrMC << ". No uncertainty histogram will be used." << std::endl;
         h2_eleTrigSF_unc = nullptr;
     }
+
+    // Close and delete the file to prevent ROOT object deletion issues
+    tempFile->Close();
+    delete tempFile;
 }
+
 
 // Retorna SF e incerteza para um elétron de (eta, pt)
 float ttHHanalyzer::getEleTrigSF(float eta, float pt, float& sf_unc) {
