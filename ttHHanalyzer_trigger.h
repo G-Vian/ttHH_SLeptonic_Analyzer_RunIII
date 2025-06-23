@@ -1020,7 +1020,7 @@ class ttHHanalyzer {
     TH2* h2_eleTrigSF_unc = nullptr;
     void initTriggerSF();
     float getEleTrigSF(float eta, float pt, float& sf_unc);
-    std::map<event*, float> eventTriggerSFUncertainty;
+    float triggerSFUncertainty = 0.0;
 ///////////////////////
 
 
