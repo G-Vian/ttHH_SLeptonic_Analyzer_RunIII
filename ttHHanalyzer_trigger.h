@@ -1013,6 +1013,14 @@ class ttHHanalyzer {
     float _bbMassMin1HiggsZ, _bbMassMin2HiggsZ, _minChi2HiggsZ = 999999999.;
     float _bbMassMin1Z, _bbMassMin2Z, _minChi2Z = 999999999.;
     TRandom3 _rand;
+///////////////////////Trigger electron
+    TFile* eleTrigSFFile = nullptr;
+    TH2* h2_eleTrigSF = nullptr;
+    TH2* h2_eleTrigSF_unc = nullptr;
+    void initTriggerSF();
+    float getEleTrigSF(float eta, float pt, float& sf_unc);
+    std::map<event*, float> eventTriggerSFUncertainty;
+///////////////////////
 
 
     void diMotherReco(const TLorentzVector & dPar1p4,const TLorentzVector & dPar2p4,const TLorentzVector & dPar3p4,const TLorentzVector & dPar4p4, const float mother1mass, const float  mother2mass, float & _minChi2,float & _bbMassMin1, float & _bbMassMin2);
