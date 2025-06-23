@@ -487,8 +487,6 @@ else if (thisEvent->getSelElectrons()->size() == 1 && thisEvent->getSelMuons()->
 }
 //////////////////////Electron Trigger Scale Factors////////////////////////////////////////////////
 void ttHHanalyzer::initTriggerSF() {
-    if (eleTrigSFFile) return; // já inicializado
-
     TString sfFilePath;
 
     if (_year == "2022") {
@@ -500,22 +498,42 @@ void ttHHanalyzer::initTriggerSF() {
     } else if (_year == "2023B") {
         sfFilePath = "/eos/cms/store/group/phys_egamma/ScaleFactors/Data2023/ForPrompt23D/tnpEleHLT/HLT_SF_Ele30_MVAiso90ID/egammaEffi.txt_EGM2D.root";
     } else {
-        std::cerr << "Unknown year for electron trigger SF: " << _year << std::endl;
+        std::cerr << "Unknown year for electron trigger SF! Year: " << _year << std::endl;
         return;
     }
 
     eleTrigSFFile = TFile::Open(sfFilePath, "READ");
     if (!eleTrigSFFile || eleTrigSFFile->IsZombie()) {
-        std::cerr << "Failed to open SF file: " << sfFilePath << std::endl;
+        std::cerr << "Failed to open electron trigger SF file: " << sfFilePath << std::endl;
         eleTrigSFFile = nullptr;
         return;
     }
 
-    h2_eleTrigSF = (TH2*)eleTrigSFFile->Get("h2_scaleFactorsEGamma");
-    h2_eleTrigSF_unc = (TH2*)eleTrigSFFile->Get("h2_uncertaintiesEGamma");
+    // Histograma principal para SF
+    h2_eleTrigSF = dynamic_cast<TH2F*>(eleTrigSFFile->Get("EGamma_SF2D"));
+    if (!h2_eleTrigSF) {
+        std::cerr << "Failed to get EGamma_SF2D histogram from SF file: " << sfFilePath << std::endl;
+        return;
+    }
 
-    if (!h2_eleTrigSF || !h2_eleTrigSF_unc) {
-        std::cerr << "Failed to get SF histograms from file: " << sfFilePath << std::endl;
+    // Escolher histograma de incerteza conforme DataOrMC
+    if (_DataOrMC == "Data") {
+        h2_eleTrigSF_unc = dynamic_cast<TH2F*>(eleTrigSFFile->Get("statData"));
+        if (!h2_eleTrigSF_unc) {
+            std::cerr << "Failed to get statData histogram for Data uncertainties from SF file." << std::endl;
+            h2_eleTrigSF_unc = nullptr;
+        }
+    } 
+    else if (_DataOrMC == "MC") {
+        h2_eleTrigSF_unc = dynamic_cast<TH2F*>(eleTrigSFFile->Get("statMC"));
+        if (!h2_eleTrigSF_unc) {
+            std::cerr << "Failed to get statMC histogram for MC uncertainties from SF file." << std::endl;
+            h2_eleTrigSF_unc = nullptr;
+        }
+    }
+    else {
+        std::cerr << "Unknown DataOrMC option: " << _DataOrMC << ". No uncertainty histogram will be used." << std::endl;
+        h2_eleTrigSF_unc = nullptr;
     }
 }
 
