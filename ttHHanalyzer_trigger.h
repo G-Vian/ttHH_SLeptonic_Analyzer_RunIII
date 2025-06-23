@@ -7,6 +7,7 @@
 #include <vector>
 #include "TVector3.h"
 #include "TH1F.h"
+#include "TH2.h"//Trigger SF for electron
 #include "TFile.h"
 #include <iterator>
 #include <string>
