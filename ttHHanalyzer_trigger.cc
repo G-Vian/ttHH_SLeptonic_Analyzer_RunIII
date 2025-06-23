@@ -484,6 +484,63 @@ else if (thisEvent->getSelElectrons()->size() == 1 && thisEvent->getSelMuons()->
 
     return true;
 }
+//////////////////////Electron Trigger Scale Factors////////////////////////////////////////////////
+void ttHHanalyzer::initTriggerSF() {
+    if (eleTrigSFFile) return; // já inicializado
+
+    TString sfFilePath;
+
+    if (_year == "2022") {
+        sfFilePath = "/eos/cms/store/group/phys_egamma/ScaleFactors/Data2022/ForRe-recoBCD/tnpEleHLT/HLT_SF_Ele30_MVAiso90ID/egammaEffi.txt_EGM2D.root";
+    } else if (_year == "2022EE") {
+        sfFilePath = "/eos/cms/store/group/phys_egamma/ScaleFactors/Data2022/ForRe-recoE+PromptFG/tnpEleHLT/HLT_SF_Ele30_MVAiso90ID/egammaEffi.txt_EGM2D.root";
+    } else if (_year == "2023") {
+        sfFilePath = "/eos/cms/store/group/phys_egamma/ScaleFactors/Data2023/ForPrompt23C/tnpEleHLT/HLT_SF_Ele30_MVAiso90ID/egammaEffi.txt_EGM2D.root";
+    } else if (_year == "2023B") {
+        sfFilePath = "/eos/cms/store/group/phys_egamma/ScaleFactors/Data2023/ForPrompt23D/tnpEleHLT/HLT_SF_Ele30_MVAiso90ID/egammaEffi.txt_EGM2D.root";
+    } else {
+        std::cerr << "Unknown year for electron trigger SF: " << _year << std::endl;
+        return;
+    }
+
+    eleTrigSFFile = TFile::Open(sfFilePath, "READ");
+    if (!eleTrigSFFile || eleTrigSFFile->IsZombie()) {
+        std::cerr << "Failed to open SF file: " << sfFilePath << std::endl;
+        eleTrigSFFile = nullptr;
+        return;
+    }
+
+    h2_eleTrigSF = (TH2*)eleTrigSFFile->Get("h2_scaleFactorsEGamma");
+    h2_eleTrigSF_unc = (TH2*)eleTrigSFFile->Get("h2_uncertaintiesEGamma");
+
+    if (!h2_eleTrigSF || !h2_eleTrigSF_unc) {
+        std::cerr << "Failed to get SF histograms from file: " << sfFilePath << std::endl;
+    }
+}
+
+// Retorna SF e incerteza para um elétron de (eta, pt)
+float ttHHanalyzer::getEleTrigSF(float eta, float pt, float& sf_unc) {
+    if (!h2_eleTrigSF || !h2_eleTrigSF_unc) {
+        sf_unc = 0.;
+        return 1.;
+    }
+
+    int binX = h2_eleTrigSF->GetXaxis()->FindBin(eta);
+    int binY = h2_eleTrigSF->GetYaxis()->FindBin(pt);
+
+    float sf = h2_eleTrigSF->GetBinContent(binX, binY);
+    sf_unc = h2_eleTrigSF_unc->GetBinContent(binX, binY);
+
+    return sf;
+}
+
+
+
+////////////////////////////////////////////////
+
+
+
+
 
 
 void ttHHanalyzer::motherReco(const TLorentzVector & dPar1p4,const TLorentzVector & dPar2p4, const float mother1mass, float & _minChi2,float & _bbMassMin1){
@@ -513,7 +570,30 @@ void ttHHanalyzer::diMotherReco(const TLorentzVector & dPar1p4,const TLorentzVec
 } 
 
 void ttHHanalyzer::analyze(event *thisEvent){
+///////////////electron trigger scale factor 
+    std::vector<electron> selectedElectrons = thisEvent->getSelElectrons();
 
+    float triggerSF = 1.0;
+    float totalSFUnc = 0.0;
+
+    for (const auto& ele : selectedElectrons) {
+        float sf_unc = 0.0;
+        float sf = getEleTrigSF(ele.Eta(), ele.Pt(), sf_unc);
+
+        triggerSF *= sf;
+        totalSFUnc += sf_unc * sf_unc;
+    }
+
+    totalSFUnc = sqrt(totalSFUnc);
+
+    // Aplicar o fator de escala no peso do evento
+    _weight[thisEvent] *= triggerSF;
+
+    // Opcional: Se quiser guardar a incerteza separadamente: 
+    eventTriggerSFUncertainty[thisEvent] = totalSFUnc;
+///////////////////////////////////////
+
+	
     std::vector<objectJet*>* bJetsInv = thisEvent->getSelbJets(); 
     std::vector<objectJet*>* lbJetsInv = thisEvent->getLoosebJets(); 
     std::vector<objectJet*>* jetsInv = thisEvent->getSelJets(); 
@@ -702,6 +782,12 @@ void ttHHanalyzer::analyze(event *thisEvent){
 void ttHHanalyzer::process(event* thisEvent, sysName sysType, bool up){
     createObjects(thisEvent, sysType, up);
     if(!selectObjects(thisEvent))  return;
+// Inicializar SF de trigger
+    static bool sfInitialized = false;
+    if (!sfInitialized) {
+        initTriggerSF();
+        sfInitialized = true;
+    }
     analyze(thisEvent);
     fillHistos(thisEvent);
     fillTree(thisEvent);
