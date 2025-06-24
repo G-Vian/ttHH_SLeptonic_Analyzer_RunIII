@@ -987,6 +987,7 @@ class ttHHanalyzer {
  private: 
     bool _sys;
     float _weight;
+    float _initialWeight; 
 //    int _year;
 //    std::string _data;
 //    std::string _sample;
