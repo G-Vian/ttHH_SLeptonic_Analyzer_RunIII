@@ -624,7 +624,7 @@ void ttHHanalyzer::analyze(event *thisEvent) {
               << std::endl;
 
     _weight *= triggerSF;
-    }
+    
 
 ///////////////////////////////////////
 
