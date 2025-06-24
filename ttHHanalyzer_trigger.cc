@@ -71,26 +71,20 @@ void ttHHanalyzer::loop(sysName sysType, bool up) {
     std::string analysisInfo = _year + ", " + _DataOrMC + ", " + _sampleName;
 
 for (int entry = 0; entry < nevents; entry++) {
-        event *currentEvent = new event;
-        _ev->read(entry);  // Read event into buffer
+    _entryInLoop = entry;  // <<< Atualiza o número do evento atual
 
-        float weight_before_trigger = _weight;
+    event *currentEvent = new event;
+    _ev->read(entry);
 
-        process(currentEvent, sysType, up);
+    process(currentEvent, sysType, up);
 
-        float weight_after_trigger = _weight;
-
-        if (entry % 1000 == 0) {
-            std::cout << "[EVENT INFO] Event entry: " << entry
-                      << " | Electron Trigger SF: " << eleTriggerSF
-                      << " | Weight before trigger SF: " << weight_before_trigger
-                      << " | Weight after trigger SF: " << weight_after_trigger
-                      << std::endl;
-            currentEvent->summarize();
-        }
-
-        events.push_back(currentEvent);
+    if (entry % 1000 == 0) {
+        std::cout << "[INFO] Processed events of " << analysisInfo << ": " << entry << std::endl;
+        currentEvent->summarize();
     }
+
+    events.push_back(currentEvent);
+}
 
     // Agora as chamadas a writeHistos e writeTree ficam dentro da função
     writeHistos();
@@ -516,7 +510,11 @@ void ttHHanalyzer::initTriggerSF() {
         return;
     }
 
-    // Clone the main SF histogram
+    // Limpar caso já existam versões anteriores
+    if (h2_eleTrigSF) delete h2_eleTrigSF;
+    if (h2_eleTrigSF_unc) delete h2_eleTrigSF_unc;
+
+    // Clonar SF principal
     TH2F* tempSF = dynamic_cast<TH2F*>(tempFile->Get("EGamma_SF2D"));
     if (!tempSF) {
         std::cerr << "Failed to get EGamma_SF2D histogram from SF file: " << sfFilePath << std::endl;
@@ -525,27 +523,26 @@ void ttHHanalyzer::initTriggerSF() {
         return;
     }
     h2_eleTrigSF = (TH2F*)tempSF->Clone("h2_eleTrigSF");
-    h2_eleTrigSF->SetDirectory(0);  // Detach from file
+    h2_eleTrigSF->SetDirectory(0);
 
-    // Select and clone the uncertainty histogram
+    // Clonar incertezas
     TString uncHistName = (_DataOrMC == "Data") ? "statData" : (_DataOrMC == "MC") ? "statMC" : "";
     if (uncHistName != "") {
         TH2F* tempUnc = dynamic_cast<TH2F*>(tempFile->Get(uncHistName));
-        if (!tempUnc) {
-            std::cerr << "Failed to get " << uncHistName << " histogram for uncertainties from SF file." << std::endl;
-            h2_eleTrigSF_unc = nullptr;
-        } else {
+        if (tempUnc) {
             h2_eleTrigSF_unc = (TH2F*)tempUnc->Clone("h2_eleTrigSF_unc");
             h2_eleTrigSF_unc->SetDirectory(0);
+        } else {
+            std::cerr << "Failed to get uncertainty histogram: " << uncHistName << std::endl;
+            h2_eleTrigSF_unc = nullptr;
         }
     } else {
-        std::cerr << "Unknown DataOrMC option: " << _DataOrMC << ". No uncertainty histogram will be used." << std::endl;
         h2_eleTrigSF_unc = nullptr;
     }
 
-    // Close and delete the file to prevent ROOT object deletion issues
     tempFile->Close();
     delete tempFile;
+    gROOT->cd();
 }
 
 
@@ -601,11 +598,14 @@ void ttHHanalyzer::diMotherReco(const TLorentzVector & dPar1p4,const TLorentzVec
 } 
 
 ///////////////electron trigger scale factor 
-void ttHHanalyzer::analyze(event *thisEvent){
+void ttHHanalyzer::analyze(event *thisEvent) {
     std::vector<objectLep*>* selectedElectrons = thisEvent->getSelElectrons();
 
     float triggerSF = 1.0;
     float totalSFUnc = 0.0;
+
+    // Guardar o peso antes de aplicar o SF
+    float weight_before_trigger = _weight;
 
     for (objectLep* ele : *selectedElectrons) {
         float sf_unc = 0.0;
@@ -617,9 +617,17 @@ void ttHHanalyzer::analyze(event *thisEvent){
 
     triggerSFUncertainty = sqrt(totalSFUnc);
 
-    eleTriggerSF = triggerSF;  // GUARDA o SF atual
+    // Aplicar o SF ao peso
+    _weight *= triggerSF;
 
-    _weight *= triggerSF;  // Aplica no peso do evento
+    // Imprimir a cada 1000 eventos
+    if (_entryInLoop % 1000 == 0) {
+        std::cout << "[EVENT INFO] Event entry: " << _entryInLoop
+                  << " | Electron Trigger SF: " << triggerSF
+                  << " | Weight before trigger SF: " << weight_before_trigger
+                  << " | Weight after trigger SF: " << _weight
+                  << std::endl;
+    }
 
 ///////////////////////////////////////
 
