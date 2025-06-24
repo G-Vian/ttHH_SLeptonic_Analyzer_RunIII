@@ -815,9 +815,7 @@ void ttHHanalyzer::analyze(event *thisEvent) {
 
 
 void ttHHanalyzer::process(event* thisEvent, sysName sysType, bool up){
-    _weight = _ev->eventWeight;
-
-
+    _weight = _initialWeight;
     createObjects(thisEvent, sysType, up);
     if(!selectObjects(thisEvent))  return;
 // Inicializar SF de trigger
