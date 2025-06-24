@@ -1022,6 +1022,8 @@ class ttHHanalyzer {
     float getEleTrigSF(float eta, float pt, float& sf_unc);
     float triggerSFUncertainty = 0.0;
     float eleTriggerSF = 1.0;  // para armazenar o SF do evento atual
+    int _entryInLoop = -1;
+
 ///////////////////////
 
 
