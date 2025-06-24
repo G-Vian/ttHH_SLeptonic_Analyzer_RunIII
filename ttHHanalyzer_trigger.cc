@@ -65,7 +65,7 @@ void ttHHanalyzer::loop(sysName sysType, bool up) {
 
     std::cout << "--------------------------------------------------------------------------" << std::endl;
     std::cout << std::endl;
-    
+
     if (exitFlag) std::exit(EXIT_FAILURE);
 
     std::string analysisInfo = _year + ", " + _DataOrMC + ", " + _sampleName;
@@ -74,23 +74,19 @@ void ttHHanalyzer::loop(sysName sysType, bool up) {
         event *currentEvent = new event;
         _ev->read(entry);  // Read event into buffer
 
-        // Backup original weight
-        float weight_before_trigger = _weight;
+        // Backup original weight before processing
+        float weight_before = _weight;
 
         // Process the event (this is where trigger SFs get applied)
         process(currentEvent, sysType, up);
 
-        // After process(), _weight should already include trigger SF
-        float weight_after_trigger = _weight;
+        // Weight after processing (should include trigger SF)
+        float weight_after = _weight;
 
-        // Assuming you saved the trigger SF value somewhere during process(), for example:
-        float ele_trigger_sf = currentEvent->getEleTriggerSF();  // You must implement this getter if not existing yet.
-
-        // Print info for each event
-        std::cout << "[EVENT INFO] Event entry: " << entry 
-                  << " | Electron Trigger SF: " << ele_trigger_sf 
-                  << " | Weight before trigger SF: " << weight_before_trigger 
-                  << " | Weight after trigger SF: " << weight_after_trigger 
+        // Print info for this event:
+        std::cout << "[EVENT INFO] Event entry: " << entry
+                  << " | Weight before trigger SF: " << weight_before
+                  << " | Weight after trigger SF: " << weight_after
                   << std::endl;
 
         if (entry % 1000 == 0) {
@@ -99,12 +95,9 @@ void ttHHanalyzer::loop(sysName sysType, bool up) {
         }
 
         events.push_back(currentEvent);
-    }
-  }
-}
+    } // fim do for
 
-    // events.back()->summarize();
-
+    // Agora as chamadas a writeHistos e writeTree ficam dentro da função
     writeHistos();
     writeTree();
 
@@ -113,11 +106,11 @@ void ttHHanalyzer::loop(sysName sysType, bool up) {
                   << ": " 
                   << x.second // string's value 
                   << std::endl;
-    } 
+    }
 
     hCutFlow->Write();
     hCutFlow_w->Write();
-}
+} // fim do método loop
 
 void ttHHanalyzer::createObjects(event * thisEvent, sysName sysType, bool up){
 cutflow["noCut"]+=1;
