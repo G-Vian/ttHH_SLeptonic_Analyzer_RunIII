@@ -70,32 +70,27 @@ void ttHHanalyzer::loop(sysName sysType, bool up) {
 
     std::string analysisInfo = _year + ", " + _DataOrMC + ", " + _sampleName;
 
-    for (int entry = 0; entry < nevents; entry++) {
+for (int entry = 0; entry < nevents; entry++) {
         event *currentEvent = new event;
         _ev->read(entry);  // Read event into buffer
 
-        // Backup original weight before processing
-        float weight_before = _weight;
+        float weight_before_trigger = _weight;
 
-        // Process the event (this is where trigger SFs get applied)
         process(currentEvent, sysType, up);
 
-        // Weight after processing (should include trigger SF)
-        float weight_after = _weight;
-
-        // Print info for this event:
-        std::cout << "[EVENT INFO] Event entry: " << entry
-                  << " | Weight before trigger SF: " << weight_before
-                  << " | Weight after trigger SF: " << weight_after
-                  << std::endl;
+        float weight_after_trigger = _weight;
 
         if (entry % 1000 == 0) {
-            std::cout << "[INFO] Processed events of " << analysisInfo << ": " << entry << std::endl;
+            std::cout << "[EVENT INFO] Event entry: " << entry
+                      << " | Electron Trigger SF: " << eleTriggerSF
+                      << " | Weight before trigger SF: " << weight_before_trigger
+                      << " | Weight after trigger SF: " << weight_after_trigger
+                      << std::endl;
             currentEvent->summarize();
         }
 
         events.push_back(currentEvent);
-    } // fim do for
+    }
 
     // Agora as chamadas a writeHistos e writeTree ficam dentro da função
     writeHistos();
@@ -605,23 +600,27 @@ void ttHHanalyzer::diMotherReco(const TLorentzVector & dPar1p4,const TLorentzVec
     }
 } 
 
-void ttHHanalyzer::analyze(event *thisEvent){
 ///////////////electron trigger scale factor 
+void ttHHanalyzer::analyze(event *thisEvent){
     std::vector<objectLep*>* selectedElectrons = thisEvent->getSelElectrons();
 
     float triggerSF = 1.0;
     float totalSFUnc = 0.0;
 
-for (objectLep* ele : *selectedElectrons) {
-    float sf_unc = 0.0;
-    float sf = getEleTrigSF(ele->getp4()->Eta(), ele->getp4()->Pt(), sf_unc);
+    for (objectLep* ele : *selectedElectrons) {
+        float sf_unc = 0.0;
+        float sf = getEleTrigSF(ele->getp4()->Eta(), ele->getp4()->Pt(), sf_unc);
 
-    triggerSF *= sf;
-    totalSFUnc += sf_unc * sf_unc;
-}
+        triggerSF *= sf;
+        totalSFUnc += sf_unc * sf_unc;
+    }
 
     triggerSFUncertainty = sqrt(totalSFUnc);
-    _weight *= triggerSF;
+
+    eleTriggerSF = triggerSF;  // GUARDA o SF atual
+
+    _weight *= triggerSF;  // Aplica no peso do evento
+}
 ///////////////////////////////////////
 
 	
