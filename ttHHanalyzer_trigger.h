@@ -934,8 +934,6 @@ class event{
 class ttHHanalyzer {
  public:
     enum sysName { kJES, kJER, kbTag, noSys };
-    void setEleTriggerSF(float sf) { eleTriggerSF = sf; }
-    float getEleTriggerSF() const { return eleTriggerSF; }
     ttHHanalyzer(const std::string & cl, eventBuffer * ev, float weight = 1., bool systematics = false,
  		  std::string year= "nothing", std::string DataOrMC = "nothing", std::string sampleName = "nothing"){
 	_weight = weight;
@@ -1023,7 +1021,6 @@ class ttHHanalyzer {
     void initTriggerSF();
     float getEleTrigSF(float eta, float pt, float& sf_unc);
     float triggerSFUncertainty = 0.0;
-    float eleTriggerSF = 1.0;
 
 ///////////////////////
 
