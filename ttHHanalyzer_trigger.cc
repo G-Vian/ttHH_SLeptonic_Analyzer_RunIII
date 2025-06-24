@@ -620,7 +620,7 @@ void ttHHanalyzer::analyze(event *thisEvent){
     eleTriggerSF = triggerSF;  // GUARDA o SF atual
 
     _weight *= triggerSF;  // Aplica no peso do evento
-}
+
 ///////////////////////////////////////
 
 	
