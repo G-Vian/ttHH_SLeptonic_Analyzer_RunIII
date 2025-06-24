@@ -815,7 +815,8 @@ void ttHHanalyzer::analyze(event *thisEvent) {
 
 
 void ttHHanalyzer::process(event* thisEvent, sysName sysType, bool up){
-    _weight = thisEvent->eventWeight;
+    _weight = _ev->eventWeight;
+
 
     createObjects(thisEvent, sysType, up);
     if(!selectObjects(thisEvent))  return;
