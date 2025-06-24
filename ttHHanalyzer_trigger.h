@@ -937,6 +937,7 @@ class ttHHanalyzer {
     ttHHanalyzer(const std::string & cl, eventBuffer * ev, float weight = 1., bool systematics = false,
  		  std::string year= "nothing", std::string DataOrMC = "nothing", std::string sampleName = "nothing"){
 	_weight = weight;
+	_initialWeight = weight;  
 	_ev = ev;
 	_cl = cl;
 	_sys = systematics;
