@@ -540,6 +540,8 @@ void ttHHanalyzer::initTriggerSF() {
         h2_eleTrigSF_unc = nullptr;
     }
 
+    // Limpeza segura
+    tempFile->GetList()->Delete();  // <- Mata todos objetos do arquivo, evitando problemas com TList::Clear
     tempFile->Close();
     delete tempFile;
     gROOT->cd();
@@ -603,8 +605,6 @@ void ttHHanalyzer::analyze(event *thisEvent) {
 
     float triggerSF = 1.0;
     float totalSFUnc = 0.0;
-
-    // Guardar o peso antes de aplicar o SF
     float weight_before_trigger = _weight;
 
     for (objectLep* ele : *selectedElectrons) {
@@ -617,16 +617,13 @@ void ttHHanalyzer::analyze(event *thisEvent) {
 
     triggerSFUncertainty = sqrt(totalSFUnc);
 
-    // Aplicar o SF ao peso
-    _weight *= triggerSF;
+    // PRINT antes de aplicar o SF
+    std::cout << "[TRIGGER SF] Electron Trigger SF: " << triggerSF
+              << " | Weight before trigger SF: " << weight_before_trigger
+              << " | Weight after trigger SF: " << (weight_before_trigger * triggerSF)
+              << std::endl;
 
-    // Imprimir a cada 1000 eventos
-    if (_entryInLoop % 1000 == 0) {
-        std::cout << "[EVENT INFO] Event entry: " << _entryInLoop
-                  << " | Electron Trigger SF: " << triggerSF
-                  << " | Weight before trigger SF: " << weight_before_trigger
-                  << " | Weight after trigger SF: " << _weight
-                  << std::endl;
+    _weight *= triggerSF;
     }
 
 ///////////////////////////////////////
