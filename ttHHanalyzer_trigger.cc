@@ -887,7 +887,7 @@ void ttHHanalyzer::fillHistos(event * thisEvent){
             float eff_val = h2_effMC->GetBinContent(binEff);
             if (h_effMC_vs_pt)  h_effMC_vs_pt->Fill(pt, eff_val);
             if (h_effMC_vs_eta) h_effMC_vs_eta->Fill(eta, eff_val);
-        }
+        } } 
 /////////////////////////////////////////////////////////////////
 
 
