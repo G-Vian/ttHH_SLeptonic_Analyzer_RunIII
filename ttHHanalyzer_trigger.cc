@@ -546,18 +546,18 @@ void ttHHanalyzer::initTriggerSF() {
     // ================================
     // Projeções: Eficiência MC (se existir)
     // ================================
-    TH2F* h2_effMC = (TH2F*)tempFile->Get("EGamma_EffMC2D");
+    TH2F* h2_effMC = dynamic_cast<TH2F*>(tempFile->Get("EGamma_EffMC2D"));
     if (h2_effMC) {
+        h2_effMC->SetDirectory(0);  // ⬅️ ESSA LINHA FAZ TODA A DIFERENÇA!
         h_effMC_vs_pt  = h2_effMC->ProjectionY("h_effMC_vs_pt");
         h_effMC_vs_eta = h2_effMC->ProjectionX("h_effMC_vs_eta");
+        delete h2_effMC; // ⬅️ Cleanup explícito do temporário (opcional, já que projetações são independentes)
     } else {
         std::cerr << "Warning: EGamma_EffMC2D histogram not found in file.\n";
         h_effMC_vs_pt = nullptr;
         h_effMC_vs_eta = nullptr;
     }
 
-
-    tempFile->GetList()->Delete();
     tempFile->Close();
     delete tempFile;
     gROOT->cd();
