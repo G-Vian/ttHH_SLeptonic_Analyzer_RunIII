@@ -556,11 +556,6 @@ void ttHHanalyzer::initTriggerSF() {
         h_effMC_vs_eta = nullptr;
     }
 
-    // Adicione os histogramas para salvamento
-    histos->add("h_sf_vs_pt", h_sf_vs_pt);
-    histos->add("h_sf_vs_eta", h_sf_vs_eta);
-    if (h_effMC_vs_pt)  histos->add("h_effMC_vs_pt", h_effMC_vs_pt);
-    if (h_effMC_vs_eta) histos->add("h_effMC_vs_eta", h_effMC_vs_eta);
 
     tempFile->GetList()->Delete();
     tempFile->Close();
@@ -870,23 +865,29 @@ void ttHHanalyzer::fillHistos(event * thisEvent){
 	i++;
     }
 /////////////////////////////Electron Trigger SF//////////////////
-	for (objectLep* ele : thisEvent->getSelElectrons()) {
-	    float eta = ele->getp4()->Eta();
-	    float pt = ele->getp4()->Pt();
-	    float sf_unc = 0.0;
-	    float sf = getEleTrigSF(eta, pt, sf_unc);
-	    h_sf_vs_pt->Fill(pt, sf);
-	    h_sf_vs_eta->Fill(eta, sf);
-	
-	    if (h2_effMC) {
-	        int binX = h2_effMC->GetXaxis()->FindBin(eta);
-	        int binY = h2_effMC->GetYaxis()->FindBin(pt);
-	        float effMC = h2_effMC->GetBinContent(binX, binY);
-	        h_effMC_vs_pt->Fill(pt, effMC);
-	        h_effMC_vs_eta->Fill(eta, effMC);
-	    }
-	}
+    // Agora, preencher os histogramas de SFs e Eficiências
+    auto electrons = thisEvent->getSelElectrons();
+    if (!electrons || electrons->empty()) return;
 
+    for (objectLep* ele : *electrons) {
+        float pt = ele->getp4()->Pt();
+        float eta = ele->getp4()->Eta();
+
+        // ===== SF =====
+        if (h2_eleTrigSF) {
+            int binSF = h2_eleTrigSF->FindBin(eta, pt);
+            float sf_val = h2_eleTrigSF->GetBinContent(binSF);
+            if (h_sf_vs_pt)  h_sf_vs_pt->Fill(pt, sf_val);
+            if (h_sf_vs_eta) h_sf_vs_eta->Fill(eta, sf_val);
+        }
+
+        // ===== Eficiência (Data ou MC, aqui exemplo com MC) =====
+        if (h2_effMC) {
+            int binEff = h2_effMC->FindBin(eta, pt);
+            float eff_val = h2_effMC->GetBinContent(binEff);
+            if (h_effMC_vs_pt)  h_effMC_vs_pt->Fill(pt, eff_val);
+            if (h_effMC_vs_eta) h_effMC_vs_eta->Fill(eta, eff_val);
+        }
 /////////////////////////////////////////////////////////////////
 
 
