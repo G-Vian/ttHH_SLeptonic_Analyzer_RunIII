@@ -510,9 +510,15 @@ void ttHHanalyzer::initTriggerSF() {
         return;
     }
 
-    if (h2_eleTrigSF) delete h2_eleTrigSF;
-    if (h2_eleTrigSF_unc) delete h2_eleTrigSF_unc;
+    // Limpa objetos antigos
+    if (h2_eleTrigSF)      { delete h2_eleTrigSF; h2_eleTrigSF = nullptr; }
+    if (h2_eleTrigSF_unc)  { delete h2_eleTrigSF_unc; h2_eleTrigSF_unc = nullptr; }
+    if (h_sf_vs_pt)        { delete h_sf_vs_pt; h_sf_vs_pt = nullptr; }
+    if (h_sf_vs_eta)       { delete h_sf_vs_eta; h_sf_vs_eta = nullptr; }
+    if (h_effMC_vs_pt)     { delete h_effMC_vs_pt; h_effMC_vs_pt = nullptr; }
+    if (h_effMC_vs_eta)    { delete h_effMC_vs_eta; h_effMC_vs_eta = nullptr; }
 
+    // SF central
     TH2F* tempSF = dynamic_cast<TH2F*>(tempFile->Get("EGamma_SF2D"));
     if (!tempSF) {
         std::cerr << "Failed to get EGamma_SF2D histogram from SF file: " << sfFilePath << std::endl;
@@ -523,6 +529,11 @@ void ttHHanalyzer::initTriggerSF() {
     h2_eleTrigSF = (TH2F*)tempSF->Clone("h2_eleTrigSF");
     h2_eleTrigSF->SetDirectory(0);
 
+    // SF vs pt/eta projeções
+    h_sf_vs_pt  = h2_eleTrigSF->ProjectionY("h_sf_vs_pt");
+    h_sf_vs_eta = h2_eleTrigSF->ProjectionX("h_sf_vs_eta");
+
+    // Incerteza
     TString uncHistName = (_DataOrMC == "Data") ? "statData" : (_DataOrMC == "MC") ? "statMC" : "";
     if (uncHistName != "") {
         TH2F* tempUnc = dynamic_cast<TH2F*>(tempFile->Get(uncHistName));
@@ -531,31 +542,21 @@ void ttHHanalyzer::initTriggerSF() {
             h2_eleTrigSF_unc->SetDirectory(0);
         } else {
             std::cerr << "Failed to get uncertainty histogram: " << uncHistName << std::endl;
-            h2_eleTrigSF_unc = nullptr;
         }
-    } else {
-        h2_eleTrigSF_unc = nullptr;
     }
 
-    // ================================
-    // Projeções: SF vs. pT e eta (1D)
-    // ================================
-    h_sf_vs_pt  = h2_eleTrigSF->ProjectionY("h_sf_vs_pt");
-    h_sf_vs_eta = h2_eleTrigSF->ProjectionX("h_sf_vs_eta");
+    // Eficiência MC (safe)
+    TH2F* tempEffMC = dynamic_cast<TH2F*>(tempFile->Get("EGamma_EffMC2D"));
+    if (tempEffMC) {
+        TH2F* h2_effMC = (TH2F*)tempEffMC->Clone("h2_effMC_clone");  // <-- clone seguro
+        h2_effMC->SetDirectory(0);
 
-    // ================================
-    // Projeções: Eficiência MC (se existir)
-    // ================================
-    TH2F* h2_effMC = dynamic_cast<TH2F*>(tempFile->Get("EGamma_EffMC2D"));
-    if (h2_effMC) {
-        h2_effMC->SetDirectory(0);  // ⬅️ ESSA LINHA FAZ TODA A DIFERENÇA!
         h_effMC_vs_pt  = h2_effMC->ProjectionY("h_effMC_vs_pt");
         h_effMC_vs_eta = h2_effMC->ProjectionX("h_effMC_vs_eta");
-        delete h2_effMC; // ⬅️ Cleanup explícito do temporário (opcional, já que projetações são independentes)
+
+        delete h2_effMC;  // <-- seguro: projeções são independentes
     } else {
         std::cerr << "Warning: EGamma_EffMC2D histogram not found in file.\n";
-        h_effMC_vs_pt = nullptr;
-        h_effMC_vs_eta = nullptr;
     }
 
     tempFile->Close();
