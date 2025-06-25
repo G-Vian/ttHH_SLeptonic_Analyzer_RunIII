@@ -510,11 +510,9 @@ void ttHHanalyzer::initTriggerSF() {
         return;
     }
 
-    // Limpar caso já existam versões anteriores
     if (h2_eleTrigSF) delete h2_eleTrigSF;
     if (h2_eleTrigSF_unc) delete h2_eleTrigSF_unc;
 
-    // Clonar SF principal
     TH2F* tempSF = dynamic_cast<TH2F*>(tempFile->Get("EGamma_SF2D"));
     if (!tempSF) {
         std::cerr << "Failed to get EGamma_SF2D histogram from SF file: " << sfFilePath << std::endl;
@@ -525,7 +523,6 @@ void ttHHanalyzer::initTriggerSF() {
     h2_eleTrigSF = (TH2F*)tempSF->Clone("h2_eleTrigSF");
     h2_eleTrigSF->SetDirectory(0);
 
-    // Clonar incertezas
     TString uncHistName = (_DataOrMC == "Data") ? "statData" : (_DataOrMC == "MC") ? "statMC" : "";
     if (uncHistName != "") {
         TH2F* tempUnc = dynamic_cast<TH2F*>(tempFile->Get(uncHistName));
@@ -540,12 +537,37 @@ void ttHHanalyzer::initTriggerSF() {
         h2_eleTrigSF_unc = nullptr;
     }
 
-    // Limpeza segura
-    tempFile->GetList()->Delete();  // <- Mata todos objetos do arquivo, evitando problemas com TList::Clear
+    // ================================
+    // Projeções: SF vs. pT e eta (1D)
+    // ================================
+    h_sf_vs_pt  = h2_eleTrigSF->ProjectionY("h_sf_vs_pt");
+    h_sf_vs_eta = h2_eleTrigSF->ProjectionX("h_sf_vs_eta");
+
+    // ================================
+    // Projeções: Eficiência MC (se existir)
+    // ================================
+    TH2F* h2_effMC = (TH2F*)tempFile->Get("EGamma_EffMC2D");
+    if (h2_effMC) {
+        h_effMC_vs_pt  = h2_effMC->ProjectionY("h_effMC_vs_pt");
+        h_effMC_vs_eta = h2_effMC->ProjectionX("h_effMC_vs_eta");
+    } else {
+        std::cerr << "Warning: EGamma_EffMC2D histogram not found in file.\n";
+        h_effMC_vs_pt = nullptr;
+        h_effMC_vs_eta = nullptr;
+    }
+
+    // Adicione os histogramas para salvamento
+    histos->add("h_sf_vs_pt", h_sf_vs_pt);
+    histos->add("h_sf_vs_eta", h_sf_vs_eta);
+    if (h_effMC_vs_pt)  histos->add("h_effMC_vs_pt", h_effMC_vs_pt);
+    if (h_effMC_vs_eta) histos->add("h_effMC_vs_eta", h_effMC_vs_eta);
+
+    tempFile->GetList()->Delete();
     tempFile->Close();
     delete tempFile;
     gROOT->cd();
 }
+
 
 
 // Retorna SF e incerteza para um elétron de (eta, pt)
@@ -847,7 +869,25 @@ void ttHHanalyzer::fillHistos(event * thisEvent){
 	hCutFlow->SetBinContent(i, x.second);
 	i++;
     }
+/////////////////////////////Electron Trigger SF//////////////////
+	for (objectLep* ele : thisEvent->getSelElectrons()) {
+	    float eta = ele->getp4()->Eta();
+	    float pt = ele->getp4()->Pt();
+	    float sf_unc = 0.0;
+	    float sf = getEleTrigSF(eta, pt, sf_unc);
+	    h_sf_vs_pt->Fill(pt, sf);
+	    h_sf_vs_eta->Fill(eta, sf);
+	
+	    if (h2_effMC) {
+	        int binX = h2_effMC->GetXaxis()->FindBin(eta);
+	        int binY = h2_effMC->GetYaxis()->FindBin(pt);
+	        float effMC = h2_effMC->GetBinContent(binX, binY);
+	        h_effMC_vs_pt->Fill(pt, effMC);
+	        h_effMC_vs_eta->Fill(eta, effMC);
+	    }
+	}
 
+/////////////////////////////////////////////////////////////////
 
 
     thisEvent->getCentrality(thisEvent->getSelJets(), thisEvent->getSelbJets(), jbjetCent);
