@@ -937,7 +937,7 @@ class ttHHanalyzer {
     ttHHanalyzer(const std::string & cl, eventBuffer * ev, float weight = 1., bool systematics = false,
  		  std::string year= "nothing", std::string DataOrMC = "nothing", std::string sampleName = "nothing"){
 	_weight = weight;
-	_initialWeight = weight;  
+	_initialWeight = weight;   //Trigger SF for electron
 	_ev = ev;
 	_cl = cl;
 	_sys = systematics;
@@ -987,7 +987,7 @@ class ttHHanalyzer {
  private: 
     bool _sys;
     float _weight;
-    float _initialWeight; 
+    float _initialWeight;  //Trigger SF for electron
 //    int _year;
 //    std::string _data;
 //    std::string _sample;
