@@ -968,7 +968,11 @@ class ttHHanalyzer {
 	*hInvMassHH2Matched,
         *hInvMassHH2NotMatched,
         *hChi2HHNotMatched,
-        *hChi2HHMatched;
+        *hChi2HHMatched,
+	*h_sf_vs_pt, //Electron Trigger SF
+	*h_sf_vs_eta, //Electron Trigger SF
+	*h_effMC_vs_pt, //Electron Trigger SF
+	*h_effMC_vs_eta; //Electron Trigger SF
 
 
     tthHypothesisCombinatorics * HypoComb; 
@@ -1143,7 +1147,13 @@ class ttHHanalyzer {
 
 	hCutFlow = new TH1F("cutflow", "N_{cutFlow}", cutflow.size(), 0, cutflow.size()-1);
 	hCutFlow_w = new TH1F("cutflow_w", "N_{weighted}", cutflow.size(), 0, cutflow.size()-1);
-
+/////////////Electron Trigger SF //////////////////
+	h_sf_vs_pt = new TH1F("h_sf_vs_pt", "SF vs pT;Electron pT [GeV];SF", 20, 0, 200);
+	h_sf_vs_eta = new TH1F("h_sf_vs_eta", "SF vs Eta;Electron #eta;SF", 20, -2.5, 2.5);
+	h_effMC_vs_pt = new TH1F("h_effMC_vs_pt", "EffMC vs pT;Electron pT [GeV];Efficiency", 20, 0, 200);
+	h_effMC_vs_eta = new TH1F("h_effMC_vs_eta", "EffMC vs Eta;Electron #eta;Efficiency", 20, -2.5, 2.5);
+//////////////////////////////////////////////////
+	    
 	TString trail = "";
 	if(sysType == kbTag){
 	    if(up) trail += "btag_up";
