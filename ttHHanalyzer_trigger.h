@@ -968,11 +968,7 @@ class ttHHanalyzer {
 	*hInvMassHH2Matched,
         *hInvMassHH2NotMatched,
         *hChi2HHNotMatched,
-        *hChi2HHMatched,
-	*h_sf_vs_pt, //Electron Trigger SF
-	*h_sf_vs_eta, //Electron Trigger SF
-	*h_effMC_vs_pt, //Electron Trigger SF
-	*h_effMC_vs_eta; //Electron Trigger SF
+        *hChi2HHMatched;
 
 
     tthHypothesisCombinatorics * HypoComb; 
@@ -1029,7 +1025,10 @@ class ttHHanalyzer {
     float triggerSFUncertainty = 0.0;
     float eleTriggerSF = 1.0;  // para armazenar o SF do evento atual
     int _entryInLoop = -1;
-
+    TH1D* h_sf_vs_pt;
+    TH1D* h_sf_vs_eta;
+    TH1D* h_effMC_vs_pt;
+    TH1D* h_effMC_vs_eta;
 ///////////////////////
 
 
