@@ -617,12 +617,17 @@ void ttHHanalyzer::analyze(event *thisEvent) {
 
     triggerSFUncertainty = sqrt(totalSFUnc);
 
-    // PRINT antes de aplicar o SF
-    std::cout << "[TRIGGER SF] Electron Trigger SF: " << triggerSF
-              << " | Weight before trigger SF: " << weight_before_trigger
-              << " | Weight after trigger SF: " << (weight_before_trigger * triggerSF)
-              << std::endl;
+    // Contador de eventos (printar de 1000 em 1000)
+    static int analyzeCounter = 0;
+    analyzeCounter++;
 
+    if (analyzeCounter % 1000 == 0) {
+        std::cout << "[TRIGGER SF] Entry: " << analyzeCounter
+                  << " | Electron Trigger SF: " << triggerSF
+                  << " | Weight before trigger SF: " << weight_before_trigger
+                  << " | Weight after trigger SF: " << _weight
+                  << std::endl;
+    }
     _weight *= triggerSF;
     
 
