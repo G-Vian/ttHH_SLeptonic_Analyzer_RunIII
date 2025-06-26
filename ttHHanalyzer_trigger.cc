@@ -624,35 +624,48 @@ void ttHHanalyzer::diMotherReco(const TLorentzVector & dPar1p4,const TLorentzVec
 
 ///////////////electron trigger scale factor --> here we will apply the SF only to events with one electron!
 void ttHHanalyzer::analyze(event *thisEvent) {
+    static std::vector<std::string> sf_logs;
+
+    std::vector<objectLep*>* selectedElectrons = thisEvent->getSelElectrons();
+
     float triggerSF = 1.0;
     float totalSFUnc = 0.0;
     float weight_before_trigger = _weight;
 
-    auto selectedElectrons = thisEvent->getSelElectrons();
-    auto selectedMuons     = thisEvent->getSelMuons();
+    bool appliedTriggerSF = false;
 
-    if (selectedElectrons && selectedElectrons->size() == 1 &&
-        (!selectedMuons || selectedMuons->empty())) {
+    if (selectedElectrons->size() == 1) {
+        for (objectLep* ele : *selectedElectrons) {
+            float sf_unc = 0.0;
+            float sf = getEleTrigSF(ele->getp4()->Eta(), ele->getp4()->Pt(), sf_unc);
 
-        objectLep* ele = selectedElectrons->at(0);
-        float sf_unc = 0.0;
-        float sf = getEleTrigSF(ele->getp4()->Eta(), ele->getp4()->Pt(), sf_unc);
-
-        triggerSF = sf;
-        totalSFUnc = sf_unc * sf_unc;
-        triggerSFUncertainty = sqrt(totalSFUnc);
-
-        if (_entryInLoop % 250 == 0) {
-            std::cout << std::fixed << std::setprecision(6);
-            std::cout << "[TRIGGER SF] Entry: " << _entryInLoop
-                      << " | Electron Trigger SF: " << triggerSF
-                      << " | Weight before trigger SF: " << weight_before_trigger
-                      << " | Weight after trigger SF: " << weight_before_trigger * triggerSF
-                      << std::endl;
+            triggerSF *= sf;
+            totalSFUnc += sf_unc * sf_unc;
         }
-
-        _weight *= triggerSF;
+        triggerSFUncertainty = sqrt(totalSFUnc);
+        appliedTriggerSF = true;
     }
+
+    if (appliedTriggerSF) {
+        _weight *= triggerSF;
+
+        std::ostringstream oss;
+        oss << "  • Entry " << _entryInLoop
+            << ": SF = " << std::fixed << std::setprecision(6) << triggerSF
+            << " | Weight before = " << weight_before_trigger
+            << " | Weight after = " << _weight;
+        sf_logs.push_back(oss.str());
+    }
+
+    if (_entryInLoop % 1000 == 0 && !sf_logs.empty()) {
+        std::cout << "[INFO] Processed events of 2023, MC, ttHH_MC_Test: " << _entryInLoop << std::endl;
+        std::cout << "[TRIGGER SF APPLICATIONS]" << std::endl;
+        for (const auto& line : sf_logs) {
+            std::cout << line << std::endl;
+        }
+        sf_logs.clear();
+    }
+
 
     
 
