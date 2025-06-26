@@ -554,11 +554,20 @@ void ttHHanalyzer::initTriggerSF() {
         std::cerr << "Warning: EGamma_EffMC2D histogram not found in file.\n";
     }
 
-    // Inicializa histogramas 2D personalizados para preenchimento manual
-    h_sf_vs_pt  = new TH2F("h_sf_vs_pt",  "Trigger SF vs pT; pT [GeV]; SF",    50, 0, 200, 100, 0.5, 1.5);
-    h_sf_vs_eta = new TH2F("h_sf_vs_eta", "Trigger SF vs eta; #eta; SF",       50, -2.5, 2.5, 100, 0.5, 1.5);
-    h_effMC_vs_pt  = new TH2F("h_effMC_vs_pt",  "MC Efficiency vs pT; pT [GeV]; Eff", 50, 0, 200, 100, 0.0, 1.1);
-    h_effMC_vs_eta = new TH2F("h_effMC_vs_eta", "MC Efficiency vs eta; #eta; Eff",   50, -2.5, 2.5, 100, 0.0, 1.1);
+    // Inicializa histogramas  para preenchimento manual
+ 	h_sf_vs_pt     = new TH1F("h_sf_vs_pt",     "SF vs pT;Electron pT [GeV];SF",        20, 0, 200);
+	h_sf_vs_eta    = new TH1F("h_sf_vs_eta",    "SF vs Eta;Electron #eta;SF",           20, -2.5, 2.5);
+	h_effMC_vs_pt  = new TH1F("h_effMC_vs_pt",  "EffMC vs pT;Electron pT [GeV];Eff.",   20, 0, 200);
+	h_effMC_vs_eta = new TH1F("h_effMC_vs_eta", "EffMC vs Eta;Electron #eta;Eff.",      20, -2.5, 2.5);
+h_sf_vs_pt_sum    = new TH1F("h_sf_vs_pt_sum",    "Sum SF vs pT",        20, 0, 200);
+h_sf_vs_pt_count  = new TH1F("h_sf_vs_pt_count",  "Count SF vs pT",      20, 0, 200);
+h_sf_vs_eta_sum   = new TH1F("h_sf_vs_eta_sum",   "Sum SF vs eta",       20, -2.5, 2.5);
+h_sf_vs_eta_count = new TH1F("h_sf_vs_eta_count", "Count SF vs eta",     20, -2.5, 2.5);
+
+h_effMC_vs_pt_sum    = new TH1F("h_effMC_vs_pt_sum",    "Sum Eff vs pT",      20, 0, 200);
+h_effMC_vs_pt_count  = new TH1F("h_effMC_vs_pt_count",  "Count Eff vs pT",    20, 0, 200);
+h_effMC_vs_eta_sum   = new TH1F("h_effMC_vs_eta_sum",   "Sum Eff vs eta",     20, -2.5, 2.5);
+h_effMC_vs_eta_count = new TH1F("h_effMC_vs_eta_count", "Count Eff vs eta",   20, -2.5, 2.5);
 
     h_sf_vs_pt->SetDirectory(0);
     h_sf_vs_eta->SetDirectory(0);
@@ -624,7 +633,7 @@ void ttHHanalyzer::diMotherReco(const TLorentzVector & dPar1p4,const TLorentzVec
 } 
 
 ///////////////electron trigger scale factor --> apply SF only to events with one electron!
-void ttHHanalyzer::analyze(event thisEvent) {
+void ttHHanalyzer::analyze(event* thisEvent) {
 std::vector<objectLep>* selectedElectrons = thisEvent->getSelElectrons();
 float triggerSF = 1.0;
 float totalSFUnc = 0.0;
@@ -878,25 +887,29 @@ for (objectLep* ele : *electrons) {
     float pt = ele->getp4()->Pt();
     float eta = ele->getp4()->Eta();
 
-    // ===== SF =====
-    if (h2_eleTrigSF && h_sf_vs_pt && h_sf_vs_eta) {
-        int binX = h2_eleTrigSF->GetXaxis()->FindBin(eta);  // eta no eixo X
-        int binY = h2_eleTrigSF->GetYaxis()->FindBin(pt);   // pt no eixo Y
-        float sf_val = h2_eleTrigSF->GetBinContent(binX, binY);
+// ===== SF =====
+if (h2_eleTrigSF) {
+    int binX = h2_eleTrigSF->GetXaxis()->FindBin(eta);
+    int binY = h2_eleTrigSF->GetYaxis()->FindBin(pt);
+    float sf_val = h2_eleTrigSF->GetBinContent(binX, binY);
 
-        h_sf_vs_pt->Fill(pt, sf_val);   // X = pt, Y = SF
-        h_sf_vs_eta->Fill(eta, sf_val); // X = eta, Y = SF
-    }
+    h_sf_vs_pt_sum->Fill(pt, sf_val);
+    h_sf_vs_pt_count->Fill(pt, 1);
+    h_sf_vs_eta_sum->Fill(eta, sf_val);
+    h_sf_vs_eta_count->Fill(eta, 1);
+}
 
-    // ===== Eficiência (MC) =====
-    if (h2_effMC && h_effMC_vs_pt && h_effMC_vs_eta) {
-        int binX_eff = h2_effMC->GetXaxis()->FindBin(eta);
-        int binY_eff = h2_effMC->GetYaxis()->FindBin(pt);
-        float eff_val = h2_effMC->GetBinContent(binX_eff, binY_eff);
+// ===== Eficiência (MC) =====
+if (h2_effMC) {
+    int binX_eff = h2_effMC->GetXaxis()->FindBin(eta);
+    int binY_eff = h2_effMC->GetYaxis()->FindBin(pt);
+    float eff_val = h2_effMC->GetBinContent(binX_eff, binY_eff);
 
-        h_effMC_vs_pt->Fill(pt, eff_val);   // X = pt, Y = Eff
-        h_effMC_vs_eta->Fill(eta, eff_val); // X = eta, Y = Eff
-    }
+    h_effMC_vs_pt_sum->Fill(pt, eff_val);
+    h_effMC_vs_pt_count->Fill(pt, 1);
+    h_effMC_vs_eta_sum->Fill(eta, eff_val);
+    h_effMC_vs_eta_count->Fill(eta, 1);
+}
 }
 
 /////////////////////////////////////////////////////////////////
@@ -1110,6 +1123,21 @@ for (objectLep* ele : *electrons) {
 
 
 void ttHHanalyzer::writeHistos(){
+////Electron Trigger SF
+h_sf_vs_pt_sum->Divide(h_sf_vs_pt_count);     // agora contém a média
+h_sf_vs_eta_sum->Divide(h_sf_vs_eta_count);
+h_effMC_vs_pt_sum->Divide(h_effMC_vs_pt_count);
+h_effMC_vs_eta_sum->Divide(h_effMC_vs_eta_count);
+
+// Opcionalmente: renomear para salvar com nome limpo
+h_sf_vs_pt_sum->SetName("h_sf_vs_pt_avg");
+h_sf_vs_eta_sum->SetName("h_sf_vs_eta_avg");
+h_effMC_vs_pt_sum->SetName("h_effMC_vs_pt_avg");
+h_effMC_vs_eta_sum->SetName("h_effMC_vs_eta_avg");
+
+//////////////////	
+
+	
     _of->file->cd();
     _histoDirs.at(0)->cd();
     for(int ih=0; ih<nHistsJets; ih++){
@@ -1128,12 +1156,6 @@ void ttHHanalyzer::writeHistos(){
 	hLightJetsEtas.at(ih)->Write();
 	hLightJetsBTagDisc.at(ih)->Write();
     }
-
-    // ===SF Trigger  Electron ===
-    if (h_sf_vs_pt)     h_sf_vs_pt->Write();
-    if (h_sf_vs_eta)    h_sf_vs_eta->Write();
-    if (h_effMC_vs_pt)  h_effMC_vs_pt->Write();
-    if (h_effMC_vs_eta) h_effMC_vs_eta->Write();
 	
     hInvMassHSingleMatched->Write();
     hInvMassHSingleNotMatched->Write();
@@ -1236,7 +1258,19 @@ void ttHHanalyzer::writeHistos(){
     hBjetDvalue->Write();
 
     _histoDirs.at(1)->cd();
-    
+
+    // ===SF Trigger  Electron ===
+    if (h_sf_vs_pt)     h_sf_vs_pt->Write();
+    if (h_sf_vs_eta)    h_sf_vs_eta->Write();
+    if (h_effMC_vs_pt)  h_effMC_vs_pt->Write();
+    if (h_effMC_vs_eta) h_effMC_vs_eta->Write();
+if(h_sf_vs_pt_avg)	h_sf_vs_pt_avg->Write();
+if(h_sf_vs_eta_avg)	h_sf_vs_eta_avg->Write();
+if(h_effMC_vs_pt_avg)	h_effMC_vs_pt_avg->Write();
+if(h_effMC_vs_eta_avg)	h_effMC_vs_eta_avg->Write();
+//////////////
+
+	
     hLepCharge1->Write();
   //  hLepCharge2->Write();
 
