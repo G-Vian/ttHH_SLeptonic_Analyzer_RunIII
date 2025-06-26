@@ -639,12 +639,12 @@ void ttHHanalyzer::analyze(event *thisEvent) {
     }
 
     triggerSFUncertainty = sqrt(totalSFUnc);
+_weight *= triggerSF;
 
     // Contador de eventos (printar de 1000 em 1000)
     static int analyzeCounter = 0;
     analyzeCounter++;
 
-_weight *= triggerSF;
 
 if (analyzeCounter % 1000 == 0) {
     std::cout << "[TRIGGER SF] Entry: " << analyzeCounter
