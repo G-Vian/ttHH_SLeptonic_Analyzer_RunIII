@@ -643,33 +643,33 @@ void ttHHanalyzer::diMotherReco(const TLorentzVector & dPar1p4,const TLorentzVec
 
 ///////////////electron trigger scale factor --> apply SF only to events with one electron!
 void ttHHanalyzer::analyze(event *thisEvent) {
-std::vector<objectLep>* selectedElectrons = thisEvent->getSelElectrons();
-float triggerSF = 1.0;
-float totalSFUnc = 0.0;
-float weight_before_trigger = _weight;
+    std::vector<objectLep*>* selectedElectrons = thisEvent->getSelElectrons();
 
-if (selectedElectrons->size() == 1) {
-    objectLep* ele = selectedElectrons->at(0);
-    float sf_unc = 0.0;
-    float sf = getEleTrigSF(ele->getp4()->Eta(), ele->getp4()->Pt(), sf_unc);
+    float triggerSF = 1.0;
+    float totalSFUnc = 0.0;
+    float weight_before_trigger = _weight;
 
-    triggerSF = sf;
-    totalSFUnc = sf_unc * sf_unc;
-    triggerSFUncertainty = sqrt(totalSFUnc);
+    if (selectedElectrons->size() == 1) {
+        // selectedElectrons->at(0) já é um ponteiro para objectLep
+        objectLep* ele = selectedElectrons->at(0);
+        float sf_unc = 0.0;
+        float sf = getEleTrigSF(ele->getp4()->Eta(), ele->getp4()->Pt(), sf_unc);
 
-    _weight *= triggerSF;
+        triggerSF = sf;
+        totalSFUnc = sf_unc * sf_unc;
+        triggerSFUncertainty = sqrt(totalSFUnc);
 
-    if (sf_log_file.is_open()) {
-        sf_log_file << "Entry " << _entryInLoop
-                    << " | Electron η = " << ele->getp4()->Eta()
-                    << ", pT = " << ele->getp4()->Pt()
-                    << " | SF = " << std::fixed << std::setprecision(10) << triggerSF
-                    << " | Weight before = " << weight_before_trigger
-                    << " | Weight after = " << _weight << "\n";
+        _weight *= triggerSF;
+
+        if (sf_log_file.is_open()) {
+            sf_log_file << "Entry " << _entryInLoop
+                        << " | Electron η = " << ele->getp4()->Eta()
+                        << ", pT = " << ele->getp4()->Pt()
+                        << " | SF = " << std::fixed << std::setprecision(10) << triggerSF
+                        << " | Weight before = " << weight_before_trigger
+                        << " | Weight after = " << _weight << "\n";
+        }
     }
-}
-
-
     
 
 ///////////////////////////////////////
