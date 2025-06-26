@@ -644,14 +644,15 @@ void ttHHanalyzer::analyze(event *thisEvent) {
     static int analyzeCounter = 0;
     analyzeCounter++;
 
-    if (analyzeCounter % 1000 == 0) {
-        std::cout << "[TRIGGER SF] Entry: " << analyzeCounter
-                  << " | Electron Trigger SF: " << triggerSF
-                  << " | Weight before trigger SF: " << weight_before_trigger
-                  << " | Weight after trigger SF: " << _weight
-                  << std::endl;
-    }
-    _weight *= triggerSF;
+_weight *= triggerSF;
+
+if (analyzeCounter % 1000 == 0) {
+    std::cout << "[TRIGGER SF] Entry: " << analyzeCounter
+              << " | Electron Trigger SF: " << triggerSF
+              << " | Weight before trigger SF: " << weight_before_trigger
+              << " | Weight after trigger SF: " << _weight
+              << std::endl;
+}
     
 
 ///////////////////////////////////////
