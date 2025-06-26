@@ -642,7 +642,7 @@ void ttHHanalyzer::diMotherReco(const TLorentzVector & dPar1p4,const TLorentzVec
 } 
 
 ///////////////electron trigger scale factor --> apply SF only to events with one electron!
-void ttHHanalyzer::analyze(event* thisEvent) {
+void ttHHanalyzer::analyze(event *thisEvent) {
 std::vector<objectLep>* selectedElectrons = thisEvent->getSelElectrons();
 float triggerSF = 1.0;
 float totalSFUnc = 0.0;
