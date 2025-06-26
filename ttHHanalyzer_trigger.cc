@@ -573,6 +573,15 @@ h_effMC_vs_eta_count = new TH1F("h_effMC_vs_eta_count", "Count Eff vs eta",   20
     h_sf_vs_eta->SetDirectory(0);
     h_effMC_vs_pt->SetDirectory(0);
     h_effMC_vs_eta->SetDirectory(0);
+h_sf_vs_pt_sum    ->SetDirectory(0);
+h_sf_vs_pt_count  ->SetDirectory(0);
+h_sf_vs_eta_sum   ->SetDirectory(0);
+h_sf_vs_eta_count ->SetDirectory(0);
+
+h_effMC_vs_pt_sum    ->SetDirectory(0);
+h_effMC_vs_pt_count  ->SetDirectory(0);
+h_effMC_vs_eta_sum   ->SetDirectory(0);
+h_effMC_vs_eta_count ->SetDirectory(0);
 
     tempFile->Close();
     delete tempFile;
