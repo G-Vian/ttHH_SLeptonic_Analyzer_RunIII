@@ -1017,19 +1017,21 @@ class ttHHanalyzer {
     float _bbMassMin1Z, _bbMassMin2Z, _minChi2Z = 999999999.;
     TRandom3 _rand;
 ///////////////////////Trigger electron
-    TFile* eleTrigSFFile = nullptr;
-    TH2* h2_eleTrigSF = nullptr;
-    TH2* h2_eleTrigSF_unc = nullptr;
-    TH2F* h2_effMC = nullptr;
-    void initTriggerSF();
-    float getEleTrigSF(float eta, float pt, float& sf_unc);
-    float triggerSFUncertainty = 0.0;
-    float eleTriggerSF = 1.0;  // para armazenar o SF do evento atual
-    int _entryInLoop = -1;
-    TH1D* h_sf_vs_pt;
-    TH1D* h_sf_vs_eta;
-    TH1D* h_effMC_vs_pt;
-    TH1D* h_effMC_vs_eta;
+TFile* eleTrigSFFile = nullptr;
+TH2F* h2_eleTrigSF = nullptr;
+TH2F* h2_eleTrigSF_unc = nullptr;
+TH2F* h2_effMC = nullptr;
+
+void initTriggerSF();
+float getEleTrigSF(float eta, float pt, float& sf_unc);
+float triggerSFUncertainty = 0.0;
+float eleTriggerSF = 1.0;  // para armazenar o SF do evento atual
+int _entryInLoop = -1;
+
+TH1F* h_sf_vs_pt = nullptr;
+TH1F* h_sf_vs_eta = nullptr;
+TH1F* h_effMC_vs_pt = nullptr;
+TH1F* h_effMC_vs_eta = nullptr;
 ///////////////////////
 
 
