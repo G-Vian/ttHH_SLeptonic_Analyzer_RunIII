@@ -637,22 +637,20 @@ void ttHHanalyzer::analyze(event *thisEvent) {
         triggerSF *= sf;
         totalSFUnc += sf_unc * sf_unc;
     }
+triggerSFUncertainty = sqrt(totalSFUnc);
 
-    triggerSFUncertainty = sqrt(totalSFUnc);
-_weight *= triggerSF;
-
-    // Contador de eventos (printar de 1000 em 1000)
-    static int analyzeCounter = 0;
-    analyzeCounter++;
-
-
-if (analyzeCounter % 1000 == 0) {
-    std::cout << "[TRIGGER SF] Entry: " << analyzeCounter
+if (_entryInLoop % 1000 == 0) {
+    std::cout << std::fixed << std::setprecision(6);
+    std::cout << "[TRIGGER SF] Entry: " << _entryInLoop
               << " | Electron Trigger SF: " << triggerSF
               << " | Weight before trigger SF: " << weight_before_trigger
-              << " | Weight after trigger SF: " << _weight
+              << " | Weight after trigger SF: " << weight_before_trigger * triggerSF
               << std::endl;
 }
+
+_weight *= triggerSF;
+
+
     
 
 ///////////////////////////////////////
@@ -1125,6 +1123,12 @@ void ttHHanalyzer::writeHistos(){
 	hLightJetsBTagDisc.at(ih)->Write();
     }
 
+    // ===SF Trigger  Electron ===
+    if (h_sf_vs_pt)     h_sf_vs_pt->Write();
+    if (h_sf_vs_eta)    h_sf_vs_eta->Write();
+    if (h_effMC_vs_pt)  h_effMC_vs_pt->Write();
+    if (h_effMC_vs_eta) h_effMC_vs_eta->Write();
+	
     hInvMassHSingleMatched->Write();
     hInvMassHSingleNotMatched->Write();
     hChi2HiggsSingleNotMatched->Write();
