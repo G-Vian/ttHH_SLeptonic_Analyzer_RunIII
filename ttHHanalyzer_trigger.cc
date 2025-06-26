@@ -517,6 +517,7 @@ void ttHHanalyzer::initTriggerSF() {
     if (h_sf_vs_eta)       { delete h_sf_vs_eta; h_sf_vs_eta = nullptr; }
     if (h_effMC_vs_pt)     { delete h_effMC_vs_pt; h_effMC_vs_pt = nullptr; }
     if (h_effMC_vs_eta)    { delete h_effMC_vs_eta; h_effMC_vs_eta = nullptr; }
+    if (h2_effMC)          { delete h2_effMC; h2_effMC = nullptr; }
 
     // SF central
     TH2F* tempSF = dynamic_cast<TH2F*>(tempFile->Get("EGamma_SF2D"));
@@ -530,8 +531,10 @@ void ttHHanalyzer::initTriggerSF() {
     h2_eleTrigSF->SetDirectory(0);
 
     // SF vs pt/eta projeções
-    h_sf_vs_pt  = h2_eleTrigSF->ProjectionY("h_sf_vs_pt");
-    h_sf_vs_eta = h2_eleTrigSF->ProjectionX("h_sf_vs_eta");
+    h_sf_vs_pt  = (TH1F*)h2_eleTrigSF->ProjectionY("h_sf_vs_pt", 1, -1);
+    h_sf_vs_eta = (TH1F*)h2_eleTrigSF->ProjectionX("h_sf_vs_eta", 1, -1);
+    h_sf_vs_pt->SetDirectory(0);
+    h_sf_vs_eta->SetDirectory(0);
 
     // Incerteza
     TString uncHistName = (_DataOrMC == "Data") ? "statData" : (_DataOrMC == "MC") ? "statMC" : "";
@@ -545,18 +548,20 @@ void ttHHanalyzer::initTriggerSF() {
         }
     }
 
-    // Eficiência MC (safe)
+    // Eficiência MC
     TH2F* tempEffMC = dynamic_cast<TH2F*>(tempFile->Get("EGamma_EffMC2D"));
     if (tempEffMC) {
-        TH2F* h2_effMC = (TH2F*)tempEffMC->Clone("h2_effMC_clone");  // <-- clone seguro
+        h2_effMC = (TH2F*)tempEffMC->Clone("h2_effMC");
         h2_effMC->SetDirectory(0);
 
-        h_effMC_vs_pt  = h2_effMC->ProjectionY("h_effMC_vs_pt");
-        h_effMC_vs_eta = h2_effMC->ProjectionX("h_effMC_vs_eta");
-
-        delete h2_effMC;  // <-- seguro: projeções são independentes
+        h_effMC_vs_pt  = (TH1F*)h2_effMC->ProjectionY("h_effMC_vs_pt", 1, -1);
+        h_effMC_vs_eta = (TH1F*)h2_effMC->ProjectionX("h_effMC_vs_eta", 1, -1);
+        h_effMC_vs_pt->SetDirectory(0);
+        h_effMC_vs_eta->SetDirectory(0);
     } else {
         std::cerr << "Warning: EGamma_EffMC2D histogram not found in file.\n";
+        h_effMC_vs_pt = nullptr;
+        h_effMC_vs_eta = nullptr;
     }
 
     tempFile->Close();
