@@ -1043,9 +1043,9 @@ TH1F* h_effMC_vs_eta_sum;
 TH1F* h_effMC_vs_eta_count;
 
 
+TH1F* h_sf_vs_pt_avg;
+TH1F* h_sf_vs_eta_avg;
 TH1F* h_effMC_vs_pt_avg;
-TH1F* h_effMC_vs_pt_avg;
-TH1F* h_effMC_vs_eta_avg;
 TH1F* h_effMC_vs_eta_avg;
 ///////////////////////
 
