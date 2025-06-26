@@ -6,9 +6,11 @@
 #include "TVector3.h"
 #include "ttHHanalyzer_trigger.h"
 #include <iostream>
+#include <fstream>
 #include "TH2.h"//Trigger SF for electron
 using namespace std;
- 
+static std::ofstream sf_log_file("log_electron_trigger_sf.txt");
+
 void ttHHanalyzer::performAnalysis(){
     loop(noSys, false);
     /*    getbJetEffMap();
@@ -34,6 +36,7 @@ void ttHHanalyzer::performAnalysis(){
     loop(kbTag, true); */
 
 }
+
 void ttHHanalyzer::loop(sysName sysType, bool up) {
     int nevents = _ev->size();
 
@@ -530,12 +533,6 @@ void ttHHanalyzer::initTriggerSF() {
     h2_eleTrigSF = (TH2F*)tempSF->Clone("h2_eleTrigSF");
     h2_eleTrigSF->SetDirectory(0);
 
-    // SF vs pt/eta projeções
-    h_sf_vs_pt  = (TH1F*)h2_eleTrigSF->ProjectionY("h_sf_vs_pt", 1, -1);
-    h_sf_vs_eta = (TH1F*)h2_eleTrigSF->ProjectionX("h_sf_vs_eta", 1, -1);
-    h_sf_vs_pt->SetDirectory(0);
-    h_sf_vs_eta->SetDirectory(0);
-
     // Incerteza
     TString uncHistName = (_DataOrMC == "Data") ? "statData" : (_DataOrMC == "MC") ? "statMC" : "";
     if (uncHistName != "") {
@@ -553,16 +550,20 @@ void ttHHanalyzer::initTriggerSF() {
     if (tempEffMC) {
         h2_effMC = (TH2F*)tempEffMC->Clone("h2_effMC");
         h2_effMC->SetDirectory(0);
-
-        h_effMC_vs_pt  = (TH1F*)h2_effMC->ProjectionY("h_effMC_vs_pt", 1, -1);
-        h_effMC_vs_eta = (TH1F*)h2_effMC->ProjectionX("h_effMC_vs_eta", 1, -1);
-        h_effMC_vs_pt->SetDirectory(0);
-        h_effMC_vs_eta->SetDirectory(0);
     } else {
         std::cerr << "Warning: EGamma_EffMC2D histogram not found in file.\n";
-        h_effMC_vs_pt = nullptr;
-        h_effMC_vs_eta = nullptr;
     }
+
+    // Inicializa histogramas 2D personalizados para preenchimento manual
+    h_sf_vs_pt  = new TH2F("h_sf_vs_pt",  "Trigger SF vs pT; pT [GeV]; SF",    50, 0, 200, 100, 0.5, 1.5);
+    h_sf_vs_eta = new TH2F("h_sf_vs_eta", "Trigger SF vs eta; #eta; SF",       50, -2.5, 2.5, 100, 0.5, 1.5);
+    h_effMC_vs_pt  = new TH2F("h_effMC_vs_pt",  "MC Efficiency vs pT; pT [GeV]; Eff", 50, 0, 200, 100, 0.0, 1.1);
+    h_effMC_vs_eta = new TH2F("h_effMC_vs_eta", "MC Efficiency vs eta; #eta; Eff",   50, -2.5, 2.5, 100, 0.0, 1.1);
+
+    h_sf_vs_pt->SetDirectory(0);
+    h_sf_vs_eta->SetDirectory(0);
+    h_effMC_vs_pt->SetDirectory(0);
+    h_effMC_vs_eta->SetDirectory(0);
 
     tempFile->Close();
     delete tempFile;
@@ -622,49 +623,33 @@ void ttHHanalyzer::diMotherReco(const TLorentzVector & dPar1p4,const TLorentzVec
     }
 } 
 
-///////////////electron trigger scale factor --> here we will apply the SF only to events with one electron!
-void ttHHanalyzer::analyze(event *thisEvent) {
-    static std::vector<std::string> sf_logs;
+///////////////electron trigger scale factor --> apply SF only to events with one electron!
+void ttHHanalyzer::analyze(event thisEvent) {
+std::vector<objectLep>* selectedElectrons = thisEvent->getSelElectrons();
+float triggerSF = 1.0;
+float totalSFUnc = 0.0;
+float weight_before_trigger = _weight;
 
-    std::vector<objectLep*>* selectedElectrons = thisEvent->getSelElectrons();
+if (selectedElectrons->size() == 1) {
+    objectLep* ele = selectedElectrons->at(0);
+    float sf_unc = 0.0;
+    float sf = getEleTrigSF(ele->getp4()->Eta(), ele->getp4()->Pt(), sf_unc);
 
-    float triggerSF = 1.0;
-    float totalSFUnc = 0.0;
-    float weight_before_trigger = _weight;
+    triggerSF = sf;
+    totalSFUnc = sf_unc * sf_unc;
+    triggerSFUncertainty = sqrt(totalSFUnc);
 
-    bool appliedTriggerSF = false;
+    _weight *= triggerSF;
 
-    if (selectedElectrons->size() == 1) {
-        for (objectLep* ele : *selectedElectrons) {
-            float sf_unc = 0.0;
-            float sf = getEleTrigSF(ele->getp4()->Eta(), ele->getp4()->Pt(), sf_unc);
-
-            triggerSF *= sf;
-            totalSFUnc += sf_unc * sf_unc;
-        }
-        triggerSFUncertainty = sqrt(totalSFUnc);
-        appliedTriggerSF = true;
+    if (sf_log_file.is_open()) {
+        sf_log_file << "Entry " << _entryInLoop
+                    << " | Electron η = " << ele->getp4()->Eta()
+                    << ", pT = " << ele->getp4()->Pt()
+                    << " | SF = " << std::fixed << std::setprecision(10) << triggerSF
+                    << " | Weight before = " << weight_before_trigger
+                    << " | Weight after = " << _weight << "\n";
     }
-
-    if (appliedTriggerSF) {
-        _weight *= triggerSF;
-
-        std::ostringstream oss;
-        oss << "  • Entry " << _entryInLoop
-            << ": SF = " << std::fixed << std::setprecision(6) << triggerSF
-            << " | Weight before = " << weight_before_trigger
-            << " | Weight after = " << _weight;
-        sf_logs.push_back(oss.str());
-    }
-
-    if (_entryInLoop % 1000 == 0 && !sf_logs.empty()) {
-        std::cout << "[INFO] Processed events of 2023, MC, ttHH_MC_Test: " << _entryInLoop << std::endl;
-        std::cout << "[TRIGGER SF APPLICATIONS]" << std::endl;
-        for (const auto& line : sf_logs) {
-            std::cout << line << std::endl;
-        }
-        sf_logs.clear();
-    }
+}
 
 
     
@@ -885,33 +870,35 @@ void ttHHanalyzer::fillHistos(event * thisEvent){
 	hCutFlow->SetBinContent(i, x.second);
 	i++;
     }
-/////////////////////////////Electron Trigger SF//////////////////
-    // Agora, preencher os histogramas de SFs e Eficiências
-    auto electrons = thisEvent->getSelElectrons();
-    if (!electrons || electrons->empty()) return;
+// /////////////////////////// Electron Trigger SF ///////////////////////////
+auto electrons = thisEvent->getSelElectrons();
+if (!electrons || electrons->empty()) return;
 
-    for (objectLep* ele : *electrons) {
-        float pt = ele->getp4()->Pt();
-        float eta = ele->getp4()->Eta();
+for (objectLep* ele : *electrons) {
+    float pt = ele->getp4()->Pt();
+    float eta = ele->getp4()->Eta();
 
- // ===== SF =====
-if (h2_eleTrigSF) {
-    int binX = h2_eleTrigSF->GetXaxis()->FindBin(eta);  // eta no eixo X
-    int binY = h2_eleTrigSF->GetYaxis()->FindBin(pt);   // pt no eixo Y
-    float sf_val = h2_eleTrigSF->GetBinContent(binX, binY);
-    if (h_sf_vs_pt)  h_sf_vs_pt->Fill(pt, sf_val);
-    if (h_sf_vs_eta) h_sf_vs_eta->Fill(eta, sf_val);
-}
+    // ===== SF =====
+    if (h2_eleTrigSF && h_sf_vs_pt && h_sf_vs_eta) {
+        int binX = h2_eleTrigSF->GetXaxis()->FindBin(eta);  // eta no eixo X
+        int binY = h2_eleTrigSF->GetYaxis()->FindBin(pt);   // pt no eixo Y
+        float sf_val = h2_eleTrigSF->GetBinContent(binX, binY);
 
-// ===== Eficiência (MC) =====
-if (h2_effMC) {
-    int binX_eff = h2_effMC->GetXaxis()->FindBin(eta);  // eta no eixo X
-    int binY_eff = h2_effMC->GetYaxis()->FindBin(pt);   // pt no eixo Y
-    float eff_val = h2_effMC->GetBinContent(binX_eff, binY_eff);
-    if (h_effMC_vs_pt)  h_effMC_vs_pt->Fill(pt, eff_val);
-    if (h_effMC_vs_eta) h_effMC_vs_eta->Fill(eta, eff_val);
-}
+        h_sf_vs_pt->Fill(pt, sf_val);   // X = pt, Y = SF
+        h_sf_vs_eta->Fill(eta, sf_val); // X = eta, Y = SF
     }
+
+    // ===== Eficiência (MC) =====
+    if (h2_effMC && h_effMC_vs_pt && h_effMC_vs_eta) {
+        int binX_eff = h2_effMC->GetXaxis()->FindBin(eta);
+        int binY_eff = h2_effMC->GetYaxis()->FindBin(pt);
+        float eff_val = h2_effMC->GetBinContent(binX_eff, binY_eff);
+
+        h_effMC_vs_pt->Fill(pt, eff_val);   // X = pt, Y = Eff
+        h_effMC_vs_eta->Fill(eta, eff_val); // X = eta, Y = Eff
+    }
+}
+
 /////////////////////////////////////////////////////////////////
 
 
