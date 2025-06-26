@@ -1149,13 +1149,7 @@ TH1F* h_effMC_vs_eta = nullptr;
 
 	hCutFlow = new TH1F("cutflow", "N_{cutFlow}", cutflow.size(), 0, cutflow.size()-1);
 	hCutFlow_w = new TH1F("cutflow_w", "N_{weighted}", cutflow.size(), 0, cutflow.size()-1);
-/////////////Electron Trigger SF //////////////////
-	h_sf_vs_pt     = new TH1F("h_sf_vs_pt",     "SF vs pT;Electron pT [GeV];SF",        20, 0, 200);
-	h_sf_vs_eta    = new TH1F("h_sf_vs_eta",    "SF vs Eta;Electron #eta;SF",           20, -2.5, 2.5);
-	h_effMC_vs_pt  = new TH1F("h_effMC_vs_pt",  "EffMC vs pT;Electron pT [GeV];Eff.",   20, 0, 200);
-	h_effMC_vs_eta = new TH1F("h_effMC_vs_eta", "EffMC vs Eta;Electron #eta;Eff.",      20, -2.5, 2.5);
 
-//////////////////////////////////////////////////
 	    
 	TString trail = "";
 	if(sysType == kbTag){
@@ -1323,6 +1317,13 @@ TH1F* h_effMC_vs_eta = nullptr;
 	tmpDirs.push_back(lepton);
 	lepton->cd();
 
+/////////////Electron Trigger SF //////////////////
+	h_sf_vs_pt     = new TH1F("h_sf_vs_pt",     "SF vs pT;Electron pT [GeV];SF",        20, 0, 200);
+	h_sf_vs_eta    = new TH1F("h_sf_vs_eta",    "SF vs Eta;Electron #eta;SF",           20, -2.5, 2.5);
+	h_effMC_vs_pt  = new TH1F("h_effMC_vs_pt",  "EffMC vs pT;Electron pT [GeV];Eff.",   20, 0, 200);
+	h_effMC_vs_eta = new TH1F("h_effMC_vs_eta", "EffMC vs Eta;Electron #eta;Eff.",      20, -2.5, 2.5);
+
+//////////////////////////////////////////////////
 	hLepCharge1 = new TH1F("lepCharge1"+trail, "lepCh1"+trail, 4, -2, 2);
 	hLepCharge2 = new TH1F("lepCharge2"+trail, "lepCh2"+trail, 4, -2, 2);
 	hLepCharge1 = new TH1F("lepCharge1"+trail, "lepCh1"+trail, 4, -2, 2);
