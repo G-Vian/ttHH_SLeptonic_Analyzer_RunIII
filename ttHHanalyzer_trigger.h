@@ -1032,6 +1032,15 @@ TH1F* h_sf_vs_pt = nullptr;
 TH1F* h_sf_vs_eta = nullptr;
 TH1F* h_effMC_vs_pt = nullptr;
 TH1F* h_effMC_vs_eta = nullptr;
+TH1F* h_sf_vs_pt_sum;
+TH1F* h_sf_vs_pt_count;
+TH1F* h_sf_vs_eta_sum;
+TH1F* h_sf_vs_eta_count;
+
+TH1F* h_effMC_vs_pt_sum;
+TH1F* h_effMC_vs_pt_count;
+TH1F* h_effMC_vs_eta_sum;
+TH1F* h_effMC_vs_eta_count;
 ///////////////////////
 
 
@@ -1322,6 +1331,15 @@ TH1F* h_effMC_vs_eta = nullptr;
 	h_sf_vs_eta    = new TH1F("h_sf_vs_eta",    "SF vs Eta;Electron #eta;SF",           20, -2.5, 2.5);
 	h_effMC_vs_pt  = new TH1F("h_effMC_vs_pt",  "EffMC vs pT;Electron pT [GeV];Eff.",   20, 0, 200);
 	h_effMC_vs_eta = new TH1F("h_effMC_vs_eta", "EffMC vs Eta;Electron #eta;Eff.",      20, -2.5, 2.5);
+h_sf_vs_pt_sum    = new TH1F("h_sf_vs_pt_sum",    "Sum SF vs pT",        20, 0, 200);
+h_sf_vs_pt_count  = new TH1F("h_sf_vs_pt_count",  "Count SF vs pT",      20, 0, 200);
+h_sf_vs_eta_sum   = new TH1F("h_sf_vs_eta_sum",   "Sum SF vs eta",       20, -2.5, 2.5);
+h_sf_vs_eta_count = new TH1F("h_sf_vs_eta_count", "Count SF vs eta",     20, -2.5, 2.5);
+
+h_effMC_vs_pt_sum    = new TH1F("h_effMC_vs_pt_sum",    "Sum Eff vs pT",      20, 0, 200);
+h_effMC_vs_pt_count  = new TH1F("h_effMC_vs_pt_count",  "Count Eff vs pT",    20, 0, 200);
+h_effMC_vs_eta_sum   = new TH1F("h_effMC_vs_eta_sum",   "Sum Eff vs eta",     20, -2.5, 2.5);
+h_effMC_vs_eta_count = new TH1F("h_effMC_vs_eta_count", "Count Eff vs eta",   20, -2.5, 2.5);
 
 //////////////////////////////////////////////////
 	hLepCharge1 = new TH1F("lepCharge1"+trail, "lepCh1"+trail, 4, -2, 2);
