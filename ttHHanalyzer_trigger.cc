@@ -513,25 +513,35 @@ void ttHHanalyzer::initTriggerSF() {
         return;
     }
 
-    // Limpa objetos antigos
-    if (h2_eleTrigSF)      { delete h2_eleTrigSF; h2_eleTrigSF = nullptr; }
-    if (h2_eleTrigSF_unc)  { delete h2_eleTrigSF_unc; h2_eleTrigSF_unc = nullptr; }
-    if (h_sf_vs_pt)        { delete h_sf_vs_pt; h_sf_vs_pt = nullptr; }
-    if (h_sf_vs_eta)       { delete h_sf_vs_eta; h_sf_vs_eta = nullptr; }
-    if (h_effMC_vs_pt)     { delete h_effMC_vs_pt; h_effMC_vs_pt = nullptr; }
-    if (h_effMC_vs_eta)    { delete h_effMC_vs_eta; h_effMC_vs_eta = nullptr; }
-    if (h2_effMC)          { delete h2_effMC; h2_effMC = nullptr; }
+    // Limpeza de ponteiros
+    auto safe_delete = [](TH1* &h) { if (h) { delete h; h = nullptr; } };
+    safe_delete((TH1*&)h2_eleTrigSF);
+    safe_delete((TH1*&)h2_eleTrigSF_unc);
+    safe_delete(h_sf_vs_pt);
+    safe_delete(h_sf_vs_eta);
+    safe_delete(h_effMC_vs_pt);
+    safe_delete(h_effMC_vs_eta);
+    safe_delete((TH1*&)h2_effMC);
+
+    safe_delete(h_sf_vs_pt_sum);
+    safe_delete(h_sf_vs_pt_count);
+    safe_delete(h_sf_vs_eta_sum);
+    safe_delete(h_sf_vs_eta_count);
+    safe_delete(h_effMC_vs_pt_sum);
+    safe_delete(h_effMC_vs_pt_count);
+    safe_delete(h_effMC_vs_eta_sum);
+    safe_delete(h_effMC_vs_eta_count);
+    safe_delete(h_sf_vs_pt_avg);
+    safe_delete(h_sf_vs_eta_avg);
+    safe_delete(h_effMC_vs_pt_avg);
+    safe_delete(h_effMC_vs_eta_avg);
 
     // SF central
     TH2F* tempSF = dynamic_cast<TH2F*>(tempFile->Get("EGamma_SF2D"));
-    if (!tempSF) {
-        std::cerr << "Failed to get EGamma_SF2D histogram from SF file: " << sfFilePath << std::endl;
-        tempFile->Close();
-        delete tempFile;
-        return;
+    if (tempSF) {
+        h2_eleTrigSF = (TH2F*)tempSF->Clone("h2_eleTrigSF");
+        h2_eleTrigSF->SetDirectory(0);
     }
-    h2_eleTrigSF = (TH2F*)tempSF->Clone("h2_eleTrigSF");
-    h2_eleTrigSF->SetDirectory(0);
 
     // Incerteza
     TString uncHistName = (_DataOrMC == "Data") ? "statData" : (_DataOrMC == "MC") ? "statMC" : "";
@@ -540,8 +550,6 @@ void ttHHanalyzer::initTriggerSF() {
         if (tempUnc) {
             h2_eleTrigSF_unc = (TH2F*)tempUnc->Clone("h2_eleTrigSF_unc");
             h2_eleTrigSF_unc->SetDirectory(0);
-        } else {
-            std::cerr << "Failed to get uncertainty histogram: " << uncHistName << std::endl;
         }
     }
 
@@ -550,49 +558,36 @@ void ttHHanalyzer::initTriggerSF() {
     if (tempEffMC) {
         h2_effMC = (TH2F*)tempEffMC->Clone("h2_effMC");
         h2_effMC->SetDirectory(0);
-    } else {
-        std::cerr << "Warning: EGamma_EffMC2D histogram not found in file.\n";
     }
 
-    // Inicializa histogramas  para preenchimento manual
- 	h_sf_vs_pt     = new TH1F("h_sf_vs_pt",     "SF vs pT;Electron pT [GeV];SF",        20, 0, 200);
-	h_sf_vs_eta    = new TH1F("h_sf_vs_eta",    "SF vs Eta;Electron #eta;SF",           20, -2.5, 2.5);
-	h_effMC_vs_pt  = new TH1F("h_effMC_vs_pt",  "EffMC vs pT;Electron pT [GeV];Eff.",   20, 0, 200);
-	h_effMC_vs_eta = new TH1F("h_effMC_vs_eta", "EffMC vs Eta;Electron #eta;Eff.",      20, -2.5, 2.5);
-h_sf_vs_pt_sum    = new TH1F("h_sf_vs_pt_sum",    "Sum SF vs pT",        20, 0, 200);
-h_sf_vs_pt_count  = new TH1F("h_sf_vs_pt_count",  "Count SF vs pT",      20, 0, 200);
-h_sf_vs_eta_sum   = new TH1F("h_sf_vs_eta_sum",   "Sum SF vs eta",       20, -2.5, 2.5);
-h_sf_vs_eta_count = new TH1F("h_sf_vs_eta_count", "Count SF vs eta",     20, -2.5, 2.5);
+    // Inicializa histogramas manuais
+    h_sf_vs_pt         = new TH1F("h_sf_vs_pt",     "SF vs pT;Electron pT [GeV];SF",        20, 0, 200);
+    h_sf_vs_eta        = new TH1F("h_sf_vs_eta",    "SF vs Eta;Electron #eta;SF",           20, -2.5, 2.5);
+    h_effMC_vs_pt      = new TH1F("h_effMC_vs_pt",  "EffMC vs pT;Electron pT [GeV];Eff.",   20, 0, 200);
+    h_effMC_vs_eta     = new TH1F("h_effMC_vs_eta", "EffMC vs Eta;Electron #eta;Eff.",      20, -2.5, 2.5);
+    h_sf_vs_pt_sum     = new TH1F("h_sf_vs_pt_sum", "Sum SF vs pT",                         20, 0, 200);
+    h_sf_vs_pt_count   = new TH1F("h_sf_vs_pt_count", "Count SF vs pT",                     20, 0, 200);
+    h_sf_vs_eta_sum    = new TH1F("h_sf_vs_eta_sum", "Sum SF vs eta",                       20, -2.5, 2.5);
+    h_sf_vs_eta_count  = new TH1F("h_sf_vs_eta_count", "Count SF vs eta",                   20, -2.5, 2.5);
+    h_effMC_vs_pt_sum  = new TH1F("h_effMC_vs_pt_sum", "Sum Eff vs pT",                     20, 0, 200);
+    h_effMC_vs_pt_count = new TH1F("h_effMC_vs_pt_count", "Count Eff vs pT",                20, 0, 200);
+    h_effMC_vs_eta_sum = new TH1F("h_effMC_vs_eta_sum", "Sum Eff vs eta",                   20, -2.5, 2.5);
+    h_effMC_vs_eta_count = new TH1F("h_effMC_vs_eta_count", "Count Eff vs eta",             20, -2.5, 2.5);
 
-h_effMC_vs_pt_sum    = new TH1F("h_effMC_vs_pt_sum",    "Sum Eff vs pT",      20, 0, 200);
-h_effMC_vs_pt_count  = new TH1F("h_effMC_vs_pt_count",  "Count Eff vs pT",    20, 0, 200);
-h_effMC_vs_eta_sum   = new TH1F("h_effMC_vs_eta_sum",   "Sum Eff vs eta",     20, -2.5, 2.5);
-h_effMC_vs_eta_count = new TH1F("h_effMC_vs_eta_count", "Count Eff vs eta",   20, -2.5, 2.5);
-
-    h_sf_vs_pt->SetDirectory(0);
-    h_sf_vs_eta->SetDirectory(0);
-    h_effMC_vs_pt->SetDirectory(0);
-    h_effMC_vs_eta->SetDirectory(0);
-h_sf_vs_pt_sum    ->SetDirectory(0);
-h_sf_vs_pt_count  ->SetDirectory(0);
-h_sf_vs_eta_sum   ->SetDirectory(0);
-h_sf_vs_eta_count ->SetDirectory(0);
-
-h_effMC_vs_pt_sum   ->SetDirectory(0);
-h_effMC_vs_pt_count ->SetDirectory(0);
-h_effMC_vs_eta_sum  ->SetDirectory(0);
-h_effMC_vs_eta_count->SetDirectory(0);
-	
-h_sf_vs_pt_avg->SetDirectory(0);
-h_sf_vs_eta_avg->SetDirectory(0);
-h_effMC_vs_pt_avg->SetDirectory(0);
-h_effMC_vs_eta_avg->SetDirectory(0);
+    // SetDirectory(0) para evitar ownership do arquivo ROOT
+    std::vector<TH1*> hists = {
+        h_sf_vs_pt, h_sf_vs_eta, h_effMC_vs_pt, h_effMC_vs_eta,
+        h_sf_vs_pt_sum, h_sf_vs_pt_count, h_sf_vs_eta_sum, h_sf_vs_eta_count,
+        h_effMC_vs_pt_sum, h_effMC_vs_pt_count, h_effMC_vs_eta_sum, h_effMC_vs_eta_count
+    };
+    for (auto& h : hists) {
+        if (h) h->SetDirectory(0);
+    }
 
     tempFile->Close();
     delete tempFile;
     gROOT->cd();
 }
-
 
 
 // Retorna SF e incerteza para um elétron de (eta, pt)
@@ -1137,22 +1132,22 @@ if (h2_effMC) {
 
 
 void ttHHanalyzer::writeHistos() {
-// Calcula a média
-h_sf_vs_pt_sum->Divide(h_sf_vs_pt_count);
-h_sf_vs_eta_sum->Divide(h_sf_vs_eta_count);
-h_effMC_vs_pt_sum->Divide(h_effMC_vs_pt_count);
-h_effMC_vs_eta_sum->Divide(h_effMC_vs_eta_count);
+    // Calcula a média de forma segura
+    if (h_sf_vs_pt_sum && h_sf_vs_pt_count) h_sf_vs_pt_sum->Divide(h_sf_vs_pt_count, 1., 1., "B");
+    if (h_sf_vs_eta_sum && h_sf_vs_eta_count) h_sf_vs_eta_sum->Divide(h_sf_vs_eta_count, 1., 1., "B");
+    if (h_effMC_vs_pt_sum && h_effMC_vs_pt_count) h_effMC_vs_pt_sum->Divide(h_effMC_vs_pt_count, 1., 1., "B");
+    if (h_effMC_vs_eta_sum && h_effMC_vs_eta_count) h_effMC_vs_eta_sum->Divide(h_effMC_vs_eta_count, 1., 1., "B");
 
-// Clona os histogramas de média
-h_sf_vs_pt_avg     = (TH1F*) h_sf_vs_pt_sum->Clone("h_sf_vs_pt_avg");
-h_sf_vs_eta_avg    = (TH1F*) h_sf_vs_eta_sum->Clone("h_sf_vs_eta_avg");
-h_effMC_vs_pt_avg  = (TH1F*) h_effMC_vs_pt_sum->Clone("h_effMC_vs_pt_avg");
-h_effMC_vs_eta_avg = (TH1F*) h_effMC_vs_eta_sum->Clone("h_effMC_vs_eta_avg");
+    // Clona os histogramas de média
+    if (h_sf_vs_pt_sum)      h_sf_vs_pt_avg     = (TH1F*) h_sf_vs_pt_sum->Clone("h_sf_vs_pt_avg");
+    if (h_sf_vs_eta_sum)     h_sf_vs_eta_avg    = (TH1F*) h_sf_vs_eta_sum->Clone("h_sf_vs_eta_avg");
+    if (h_effMC_vs_pt_sum)   h_effMC_vs_pt_avg  = (TH1F*) h_effMC_vs_pt_sum->Clone("h_effMC_vs_pt_avg");
+    if (h_effMC_vs_eta_sum)  h_effMC_vs_eta_avg = (TH1F*) h_effMC_vs_eta_sum->Clone("h_effMC_vs_eta_avg");
 
-h_sf_vs_pt_avg->SetDirectory(0);
-h_sf_vs_eta_avg->SetDirectory(0);
-h_effMC_vs_pt_avg->SetDirectory(0);
-h_effMC_vs_eta_avg->SetDirectory(0);
+    if (h_sf_vs_pt_avg)      h_sf_vs_pt_avg->SetDirectory(0);
+    if (h_sf_vs_eta_avg)     h_sf_vs_eta_avg->SetDirectory(0);
+    if (h_effMC_vs_pt_avg)   h_effMC_vs_pt_avg->SetDirectory(0);
+    if (h_effMC_vs_eta_avg)  h_effMC_vs_eta_avg->SetDirectory(0);
 
 	
     _of->file->cd();
