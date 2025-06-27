@@ -902,8 +902,8 @@ if (h2_eleTrigSF) {
     int binX = h2_eleTrigSF->GetXaxis()->FindBin(eta);
     int binY = h2_eleTrigSF->GetYaxis()->FindBin(pt);
     float sf_val = h2_eleTrigSF->GetBinContent(binX, binY);
-    h_sf_vs_pt->Fill(pt, sf);
-    h_sf_vs_eta->Fill(eta, sf);
+    h_sf_vs_pt->Fill(pt, sf_val);
+    h_sf_vs_eta->Fill(eta, sf_val);
     h_sf_vs_pt_sum->Fill(pt, sf_val);
     h_sf_vs_pt_count->Fill(pt, 1);
     h_sf_vs_eta_sum->Fill(eta, sf_val);
@@ -915,8 +915,8 @@ if (h2_effMC) {
     int binX_eff = h2_effMC->GetXaxis()->FindBin(eta);
     int binY_eff = h2_effMC->GetYaxis()->FindBin(pt);
     float eff_val = h2_effMC->GetBinContent(binX_eff, binY_eff);
-    h_effMC_vs_pt->Fill(pt, effMC);
-    h_effMC_vs_eta->Fill(eta, effMC);
+    h_effMC_vs_pt->Fill(pt, eff_val);
+    h_effMC_vs_eta->Fill(eta, eff_val);
     h_effMC_vs_pt_sum->Fill(pt, eff_val);
     h_effMC_vs_pt_count->Fill(pt, 1);
     h_effMC_vs_eta_sum->Fill(eta, eff_val);
