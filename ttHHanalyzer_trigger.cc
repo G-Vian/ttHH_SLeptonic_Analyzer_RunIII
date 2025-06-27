@@ -513,28 +513,29 @@ void ttHHanalyzer::initTriggerSF() {
         return;
     }
 
-    // Limpeza de ponteiros
-    auto safe_delete = [](TH1* &h) { if (h) { delete h; h = nullptr; } };
-    safe_delete((TH1*&)h2_eleTrigSF);
-    safe_delete((TH1*&)h2_eleTrigSF_unc);
-    safe_delete(h_sf_vs_pt);
-    safe_delete(h_sf_vs_eta);
-    safe_delete(h_effMC_vs_pt);
-    safe_delete(h_effMC_vs_eta);
-    safe_delete((TH1*&)h2_effMC);
-
-    safe_delete(h_sf_vs_pt_sum);
-    safe_delete(h_sf_vs_pt_count);
-    safe_delete(h_sf_vs_eta_sum);
-    safe_delete(h_sf_vs_eta_count);
-    safe_delete(h_effMC_vs_pt_sum);
-    safe_delete(h_effMC_vs_pt_count);
-    safe_delete(h_effMC_vs_eta_sum);
-    safe_delete(h_effMC_vs_eta_count);
-    safe_delete(h_sf_vs_pt_avg);
-    safe_delete(h_sf_vs_eta_avg);
-    safe_delete(h_effMC_vs_pt_avg);
-    safe_delete(h_effMC_vs_eta_avg);
+	if (h_sf_vs_pt) { delete h_sf_vs_pt; h_sf_vs_pt = nullptr; }
+	if (h_sf_vs_eta) { delete h_sf_vs_eta; h_sf_vs_eta = nullptr; }
+	if (h_effMC_vs_pt) { delete h_effMC_vs_pt; h_effMC_vs_pt = nullptr; }
+	if (h_effMC_vs_eta) { delete h_effMC_vs_eta; h_effMC_vs_eta = nullptr; }
+	
+	if (h2_effMC) { delete h2_effMC; h2_effMC = nullptr; }
+	if (h2_eleTrigSF) { delete h2_eleTrigSF; h2_eleTrigSF = nullptr; }
+	if (h2_eleTrigSF_unc) { delete h2_eleTrigSF_unc; h2_eleTrigSF_unc = nullptr; }
+	
+	if (h_sf_vs_pt_sum) { delete h_sf_vs_pt_sum; h_sf_vs_pt_sum = nullptr; }
+	if (h_sf_vs_pt_count) { delete h_sf_vs_pt_count; h_sf_vs_pt_count = nullptr; }
+	if (h_sf_vs_eta_sum) { delete h_sf_vs_eta_sum; h_sf_vs_eta_sum = nullptr; }
+	if (h_sf_vs_eta_count) { delete h_sf_vs_eta_count; h_sf_vs_eta_count = nullptr; }
+	
+	if (h_effMC_vs_pt_sum) { delete h_effMC_vs_pt_sum; h_effMC_vs_pt_sum = nullptr; }
+	if (h_effMC_vs_pt_count) { delete h_effMC_vs_pt_count; h_effMC_vs_pt_count = nullptr; }
+	if (h_effMC_vs_eta_sum) { delete h_effMC_vs_eta_sum; h_effMC_vs_eta_sum = nullptr; }
+	if (h_effMC_vs_eta_count) { delete h_effMC_vs_eta_count; h_effMC_vs_eta_count = nullptr; }
+	
+	if (h_sf_vs_pt_avg) { delete h_sf_vs_pt_avg; h_sf_vs_pt_avg = nullptr; }
+	if (h_sf_vs_eta_avg) { delete h_sf_vs_eta_avg; h_sf_vs_eta_avg = nullptr; }
+	if (h_effMC_vs_pt_avg) { delete h_effMC_vs_pt_avg; h_effMC_vs_pt_avg = nullptr; }
+	if (h_effMC_vs_eta_avg) { delete h_effMC_vs_eta_avg; h_effMC_vs_eta_avg = nullptr; }
 
     // SF central
     TH2F* tempSF = dynamic_cast<TH2F*>(tempFile->Get("EGamma_SF2D"));
