@@ -1134,10 +1134,28 @@ if (h2_effMC) {
 
 void ttHHanalyzer::writeHistos() {
     // Calcula a média de forma segura
-    if (h_sf_vs_pt_sum && h_sf_vs_pt_count) h_sf_vs_pt_sum->Divide(h_sf_vs_pt_count, 1., 1., "B");
-    if (h_sf_vs_eta_sum && h_sf_vs_eta_count) h_sf_vs_eta_sum->Divide(h_sf_vs_eta_count, 1., 1., "B");
-    if (h_effMC_vs_pt_sum && h_effMC_vs_pt_count) h_effMC_vs_pt_sum->Divide(h_effMC_vs_pt_count, 1., 1., "B");
-    if (h_effMC_vs_eta_sum && h_effMC_vs_eta_count) h_effMC_vs_eta_sum->Divide(h_effMC_vs_eta_count, 1., 1., "B");
+	if (h_sf_vs_pt_sum && h_sf_vs_pt_count) {
+	    if (h_sf_vs_pt_avg) delete h_sf_vs_pt_avg;
+	    h_sf_vs_pt_avg = (TH1F*) h_sf_vs_pt_sum->Clone("h_sf_vs_pt_avg");
+	    h_sf_vs_pt_avg->Divide(h_sf_vs_pt_sum, h_sf_vs_pt_count, 1., 1., "B");
+	}
+	if (h_sf_vs_eta_sum && h_sf_vs_eta_count) {
+	    if (h_sf_vs_eta_avg) delete h_sf_vs_eta_avg;
+	    h_sf_vs_eta_avg = (TH1F*) h_sf_vs_eta_sum->Clone("h_sf_vs_eta_avg");
+	    h_sf_vs_eta_avg->Divide(h_sf_vs_eta_sum, h_sf_vs_eta_count, 1., 1., "B");
+	}
+	
+	if (h_effMC_vs_pt_sum && h_effMC_vs_pt_count) {
+	    if (h_effMC_vs_pt_avg) delete h_effMC_vs_pt_avg;
+	    h_effMC_vs_pt_avg = (TH1F*) h_effMC_vs_pt_sum->Clone("h_effMC_vs_pt_avg");
+	    h_effMC_vs_pt_avg->Divide(h_effMC_vs_pt_sum, h_effMC_vs_pt_count, 1., 1., "B");
+	}
+	
+	if (h_effMC_vs_eta_sum && h_effMC_vs_eta_count) {
+	    if (h_effMC_vs_eta_avg) delete h_effMC_vs_eta_avg;
+	    h_effMC_vs_eta_avg = (TH1F*) h_effMC_vs_eta_sum->Clone("h_effMC_vs_eta_avg");
+	    h_effMC_vs_eta_avg->Divide(h_effMC_vs_eta_sum, h_effMC_vs_eta_count, 1., 1., "B");
+	}
 
     // Clona os histogramas de média
     if (h_sf_vs_pt_sum)      h_sf_vs_pt_avg     = (TH1F*) h_sf_vs_pt_sum->Clone("h_sf_vs_pt_avg");
