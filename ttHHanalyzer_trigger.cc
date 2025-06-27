@@ -902,7 +902,8 @@ if (h2_eleTrigSF) {
     int binX = h2_eleTrigSF->GetXaxis()->FindBin(eta);
     int binY = h2_eleTrigSF->GetYaxis()->FindBin(pt);
     float sf_val = h2_eleTrigSF->GetBinContent(binX, binY);
-
+    h_sf_vs_pt->Fill(pt, sf);
+    h_sf_vs_eta->Fill(eta, sf);
     h_sf_vs_pt_sum->Fill(pt, sf_val);
     h_sf_vs_pt_count->Fill(pt, 1);
     h_sf_vs_eta_sum->Fill(eta, sf_val);
@@ -914,13 +915,16 @@ if (h2_effMC) {
     int binX_eff = h2_effMC->GetXaxis()->FindBin(eta);
     int binY_eff = h2_effMC->GetYaxis()->FindBin(pt);
     float eff_val = h2_effMC->GetBinContent(binX_eff, binY_eff);
-
+    h_effMC_vs_pt->Fill(pt, effMC);
+    h_effMC_vs_eta->Fill(eta, effMC);
     h_effMC_vs_pt_sum->Fill(pt, eff_val);
     h_effMC_vs_pt_count->Fill(pt, 1);
     h_effMC_vs_eta_sum->Fill(eta, eff_val);
     h_effMC_vs_eta_count->Fill(eta, 1);
 }
 }
+  
+
 
 /////////////////////////////////////////////////////////////////
 
@@ -1133,40 +1137,34 @@ if (h2_effMC) {
 
 
 void ttHHanalyzer::writeHistos() {
-    // Calcula a média de forma segura
-	if (h_sf_vs_pt_sum && h_sf_vs_pt_count) {
-	    if (h_sf_vs_pt_avg) delete h_sf_vs_pt_avg;
-	    h_sf_vs_pt_avg = (TH1F*) h_sf_vs_pt_sum->Clone("h_sf_vs_pt_avg");
-	    h_sf_vs_pt_avg->Divide(h_sf_vs_pt_sum, h_sf_vs_pt_count, 1., 1., "B");
-	}
-	if (h_sf_vs_eta_sum && h_sf_vs_eta_count) {
-	    if (h_sf_vs_eta_avg) delete h_sf_vs_eta_avg;
-	    h_sf_vs_eta_avg = (TH1F*) h_sf_vs_eta_sum->Clone("h_sf_vs_eta_avg");
-	    h_sf_vs_eta_avg->Divide(h_sf_vs_eta_sum, h_sf_vs_eta_count, 1., 1., "B");
-	}
-	
-	if (h_effMC_vs_pt_sum && h_effMC_vs_pt_count) {
-	    if (h_effMC_vs_pt_avg) delete h_effMC_vs_pt_avg;
-	    h_effMC_vs_pt_avg = (TH1F*) h_effMC_vs_pt_sum->Clone("h_effMC_vs_pt_avg");
-	    h_effMC_vs_pt_avg->Divide(h_effMC_vs_pt_sum, h_effMC_vs_pt_count, 1., 1., "B");
-	}
-	
-	if (h_effMC_vs_eta_sum && h_effMC_vs_eta_count) {
-	    if (h_effMC_vs_eta_avg) delete h_effMC_vs_eta_avg;
-	    h_effMC_vs_eta_avg = (TH1F*) h_effMC_vs_eta_sum->Clone("h_effMC_vs_eta_avg");
-	    h_effMC_vs_eta_avg->Divide(h_effMC_vs_eta_sum, h_effMC_vs_eta_count, 1., 1., "B");
-	}
+// Cálculo das médias de SF e Eficiência com clonagem correta
+if (h_sf_vs_pt_sum && h_sf_vs_pt_count) {
+    if (h_sf_vs_pt_avg) delete h_sf_vs_pt_avg;
+    h_sf_vs_pt_avg = (TH1F*) h_sf_vs_pt_sum->Clone("h_sf_vs_pt_avg");
+    h_sf_vs_pt_avg->Divide(h_sf_vs_pt_sum, h_sf_vs_pt_count, 1., 1., "B");
+    h_sf_vs_pt_avg->SetDirectory(0);
+}
 
-    // Clona os histogramas de média
-    if (h_sf_vs_pt_sum)      h_sf_vs_pt_avg     = (TH1F*) h_sf_vs_pt_sum->Clone("h_sf_vs_pt_avg");
-    if (h_sf_vs_eta_sum)     h_sf_vs_eta_avg    = (TH1F*) h_sf_vs_eta_sum->Clone("h_sf_vs_eta_avg");
-    if (h_effMC_vs_pt_sum)   h_effMC_vs_pt_avg  = (TH1F*) h_effMC_vs_pt_sum->Clone("h_effMC_vs_pt_avg");
-    if (h_effMC_vs_eta_sum)  h_effMC_vs_eta_avg = (TH1F*) h_effMC_vs_eta_sum->Clone("h_effMC_vs_eta_avg");
+if (h_sf_vs_eta_sum && h_sf_vs_eta_count) {
+    if (h_sf_vs_eta_avg) delete h_sf_vs_eta_avg;
+    h_sf_vs_eta_avg = (TH1F*) h_sf_vs_eta_sum->Clone("h_sf_vs_eta_avg");
+    h_sf_vs_eta_avg->Divide(h_sf_vs_eta_sum, h_sf_vs_eta_count, 1., 1., "B");
+    h_sf_vs_eta_avg->SetDirectory(0);
+}
 
-    if (h_sf_vs_pt_avg)      h_sf_vs_pt_avg->SetDirectory(0);
-    if (h_sf_vs_eta_avg)     h_sf_vs_eta_avg->SetDirectory(0);
-    if (h_effMC_vs_pt_avg)   h_effMC_vs_pt_avg->SetDirectory(0);
-    if (h_effMC_vs_eta_avg)  h_effMC_vs_eta_avg->SetDirectory(0);
+if (h_effMC_vs_pt_sum && h_effMC_vs_pt_count) {
+    if (h_effMC_vs_pt_avg) delete h_effMC_vs_pt_avg;
+    h_effMC_vs_pt_avg = (TH1F*) h_effMC_vs_pt_sum->Clone("h_effMC_vs_pt_avg");
+    h_effMC_vs_pt_avg->Divide(h_effMC_vs_pt_sum, h_effMC_vs_pt_count, 1., 1., "B");
+    h_effMC_vs_pt_avg->SetDirectory(0);
+}
+
+if (h_effMC_vs_eta_sum && h_effMC_vs_eta_count) {
+    if (h_effMC_vs_eta_avg) delete h_effMC_vs_eta_avg;
+    h_effMC_vs_eta_avg = (TH1F*) h_effMC_vs_eta_sum->Clone("h_effMC_vs_eta_avg");
+    h_effMC_vs_eta_avg->Divide(h_effMC_vs_eta_sum, h_effMC_vs_eta_count, 1., 1., "B");
+    h_effMC_vs_eta_avg->SetDirectory(0);
+}
 
 	
     _of->file->cd();
