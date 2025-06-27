@@ -578,10 +578,7 @@ h_sf_vs_pt_count  ->SetDirectory(0);
 h_sf_vs_eta_sum   ->SetDirectory(0);
 h_sf_vs_eta_count ->SetDirectory(0);
 
-h_effMC_vs_pt_sum    ->SetDirectory(0);
-h_effMC_vs_pt_count  ->SetDirectory(0);
-h_effMC_vs_eta_sum   ->SetDirectory(0);
-h_effMC_vs_eta_count ->SetDirectory(0);
+
 
     tempFile->Close();
     delete tempFile;
@@ -660,15 +657,15 @@ void ttHHanalyzer::analyze(event *thisEvent) {
         triggerSFUncertainty = sqrt(totalSFUnc);
 
         _weight *= triggerSF;
-
-        if (sf_log_file.is_open()) {
+////Below is a log to verify the SFs of each electron/////////////
+     /*   if (sf_log_file.is_open()) {
             sf_log_file << "Entry " << _entryInLoop
                         << " | Electron η = " << ele->getp4()->Eta()
                         << ", pT = " << ele->getp4()->Pt()
                         << " | SF = " << std::fixed << std::setprecision(10) << triggerSF
                         << " | Weight before = " << weight_before_trigger
                         << " | Weight after = " << _weight << "\n";
-        }
+        }*/
     }
     
 
@@ -1131,20 +1128,19 @@ if (h2_effMC) {
 
 
 
-void ttHHanalyzer::writeHistos(){
-////Electron Trigger SF
-h_sf_vs_pt_sum->Divide(h_sf_vs_pt_count);     // agora contém a média
+void ttHHanalyzer::writeHistos() {
+// Média = soma / contagem
+h_sf_vs_pt_sum->Divide(h_sf_vs_pt_count);
 h_sf_vs_eta_sum->Divide(h_sf_vs_eta_count);
 h_effMC_vs_pt_sum->Divide(h_effMC_vs_pt_count);
 h_effMC_vs_eta_sum->Divide(h_effMC_vs_eta_count);
 
-// Opcionalmente: renomear para salvar com nome limpo
+
+// Renomeia para salvar como "média"
 h_sf_vs_pt_sum->SetName("h_sf_vs_pt_avg");
 h_sf_vs_eta_sum->SetName("h_sf_vs_eta_avg");
 h_effMC_vs_pt_sum->SetName("h_effMC_vs_pt_avg");
 h_effMC_vs_eta_sum->SetName("h_effMC_vs_eta_avg");
-
-//////////////////	
 
 	
     _of->file->cd();
@@ -1268,18 +1264,17 @@ h_effMC_vs_eta_sum->SetName("h_effMC_vs_eta_avg");
 
     _histoDirs.at(1)->cd();
 
-    // ===SF Trigger  Electron ===
-    if (h_sf_vs_pt)     h_sf_vs_pt->Write();
-    if (h_sf_vs_eta)    h_sf_vs_eta->Write();
-    if (h_effMC_vs_pt)  h_effMC_vs_pt->Write();
-    if (h_effMC_vs_eta) h_effMC_vs_eta->Write();
-if(h_sf_vs_pt_avg)	h_sf_vs_pt_avg->Write();
-if(h_sf_vs_eta_avg)	h_sf_vs_eta_avg->Write();
-if(h_effMC_vs_pt_avg)	h_effMC_vs_pt_avg->Write();
-if(h_effMC_vs_eta_avg)	h_effMC_vs_eta_avg->Write();
-//////////////
+// ===SF Trigger Electron===
+if (h_sf_vs_pt)          h_sf_vs_pt->Write();
+if (h_sf_vs_eta)         h_sf_vs_eta->Write();
+if (h_effMC_vs_pt)       h_effMC_vs_pt->Write();
+if (h_effMC_vs_eta)      h_effMC_vs_eta->Write();
 
-	
+// Escreve os histogramas de média
+if (h_sf_vs_pt_sum)      h_sf_vs_pt_sum->Write();  // já renomeado para "_avg"
+if (h_sf_vs_eta_sum)     h_sf_vs_eta_sum->Write();
+if (h_effMC_vs_pt_sum)   h_effMC_vs_pt_sum->Write();
+if (h_effMC_vs_eta_sum)  h_effMC_vs_eta_sum->Write();
     hLepCharge1->Write();
   //  hLepCharge2->Write();
 
