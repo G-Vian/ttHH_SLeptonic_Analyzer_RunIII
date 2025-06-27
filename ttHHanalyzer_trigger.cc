@@ -578,7 +578,15 @@ h_sf_vs_pt_count  ->SetDirectory(0);
 h_sf_vs_eta_sum   ->SetDirectory(0);
 h_sf_vs_eta_count ->SetDirectory(0);
 
-
+h_effMC_vs_pt_sum   ->SetDirectory(0);
+h_effMC_vs_pt_count ->SetDirectory(0);
+h_effMC_vs_eta_sum  ->SetDirectory(0);
+h_effMC_vs_eta_count->SetDirectory(0);
+	
+h_sf_vs_pt_avg->SetDirectory(0);
+h_sf_vs_eta_avg->SetDirectory(0);
+h_effMC_vs_pt_avg->SetDirectory(0);
+h_effMC_vs_eta_avg->SetDirectory(0);
 
     tempFile->Close();
     delete tempFile;
@@ -1129,18 +1137,22 @@ if (h2_effMC) {
 
 
 void ttHHanalyzer::writeHistos() {
-// Média = soma / contagem
+// Calcula a média
 h_sf_vs_pt_sum->Divide(h_sf_vs_pt_count);
 h_sf_vs_eta_sum->Divide(h_sf_vs_eta_count);
 h_effMC_vs_pt_sum->Divide(h_effMC_vs_pt_count);
 h_effMC_vs_eta_sum->Divide(h_effMC_vs_eta_count);
 
+// Clona os histogramas de média
+h_sf_vs_pt_avg     = (TH1F*) h_sf_vs_pt_sum->Clone("h_sf_vs_pt_avg");
+h_sf_vs_eta_avg    = (TH1F*) h_sf_vs_eta_sum->Clone("h_sf_vs_eta_avg");
+h_effMC_vs_pt_avg  = (TH1F*) h_effMC_vs_pt_sum->Clone("h_effMC_vs_pt_avg");
+h_effMC_vs_eta_avg = (TH1F*) h_effMC_vs_eta_sum->Clone("h_effMC_vs_eta_avg");
 
-// Renomeia para salvar como "média"
-h_sf_vs_pt_sum->SetName("h_sf_vs_pt_avg");
-h_sf_vs_eta_sum->SetName("h_sf_vs_eta_avg");
-h_effMC_vs_pt_sum->SetName("h_effMC_vs_pt_avg");
-h_effMC_vs_eta_sum->SetName("h_effMC_vs_eta_avg");
+h_sf_vs_pt_avg->SetDirectory(0);
+h_sf_vs_eta_avg->SetDirectory(0);
+h_effMC_vs_pt_avg->SetDirectory(0);
+h_effMC_vs_eta_avg->SetDirectory(0);
 
 	
     _of->file->cd();
@@ -1271,10 +1283,11 @@ if (h_effMC_vs_pt)       h_effMC_vs_pt->Write();
 if (h_effMC_vs_eta)      h_effMC_vs_eta->Write();
 
 // Escreve os histogramas de média
-if (h_sf_vs_pt_sum)      h_sf_vs_pt_sum->Write();  // já renomeado para "_avg"
-if (h_sf_vs_eta_sum)     h_sf_vs_eta_sum->Write();
-if (h_effMC_vs_pt_sum)   h_effMC_vs_pt_sum->Write();
-if (h_effMC_vs_eta_sum)  h_effMC_vs_eta_sum->Write();
+if (h_sf_vs_pt_avg)     h_sf_vs_pt_avg->Write();
+if (h_sf_vs_eta_avg)    h_sf_vs_eta_avg->Write();
+if (h_effMC_vs_pt_avg)  h_effMC_vs_pt_avg->Write();
+if (h_effMC_vs_eta_avg) h_effMC_vs_eta_avg->Write();
+
     hLepCharge1->Write();
   //  hLepCharge2->Write();
 
