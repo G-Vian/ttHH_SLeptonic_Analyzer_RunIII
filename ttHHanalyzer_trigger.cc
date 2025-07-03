@@ -698,35 +698,71 @@ void ttHHanalyzer::initMuonTriggerSF() {
 float ttHHanalyzer::getMuonTrigSF(float eta, float pt) {
     if (muonTrigSFJson.empty()) return 1.0;
 
-    const auto& records = muonTrigSFJson["data"]["content"];
-    std::vector<float> eta_edges = muonTrigSFJson["data"]["edges"];
+    // Procura o objeto de correção específico
+    const json* correction = nullptr;
+    for (const auto& corr : muonTrigSFJson["corrections"]) {
+        if (corr.contains("name") && corr["name"] == "NUM_IsoMu24_DEN_CutBasedIdTight_and_PFIsoTight") {
+            correction = &corr;
+            break;
+        }
+    }
+    if (!correction) {
+        std::cerr << "Correção NUM_IsoMu24_DEN_CutBasedIdTight_and_PFIsoTight não encontrada no JSON!" << std::endl;
+        return 1.0;
+    }
+
+    // Pega os dados de binning em eta e pt
+    const auto& data_eta = (*correction)["data"];
+    if (!data_eta.contains("edges") || !data_eta.contains("content")) {
+        std::cerr << "Formato inválido na parte data do JSON." << std::endl;
+        return 1.0;
+    }
+
+    // Encontra o bin de eta
+    const std::vector<float> eta_edges = data_eta["edges"].get<std::vector<float>>();
     int eta_bin = -1;
     for (size_t i = 0; i < eta_edges.size() - 1; ++i) {
-        if (eta >= eta_edges[i] && eta < eta_edges[i + 1]) {
+        if (eta >= eta_edges[i] && eta < eta_edges[i+1]) {
             eta_bin = i;
             break;
         }
     }
-    if (eta_bin == -1) return 1.0;
+    if (eta_bin == -1) {
+        // Tenta pegar último bin se eta == última borda
+        if (eta == eta_edges.back()) eta_bin = int(eta_edges.size()) - 2;
+        else return 1.0;
+    }
 
-    const auto& pt_binning = records[eta_bin];
-    std::vector<float> pt_edges = pt_binning["edges"];
+    // Para este eta bin, pega o conteúdo que é o binning em pt
+    const auto& data_pt = data_eta["content"][eta_bin];
+    if (!data_pt.contains("edges") || !data_pt.contains("content")) {
+        std::cerr << "Formato inválido na parte pt do JSON." << std::endl;
+        return 1.0;
+    }
+
+    // Encontra o bin de pt
+    const std::vector<float> pt_edges = data_pt["edges"].get<std::vector<float>>();
     int pt_bin = -1;
     for (size_t i = 0; i < pt_edges.size() - 1; ++i) {
-        if (pt >= pt_edges[i] && pt < pt_edges[i + 1]) {
+        if (pt >= pt_edges[i] && pt < pt_edges[i+1]) {
             pt_bin = i;
             break;
         }
     }
-    if (pt_bin == -1) return 1.0;
+    if (pt_bin == -1) {
+        if (pt == pt_edges.back()) pt_bin = int(pt_edges.size()) - 2;
+        else return 1.0;
+    }
 
-    const auto& categories = pt_binning["content"][pt_bin]["content"];
+    // Agora pega o vetor de categorias ("scale_factors") neste bin de pt
+    const auto& categories = data_pt["content"][pt_bin]["content"];
     for (const auto& entry : categories) {
-        if (entry["key"] == "nominal") {
-            return entry["value"];
+        if (entry.contains("key") && entry["key"] == "nominal" && entry.contains("value")) {
+            return entry["value"].get<float>();
         }
     }
 
+    // Se não encontrou "nominal", retorna 1.0 como fallback
     return 1.0;
 }
 
