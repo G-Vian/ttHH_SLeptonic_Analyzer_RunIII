@@ -638,14 +638,26 @@ void ttHHanalyzer::initMuonTriggerSF() {
         return;
     }
 
+    // Lê o arquivo como texto para poder manipular o conteúdo
     std::ifstream input(sfFilePath.Data());
     if (!input.is_open()) {
         std::cerr << "Erro ao abrir arquivo de SF: " << sfFilePath << std::endl;
         return;
     }
 
+    std::string json_str((std::istreambuf_iterator<char>(input)), std::istreambuf_iterator<char>());
+    input.close();
+
+    // Substitui todas as ocorrências de "Infinity" por "1e10"
+    size_t pos = 0;
+    while ((pos = json_str.find("Infinity", pos)) != std::string::npos) {
+        json_str.replace(pos, 8, "1e10");
+        pos += 4; // Avança para não entrar em loop infinito
+    }
+
+    // Tenta fazer o parse do JSON corrigido
     try {
-        input >> muonTrigSFJson;
+        muonTrigSFJson = json::parse(json_str);
     } catch (const std::exception& e) {
         std::cerr << "Erro ao ler JSON: " << e.what() << std::endl;
         return;
