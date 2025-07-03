@@ -11,30 +11,11 @@
 using namespace std;
 static std::ofstream sf_log_file("log_electron_trigger_sf.txt");
 #include <cstdlib>/// this is for MUON trigger SF
-#include "include/json.hpp"/// this is for MUON trigger SF
+#include "json.hpp"// this is for MUON trigger SF
 using json = nlohmann::json;  /// this is for MUON trigger SF 
 json muonTrigSFJson; /// this is for MUON trigger SF
 
-void checkAndDownloadJsonHeader() {
-    std::string includeDir = "include";
-    std::string jsonPath = includeDir + "/json.hpp";
 
-    // Cria a pasta include se não existir
-    if (!std::filesystem::exists(includeDir)) {
-        std::filesystem::create_directory(includeDir);
-    }
-
-    // Verifica se json.hpp já existe
-    if (!std::filesystem::exists(jsonPath)) {
-        std::cout << "Baixando json.hpp de nlohmann/json..." << std::endl;
-        std::string cmd = "wget -q https://raw.githubusercontent.com/nlohmann/json/develop/single_include/nlohmann/json.hpp -O " + jsonPath;
-        int ret = std::system(cmd.c_str());
-        if (ret != 0) {
-            std::cerr << "Erro ao baixar json.hpp! Verifique sua conexão com a internet ou o comando 'wget'." << std::endl;
-            exit(1);
-        }
-    }
-}
 
 
 void ttHHanalyzer::performAnalysis(){
