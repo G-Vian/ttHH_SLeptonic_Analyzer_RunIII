@@ -13,8 +13,8 @@ static std::ofstream sf_log_file("log_electron_trigger_sf.txt");
 #include <cstdlib>/// this is for MUON trigger SF
 #include "json.hpp"// this is for MUON trigger SF
 using json = nlohmann::json;  /// this is for MUON trigger SF 
-json muonTrigSFJson; /// this is for MUON trigger SF
-
+json muonTrigSFJson; /// this is for MUON trigger SF 
+#include <filesystem>/// this is for MUON trigger SF 
 
 
 
@@ -999,7 +999,6 @@ void ttHHanalyzer::analyze(event *thisEvent) {
 
 
 void ttHHanalyzer::process(event* thisEvent, sysName sysType, bool up) {
-    checkAndDownloadJsonHeader(); // Muon Trigger SF 
     _weight = _initialWeight;
     createObjects(thisEvent, sysType, up);
     if (!selectObjects(thisEvent)) return;
