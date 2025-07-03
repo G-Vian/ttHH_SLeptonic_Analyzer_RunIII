@@ -20,6 +20,9 @@
 #include "include/tthHypothesisCombinatorics.h"
 #include "include/HypothesisCombinatorics.h"
 #include "fifo_map.hpp"
+#include "json.hpp" // muon trigger SF
+using json = nlohmann::json;  /// this is for MUON trigger SF 
+
 //using namespace ROOT::Math;
 using nlohmann::fifo_map;
 
@@ -1051,7 +1054,6 @@ TH1F* h_effMC_vs_eta_avg;
 ///////////////////////Muon trigger SF
     // JSON com os scale factors de muons
  nlohmann::json muonTrigSFJson;
-
     // Histogramas dos SFs de muons
 TH1F* h_sf_muon_vs_pt         = nullptr;
 TH1F* h_sf_muon_vs_eta        = nullptr;
