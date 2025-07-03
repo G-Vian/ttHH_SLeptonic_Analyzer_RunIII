@@ -624,7 +624,6 @@ void ttHHanalyzer::initMuonTriggerSF() {
     TString repoPath = "muonefficiencies";
     TString sfFilePath;
 
-
     // Define o caminho do JSON com base no ano
     if (_year == "2022") {
         sfFilePath = repoPath + "/Run3/2022/2022_Z/HLT/json/ScaleFactors_Muon_Z_HLT_2022_eta_pt_schemaV2.json";
@@ -686,6 +685,7 @@ void ttHHanalyzer::initMuonTriggerSF() {
     std::cout << "SF de muons carregado com sucesso!" << std::endl;
 }
 
+
 float ttHHanalyzer::getMuonTrigSF(float eta, float pt) {
     if (muonTrigSFJson.empty()) return 1.0;
 
@@ -719,7 +719,6 @@ float ttHHanalyzer::getMuonTrigSF(float eta, float pt) {
         }
     }
     if (eta_bin == -1) {
-        // Tenta pegar último bin se eta == última borda
         if (eta == eta_edges.back()) eta_bin = int(eta_edges.size()) - 2;
         else return 1.0;
     }
@@ -756,9 +755,7 @@ float ttHHanalyzer::getMuonTrigSF(float eta, float pt) {
     // Se não encontrou "nominal", retorna 1.0 como fallback
     return 1.0;
 }
-
-
-////////////////////////////////////////////////
+///////////////////
 
 
 void ttHHanalyzer::motherReco(const TLorentzVector & dPar1p4,const TLorentzVector & dPar2p4, const float mother1mass, float & _minChi2,float & _bbMassMin1){
