@@ -620,19 +620,6 @@ float ttHHanalyzer::getEleTrigSF(float eta, float pt, float& sf_unc) {
 
 //////////////////////Muon Trigger Scale Factors////////////////////////////////////////////////
 
-
-#include <unistd.h>  // para access()
-#include <sys/stat.h> // para mkdir()
-#include <sys/types.h>
-#include <fstream>
-#include <iostream>
-#include "TH1F.h"
-#include "TString.h"
-#include "json.hpp"  // Certifique-se de que json.hpp está no path correto
-
-using json = nlohmann::json;
-json muonTrigSFJson;
-
 void ttHHanalyzer::initMuonTriggerSF() {
     TString repoPath = "muonefficiencies";
     TString sfFilePath;
