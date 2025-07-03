@@ -10,6 +10,11 @@
 #include "TH2.h"//Trigger SF for electron
 using namespace std;
 static std::ofstream sf_log_file("log_electron_trigger_sf.txt");
+#include "json.hpp" /// this is for MUON trigger SF
+using json = nlohmann::json;  /// this is for MUON trigger SF 
+json muonTrigSFJson; /// this is for MUON trigger SF
+
+
 
 void ttHHanalyzer::performAnalysis(){
     loop(noSys, false);
@@ -611,9 +616,121 @@ float ttHHanalyzer::getEleTrigSF(float eta, float pt, float& sf_unc) {
 
 ////////////////////////////////////////////////
 
+//////////////////////Muon Trigger Scale Factors////////////////////////////////////////////////
 
 
+void ttHHanalyzer::initMuonTriggerSF() {
+    TString repoPath = "muonefficiencies";
+    TString sfFilePath;
 
+    // Clona o repositório se ainda não existir
+    if (!std::filesystem::exists(repoPath.Data())) {
+        std::cout << "Clonando repositório muonefficiencies..." << std::endl;
+        int ret = system("git clone https://gitlab.cern.ch/cms-muonPOG/muonefficiencies.git");
+        if (ret != 0) {
+            std::cerr << "Erro ao clonar o repositório!" << std::endl;
+            return;
+        }
+    }
+
+    // Define o caminho do JSON com base no ano
+    if (_year == "2022") {
+        sfFilePath = repoPath + "/Run3/2022/2022_Z/HLT/json/ScaleFactors_Muon_Z_HLT_2022_eta_pt_schemaV2.json";
+    } else if (_year == "2022EE") {
+        sfFilePath = repoPath + "/Run3/2022EE/2022EE_Z/HLT/json/ScaleFactors_Muon_Z_HLT_2022EE_eta_pt_schemaV2.json";
+    } else if (_year == "2023") {
+        sfFilePath = repoPath + "/Run3/2023/2023_Z/HLT/json/ScaleFactors_Muon_Z_HLT_2023_eta_pt_schemaV2.json";
+    } else if (_year == "2023B") {
+        sfFilePath = repoPath + "/Run3/2023BPix/2023BPix_Z/HLT/json/ScaleFactors_Muon_Z_HLT_2023BPix_eta_pt_schemaV2.json";
+    } else {
+        std::cerr << "Ano não suportado para SF de muons: " << _year << std::endl;
+        return;
+    }
+
+    std::ifstream input(sfFilePath.Data());
+    if (!input.is_open()) {
+        std::cerr << "Erro ao abrir arquivo de SF: " << sfFilePath << std::endl;
+        return;
+    }
+
+    try {
+        input >> muonTrigSFJson;
+    } catch (const std::exception& e) {
+        std::cerr << "Erro ao ler JSON: " << e.what() << std::endl;
+        return;
+    }
+
+    // Apaga histogramas anteriores, se existirem
+    if (h_sf_muon_vs_pt) { delete h_sf_muon_vs_pt; h_sf_muon_vs_pt = nullptr; }
+    if (h_sf_muon_vs_eta) { delete h_sf_muon_vs_eta; h_sf_muon_vs_eta = nullptr; }
+    if (h_sf_muon_vs_pt_sum) { delete h_sf_muon_vs_pt_sum; h_sf_muon_vs_pt_sum = nullptr; }
+    if (h_sf_muon_vs_pt_count) { delete h_sf_muon_vs_pt_count; h_sf_muon_vs_pt_count = nullptr; }
+    if (h_sf_muon_vs_eta_sum) { delete h_sf_muon_vs_eta_sum; h_sf_muon_vs_eta_sum = nullptr; }
+    if (h_sf_muon_vs_eta_count) { delete h_sf_muon_vs_eta_count; h_sf_muon_vs_eta_count = nullptr; }
+    if (h_sf_muon_vs_pt_avg) { delete h_sf_muon_vs_pt_avg; h_sf_muon_vs_pt_avg = nullptr; }
+    if (h_sf_muon_vs_eta_avg) { delete h_sf_muon_vs_eta_avg; h_sf_muon_vs_eta_avg = nullptr; }
+
+    // Cria histogramas
+    h_sf_muon_vs_pt        = new TH1F("h_sf_muon_vs_pt", "Muon SF vs pT;Muon pT [GeV];SF", 20, 0, 200);
+    h_sf_muon_vs_eta       = new TH1F("h_sf_muon_vs_eta", "Muon SF vs Eta;Muon #eta;SF", 20, -2.5, 2.5);
+    h_sf_muon_vs_pt_sum    = new TH1F("h_sf_muon_vs_pt_sum", "Sum SF vs pT", 20, 0, 200);
+    h_sf_muon_vs_pt_count  = new TH1F("h_sf_muon_vs_pt_count", "Count SF vs pT", 20, 0, 200);
+    h_sf_muon_vs_eta_sum   = new TH1F("h_sf_muon_vs_eta_sum", "Sum SF vs eta", 20, -2.5, 2.5);
+    h_sf_muon_vs_eta_count = new TH1F("h_sf_muon_vs_eta_count", "Count SF vs eta", 20, -2.5, 2.5);
+    h_sf_muon_vs_pt_avg    = new TH1F("h_sf_muon_vs_pt_avg", "Avg SF vs pT", 20, 0, 200);
+    h_sf_muon_vs_eta_avg   = new TH1F("h_sf_muon_vs_eta_avg", "Avg SF vs eta", 20, -2.5, 2.5);
+
+    // SetDirectory(0)
+    std::vector<TH1*> hists = {
+        h_sf_muon_vs_pt, h_sf_muon_vs_eta,
+        h_sf_muon_vs_pt_sum, h_sf_muon_vs_pt_count,
+        h_sf_muon_vs_eta_sum, h_sf_muon_vs_eta_count,
+        h_sf_muon_vs_pt_avg, h_sf_muon_vs_eta_avg
+    };
+    for (auto& h : hists) {
+        if (h) h->SetDirectory(0);
+    }
+
+    std::cout << "SF de muons carregado com sucesso!" << std::endl;
+}
+
+float ttHHanalyzer::getMuonTrigSF(float eta, float pt) {
+    if (muonTrigSFJson.empty()) return 1.0;
+
+    const auto& records = muonTrigSFJson["data"]["content"];
+    std::vector<float> eta_edges = muonTrigSFJson["data"]["edges"];
+    int eta_bin = -1;
+    for (size_t i = 0; i < eta_edges.size() - 1; ++i) {
+        if (eta >= eta_edges[i] && eta < eta_edges[i + 1]) {
+            eta_bin = i;
+            break;
+        }
+    }
+    if (eta_bin == -1) return 1.0;
+
+    const auto& pt_binning = records[eta_bin];
+    std::vector<float> pt_edges = pt_binning["edges"];
+    int pt_bin = -1;
+    for (size_t i = 0; i < pt_edges.size() - 1; ++i) {
+        if (pt >= pt_edges[i] && pt < pt_edges[i + 1]) {
+            pt_bin = i;
+            break;
+        }
+    }
+    if (pt_bin == -1) return 1.0;
+
+    const auto& categories = pt_binning["content"][pt_bin]["content"];
+    for (const auto& entry : categories) {
+        if (entry["key"] == "nominal") {
+            return entry["value"];
+        }
+    }
+
+    return 1.0;
+}
+
+
+////////////////////////////////////////////////
 
 
 void ttHHanalyzer::motherReco(const TLorentzVector & dPar1p4,const TLorentzVector & dPar2p4, const float mother1mass, float & _minChi2,float & _bbMassMin1){
@@ -645,13 +762,13 @@ void ttHHanalyzer::diMotherReco(const TLorentzVector & dPar1p4,const TLorentzVec
 ///////////////electron trigger scale factor --> apply SF only to events with one electron!
 void ttHHanalyzer::analyze(event *thisEvent) {
     std::vector<objectLep*>* selectedElectrons = thisEvent->getSelElectrons();
+    std::vector<objectLep*>* selectedMuons = thisEvent->getSelMuons();
 
     float triggerSF = 1.0;
     float totalSFUnc = 0.0;
     float weight_before_trigger = _weight;
 
     if (selectedElectrons->size() == 1) {
-        // selectedElectrons->at(0) já é um ponteiro para objectLep
         objectLep* ele = selectedElectrons->at(0);
         float sf_unc = 0.0;
         float sf = getEleTrigSF(ele->getp4()->Eta(), ele->getp4()->Pt(), sf_unc);
@@ -661,17 +778,35 @@ void ttHHanalyzer::analyze(event *thisEvent) {
         triggerSFUncertainty = sqrt(totalSFUnc);
 
         _weight *= triggerSF;
-////Below is a log to verify the SFs of each electron/////////////
-     /*   if (sf_log_file.is_open()) {
+
+        if (sf_log_file.is_open()) {
             sf_log_file << "Entry " << _entryInLoop
                         << " | Electron η = " << ele->getp4()->Eta()
                         << ", pT = " << ele->getp4()->Pt()
-                        << " | SF = " << std::fixed << std::setprecision(10) << triggerSF
+                        << " | Electron SF = " << std::fixed << std::setprecision(10) << triggerSF
                         << " | Weight before = " << weight_before_trigger
                         << " | Weight after = " << _weight << "\n";
-        }*/
+        }
+    } 
+    else if (selectedElectrons->empty() && selectedMuons->size() == 1) {
+        objectLep* mu = selectedMuons->at(0);
+        float sf = getMuonTrigSF(mu->getp4()->Eta(), mu->getp4()->Pt());
+
+        triggerSF = sf;
+        triggerSFUncertainty = 0.0; // se você quiser propagar incerteza depois, pode adaptar aqui
+
+        _weight *= triggerSF;
+
+        if (sf_log_file.is_open()) {
+            sf_log_file << "Entry " << _entryInLoop
+                        << " | Muon η = " << mu->getp4()->Eta()
+                        << ", pT = " << mu->getp4()->Pt()
+                        << " | Muon SF = " << std::fixed << std::setprecision(10) << triggerSF
+                        << " | Weight before = " << weight_before_trigger
+                        << " | Weight after = " << _weight << "\n";
+        }
     }
-    
+
 
 ///////////////////////////////////////
 
@@ -861,16 +996,25 @@ void ttHHanalyzer::analyze(event *thisEvent) {
 }
 
 
-void ttHHanalyzer::process(event* thisEvent, sysName sysType, bool up){
+void ttHHanalyzer::process(event* thisEvent, sysName sysType, bool up) {
     _weight = _initialWeight;
     createObjects(thisEvent, sysType, up);
-    if(!selectObjects(thisEvent))  return;
-// Inicializar SF de trigger
-    static bool sfInitialized = false;
-    if (!sfInitialized) {
+    if (!selectObjects(thisEvent)) return;
+
+    // Inicializar SF de trigger - elétrons
+    static bool eleSFInitialized = false;
+    if (!eleSFInitialized) {
         initTriggerSF();
-        sfInitialized = true;
+        eleSFInitialized = true;
     }
+
+    // Inicializar SF de trigger - múons
+    static bool muonSFInitialized = false;
+    if (!muonSFInitialized) {
+        initMuonTriggerSF();
+        muonSFInitialized = true;
+    }
+
     analyze(thisEvent);
     fillHistos(thisEvent);
     fillTree(thisEvent);
@@ -924,7 +1068,44 @@ if (h2_effMC) {
 }
 }
   
+////////////////////////////////////////////////////////////////
+///////////////Muon Trigger SF 
+// Obtém os muons selecionados
+auto muons = thisEvent->getSelMuons();
+if (!muons || muons->empty()) return;
 
+// Loop para preencher os histogramas de SF para muons
+for (objectLep* mu : *muons) {
+    float pt = mu->getp4()->Pt();
+    float eta = mu->getp4()->Eta();
+
+    // Obtém o SF do JSON (sem incertezas aqui)
+    float sf_val = getMuonTrigSF(eta, pt);
+
+    // Preenche histogramas 1D para SF vs pT e vs eta
+    if (h_sf_muon_vs_pt) {
+        h_sf_muon_vs_pt->Fill(pt, sf_val);
+    }
+    if (h_sf_muon_vs_eta) {
+        h_sf_muon_vs_eta->Fill(eta, sf_val);
+    }
+
+    // Atualiza os histogramas de soma e contagem para calcular média depois
+    if (h_sf_muon_vs_pt_sum) {
+        h_sf_muon_vs_pt_sum->Fill(pt, sf_val);
+    }
+    if (h_sf_muon_vs_pt_count) {
+        h_sf_muon_vs_pt_count->Fill(pt, 1);
+    }
+    if (h_sf_muon_vs_eta_sum) {
+        h_sf_muon_vs_eta_sum->Fill(eta, sf_val);
+    }
+    if (h_sf_muon_vs_eta_count) {
+        h_sf_muon_vs_eta_count->Fill(eta, 1);
+    }
+}
+
+	
 
 /////////////////////////////////////////////////////////////////
 
@@ -1166,6 +1347,24 @@ if (h_effMC_vs_eta_sum && h_effMC_vs_eta_count) {
     h_effMC_vs_eta_avg->SetDirectory(0);
 }
 
+// Cálculo das médias de SF dos muons com clonagem correta
+// Média SF vs pT
+if (h_sf_muon_vs_pt_sum && h_sf_muon_vs_pt_count) {
+    if (h_sf_muon_vs_pt_avg) delete h_sf_muon_vs_pt_avg;
+    h_sf_muon_vs_pt_avg = (TH1F*) h_sf_muon_vs_pt_sum->Clone("h_sf_muon_vs_pt_avg");
+    h_sf_muon_vs_pt_avg->Divide(h_sf_muon_vs_pt_sum, h_sf_muon_vs_pt_count, 1., 1., "B");
+    h_sf_muon_vs_pt_avg->SetDirectory(0);
+}
+
+// Média SF vs eta
+if (h_sf_muon_vs_eta_sum && h_sf_muon_vs_eta_count) {
+    if (h_sf_muon_vs_eta_avg) delete h_sf_muon_vs_eta_avg;
+    h_sf_muon_vs_eta_avg = (TH1F*) h_sf_muon_vs_eta_sum->Clone("h_sf_muon_vs_eta_avg");
+    h_sf_muon_vs_eta_avg->Divide(h_sf_muon_vs_eta_sum, h_sf_muon_vs_eta_count, 1., 1., "B");
+    h_sf_muon_vs_eta_avg->SetDirectory(0);
+}
+
+	
 	
     _of->file->cd();
     _histoDirs.at(0)->cd();
@@ -1300,6 +1499,15 @@ if (h_sf_vs_eta_avg)    h_sf_vs_eta_avg->Write();
 if (h_effMC_vs_pt_avg)  h_effMC_vs_pt_avg->Write();
 if (h_effMC_vs_eta_avg) h_effMC_vs_eta_avg->Write();
 
+
+//Histograms for muons
+// === SF Trigger Muon ===
+if (h_sf_muon_vs_pt)      h_sf_muon_vs_pt->Write();
+if (h_sf_muon_vs_eta)     h_sf_muon_vs_eta->Write();
+if (h_sf_muon_vs_pt_avg)  h_sf_muon_vs_pt_avg->Write();
+if (h_sf_muon_vs_eta_avg) h_sf_muon_vs_eta_avg->Write();
+
+	
     hLepCharge1->Write();
   //  hLepCharge2->Write();
 
