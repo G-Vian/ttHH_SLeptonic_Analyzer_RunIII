@@ -1052,8 +1052,6 @@ TH1F* h_effMC_vs_pt_avg;
 TH1F* h_effMC_vs_eta_avg;
 ///////////////////////
 ///////////////////////Muon trigger SF
-    // JSON com os scale factors de muons
- nlohmann::json muonTrigSFJson;
     // Histogramas dos SFs de muons
 TH1F* h_sf_muon_vs_pt         = nullptr;
 TH1F* h_sf_muon_vs_eta        = nullptr;
