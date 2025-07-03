@@ -624,15 +624,6 @@ void ttHHanalyzer::initMuonTriggerSF() {
     TString repoPath = "muonefficiencies";
     TString sfFilePath;
 
-    // Clona o repositório se ainda não existir
-    if (access(repoPath.Data(), F_OK) != 0) {
-        std::cout << "Clonando repositório muonefficiencies..." << std::endl;
-        int ret = system("git clone https://gitlab.cern.ch/cms-muonPOG/muonefficiencies.git");
-        if (ret != 0) {
-            std::cerr << "Erro ao clonar o repositório!" << std::endl;
-            return;
-        }
-    }
 
     // Define o caminho do JSON com base no ano
     if (_year == "2022") {
