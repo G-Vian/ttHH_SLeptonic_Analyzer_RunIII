@@ -621,12 +621,24 @@ float ttHHanalyzer::getEleTrigSF(float eta, float pt, float& sf_unc) {
 //////////////////////Muon Trigger Scale Factors////////////////////////////////////////////////
 
 
+#include <unistd.h>  // para access()
+#include <sys/stat.h> // para mkdir()
+#include <sys/types.h>
+#include <fstream>
+#include <iostream>
+#include "TH1F.h"
+#include "TString.h"
+#include "json.hpp"  // Certifique-se de que json.hpp está no path correto
+
+using json = nlohmann::json;
+json muonTrigSFJson;
+
 void ttHHanalyzer::initMuonTriggerSF() {
     TString repoPath = "muonefficiencies";
     TString sfFilePath;
 
     // Clona o repositório se ainda não existir
-    if (!std::filesystem::exists(repoPath.Data())) {
+    if (access(repoPath.Data(), F_OK) != 0) {
         std::cout << "Clonando repositório muonefficiencies..." << std::endl;
         int ret = system("git clone https://gitlab.cern.ch/cms-muonPOG/muonefficiencies.git");
         if (ret != 0) {
@@ -695,42 +707,6 @@ void ttHHanalyzer::initMuonTriggerSF() {
 
     std::cout << "SF de muons carregado com sucesso!" << std::endl;
 }
-
-float ttHHanalyzer::getMuonTrigSF(float eta, float pt) {
-    if (muonTrigSFJson.empty()) return 1.0;
-
-    const auto& records = muonTrigSFJson["data"]["content"];
-    std::vector<float> eta_edges = muonTrigSFJson["data"]["edges"];
-    int eta_bin = -1;
-    for (size_t i = 0; i < eta_edges.size() - 1; ++i) {
-        if (eta >= eta_edges[i] && eta < eta_edges[i + 1]) {
-            eta_bin = i;
-            break;
-        }
-    }
-    if (eta_bin == -1) return 1.0;
-
-    const auto& pt_binning = records[eta_bin];
-    std::vector<float> pt_edges = pt_binning["edges"];
-    int pt_bin = -1;
-    for (size_t i = 0; i < pt_edges.size() - 1; ++i) {
-        if (pt >= pt_edges[i] && pt < pt_edges[i + 1]) {
-            pt_bin = i;
-            break;
-        }
-    }
-    if (pt_bin == -1) return 1.0;
-
-    const auto& categories = pt_binning["content"][pt_bin]["content"];
-    for (const auto& entry : categories) {
-        if (entry["key"] == "nominal") {
-            return entry["value"];
-        }
-    }
-
-    return 1.0;
-}
-
 
 ////////////////////////////////////////////////
 
