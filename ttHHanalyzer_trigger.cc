@@ -1060,11 +1060,7 @@ void ttHHanalyzer::process(event* thisEvent, sysName sysType, bool up) {
 
 void ttHHanalyzer::fillHistos(event * thisEvent){
 
-    //    for(int i=0; i < cutflow.size(); i++){
-    //	std::cout << "cutflow size: " << cutflow[i] << std::endl; 
-	//	hCutFlow->SetBinContent(1, cutflow[0]);
-    //    }
-    
+      
     int i = 1; 
     for (const auto& x : cutflow){
 	hCutFlow->SetBinContent(i, x.second);
@@ -1072,75 +1068,59 @@ void ttHHanalyzer::fillHistos(event * thisEvent){
     }
 // /////////////////////////// Electron Trigger SF ///////////////////////////
 auto electrons = thisEvent->getSelElectrons();
-if (!electrons || electrons->empty()) return;
+if (electrons && !electrons->empty()) {
+    for (objectLep* ele : *electrons) {
+        float pt = ele->getp4()->Pt();
+        float eta = ele->getp4()->Eta();
 
-for (objectLep* ele : *electrons) {
-    float pt = ele->getp4()->Pt();
-    float eta = ele->getp4()->Eta();
+        // ===== SF =====
+        if (h2_eleTrigSF) {
+            int binX = h2_eleTrigSF->GetXaxis()->FindBin(eta);
+            int binY = h2_eleTrigSF->GetYaxis()->FindBin(pt);
+            float sf_val = h2_eleTrigSF->GetBinContent(binX, binY);
+            h_sf_vs_pt->Fill(pt, sf_val);
+            h_sf_vs_eta->Fill(eta, sf_val);
+            h_sf_vs_pt_sum->Fill(pt, sf_val);
+            h_sf_vs_pt_count->Fill(pt, 1);
+            h_sf_vs_eta_sum->Fill(eta, sf_val);
+            h_sf_vs_eta_count->Fill(eta, 1);
+        }
 
-// ===== SF =====
-if (h2_eleTrigSF) {
-    int binX = h2_eleTrigSF->GetXaxis()->FindBin(eta);
-    int binY = h2_eleTrigSF->GetYaxis()->FindBin(pt);
-    float sf_val = h2_eleTrigSF->GetBinContent(binX, binY);
-    h_sf_vs_pt->Fill(pt, sf_val);
-    h_sf_vs_eta->Fill(eta, sf_val);
-    h_sf_vs_pt_sum->Fill(pt, sf_val);
-    h_sf_vs_pt_count->Fill(pt, 1);
-    h_sf_vs_eta_sum->Fill(eta, sf_val);
-    h_sf_vs_eta_count->Fill(eta, 1);
-}
-
-// ===== Eficiência (MC) =====
-if (h2_effMC) {
-    int binX_eff = h2_effMC->GetXaxis()->FindBin(eta);
-    int binY_eff = h2_effMC->GetYaxis()->FindBin(pt);
-    float eff_val = h2_effMC->GetBinContent(binX_eff, binY_eff);
-    h_effMC_vs_pt->Fill(pt, eff_val);
-    h_effMC_vs_eta->Fill(eta, eff_val);
-    h_effMC_vs_pt_sum->Fill(pt, eff_val);
-    h_effMC_vs_pt_count->Fill(pt, 1);
-    h_effMC_vs_eta_sum->Fill(eta, eff_val);
-    h_effMC_vs_eta_count->Fill(eta, 1);
-}
+        // ===== Eficiência (MC) =====
+        if (h2_effMC) {
+            int binX_eff = h2_effMC->GetXaxis()->FindBin(eta);
+            int binY_eff = h2_effMC->GetYaxis()->FindBin(pt);
+            float eff_val = h2_effMC->GetBinContent(binX_eff, binY_eff);
+            h_effMC_vs_pt->Fill(pt, eff_val);
+            h_effMC_vs_eta->Fill(eta, eff_val);
+            h_effMC_vs_pt_sum->Fill(pt, eff_val);
+            h_effMC_vs_pt_count->Fill(pt, 1);
+            h_effMC_vs_eta_sum->Fill(eta, eff_val);
+            h_effMC_vs_eta_count->Fill(eta, 1);
+        }
+    }
 }
   
 ////////////////////////////////////////////////////////////////
 ///////////////Muon Trigger SF 
 // Obtém os muons selecionados
 auto muons = thisEvent->getSelMuons();
-if (!muons || muons->empty()) return;
+if (muons && !muons->empty()) {
+    for (objectLep* mu : *muons) {
+        float pt = mu->getp4()->Pt();
+        float eta = mu->getp4()->Eta();
 
-// Loop para preencher os histogramas de SF para muons
-for (objectLep* mu : *muons) {
-    float pt = mu->getp4()->Pt();
-    float eta = mu->getp4()->Eta();
+        float sf_val = getMuonTrigSF(eta, pt);
 
-    // Obtém o SF do JSON (sem incertezas aqui)
-    float sf_val = getMuonTrigSF(eta, pt);
-
-    // Preenche histogramas 1D para SF vs pT e vs eta
-    if (h_sf_muon_vs_pt) {
-        h_sf_muon_vs_pt->Fill(pt, sf_val);
-    }
-    if (h_sf_muon_vs_eta) {
-        h_sf_muon_vs_eta->Fill(eta, sf_val);
-    }
-
-    // Atualiza os histogramas de soma e contagem para calcular média depois
-    if (h_sf_muon_vs_pt_sum) {
-        h_sf_muon_vs_pt_sum->Fill(pt, sf_val);
-    }
-    if (h_sf_muon_vs_pt_count) {
-        h_sf_muon_vs_pt_count->Fill(pt, 1);
-    }
-    if (h_sf_muon_vs_eta_sum) {
-        h_sf_muon_vs_eta_sum->Fill(eta, sf_val);
-    }
-    if (h_sf_muon_vs_eta_count) {
-        h_sf_muon_vs_eta_count->Fill(eta, 1);
+        if (h_sf_muon_vs_pt)        h_sf_muon_vs_pt->Fill(pt, sf_val);
+        if (h_sf_muon_vs_eta)       h_sf_muon_vs_eta->Fill(eta, sf_val);
+        if (h_sf_muon_vs_pt_sum)    h_sf_muon_vs_pt_sum->Fill(pt, sf_val);
+        if (h_sf_muon_vs_pt_count)  h_sf_muon_vs_pt_count->Fill(pt, 1);
+        if (h_sf_muon_vs_eta_sum)   h_sf_muon_vs_eta_sum->Fill(eta, sf_val);
+        if (h_sf_muon_vs_eta_count) h_sf_muon_vs_eta_count->Fill(eta, 1);
     }
 }
+
 
 	
 
