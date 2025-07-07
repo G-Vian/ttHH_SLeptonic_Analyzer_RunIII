@@ -508,6 +508,8 @@ void ttHHanalyzer::initTriggerSF() {
         sfFilePath = "/eos/cms/store/group/phys_egamma/ScaleFactors/Data2023/ForPrompt23C/tnpEleHLT/HLT_SF_Ele30_MVAiso90ID/egammaEffi.txt_EGM2D.root";
     } else if (_year == "2023B") {
         sfFilePath = "/eos/cms/store/group/phys_egamma/ScaleFactors/Data2023/ForPrompt23D/tnpEleHLT/HLT_SF_Ele30_MVAiso90ID/egammaEffi.txt_EGM2D.root";
+    } else if (_year == "2024") {
+        sfFilePath = "/eos/cms/store/group/phys_egamma/ScaleFactors/Data2023/ForPrompt23D/tnpEleHLT/HLT_SF_Ele30_MVAiso90ID/egammaEffi.txt_EGM2D.root";
     } else {
         std::cerr << "Unknown year for electron trigger SF! Year: " << _year << std::endl;
         return;
@@ -632,6 +634,8 @@ void ttHHanalyzer::initMuonTriggerSF() {
     } else if (_year == "2023") {
         sfFilePath = repoPath + "/Run3/2023/2023_Z/HLT/json/ScaleFactors_Muon_Z_HLT_2023_eta_pt_schemaV2.json";
     } else if (_year == "2023B") {
+        sfFilePath = repoPath + "/Run3/2023BPix/2023BPix_Z/HLT/json/ScaleFactors_Muon_Z_HLT_2023BPix_eta_pt_schemaV2.json";
+    } else if (_year == "2024") {
         sfFilePath = repoPath + "/Run3/2023BPix/2023BPix_Z/HLT/json/ScaleFactors_Muon_Z_HLT_2023BPix_eta_pt_schemaV2.json";
     } else {
         std::cerr << "Ano não suportado para SF de muons: " << _year << std::endl;
