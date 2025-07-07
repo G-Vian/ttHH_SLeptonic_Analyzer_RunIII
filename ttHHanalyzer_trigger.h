@@ -157,8 +157,9 @@ class objectJet:public objectPhysics {
     float valbTagMedium;
     float valbTagLoose;
     */
-//PaticleNet
 
+//PaticleNet
+/*
     static constexpr float valbTagTight2022  =0.6734; //22
     static constexpr float valbTagMedium2022 = 0.245; 
     static constexpr float valbTagLoose2022  = 0.047; 
@@ -234,6 +235,87 @@ float getValbTagLoose(const std::string& year) {
     }
     return -1.0f;  // Valor padrão se o ano não for reconhecido
 }
+
+*/
+//UParTAK4 --> 22 and 23 WP not available yet! I'm using PNet Values 
+
+    static constexpr float valbTagTight2022  =0.6734; //22
+    static constexpr float valbTagMedium2022 = 0.245; 
+    static constexpr float valbTagLoose2022  = 0.047; 
+    static constexpr float valbTagTight2022E  = 0.6915; //22EE
+    static constexpr float valbTagMedium2022E = 0.2605; 
+    static constexpr float valbTagLoose2022E  = 0.0499; 
+    static constexpr float valbTagTight2023  = 0.6172; //23
+    static constexpr float valbTagMedium2023 =0.1917; 
+    static constexpr float valbTagLoose2023  = 	0.0358; 
+    static constexpr float valbTagTight2023B  = 0.6133; //23Bpix
+    static constexpr float valbTagMedium2023B = 0.1919; 
+    static constexpr float valbTagLoose2023B  = 0.0359; 
+    static constexpr float valbTagTight2024  = 0.4648; //24 (Correct values)
+    static constexpr float valbTagMedium2024 =  0.1272; 
+    static constexpr float valbTagLoose2024  = 0.0246; 
+    float valbTagTight;
+    float valbTagMedium;
+    float valbTagLoose;
+    
+float getValbTagTight(const std::string& year) {
+    if (year == "2017") {
+        return valbTagTight2017;
+    } else if (year == "2018") {
+        return valbTagTight2018;
+    } else if (year == "2022EE") {
+        return valbTagTight2022E;
+    } else if (year == "2022") {
+        return valbTagTight2022;
+    } else if (year == "2023B") {
+        return valbTagTight2023B;
+    } else if (year == "2023") {
+        return valbTagTight2023;
+    }  else if (year == "2024") {
+        return valbTagTight2024;
+    }
+    return -1.0f;  // Valor padrão se o ano não for reconhecido
+}
+
+float getValbTagMedium(const std::string& year) {
+    if (year == "2017") {
+        return valbTagMedium2017;
+    } else if (year == "2018") {
+        return valbTagMedium2018;
+    } else if (year == "2022EE") {
+        return valbTagMedium2022E;
+    } else if (year == "2022") {
+        return valbTagMedium2022;
+    } else if (year == "2023B") {
+        return valbTagMedium2023B;
+    } else if (year == "2023") {
+        return valbTagMedium2023;
+    } else if (year == "2024") {
+        return valbTagMedium2024;
+    }
+    return -1.0f;  // Valor padrão se o ano não for reconhecido
+}
+
+float getValbTagLoose(const std::string& year) {
+    if (year == "2017") {
+        return valbTagLoose2017;
+    } else if (year == "2018") {
+        return valbTagLoose2018;
+    } else if (year == "2022EE") {
+        return valbTagLoose2022E;
+    } else if (year == "2022") {
+        return valbTagLoose2022;
+    } else if (year == "2023B") {
+        return valbTagLoose2023B;
+    } else if (year == "2023") {
+        return valbTagLoose2023;
+    }else if (year == "2024") {
+        return valbTagLoose2024;
+    }
+    return -1.0f;  // Valor padrão se o ano não for reconhecido
+}
+
+
 };
 
 class objectMET:public objectPhysics {
