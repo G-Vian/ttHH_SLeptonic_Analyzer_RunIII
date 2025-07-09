@@ -1,0 +1,21 @@
+
+Update from July 8th, 2025
+
+I have upgraded Python and pip from versions Python 3.6.4 and pip 9.0.3 to Python 3.9 and pip 21.3.1 .
+
+Although it was not expected, the `submit_job_FH_Trigger.py` script still works correctly after this upgrade.
+
+However, one change in behavior is that I now need to use:
+
+/usr/bin/python3 -m pip install --user <package>
+
+
+instead of the simpler:
+
+pip install <package>
+
+
+The plain `pip install` no longer works in my environment.
+
+
+
