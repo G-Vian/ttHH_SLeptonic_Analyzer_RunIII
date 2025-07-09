@@ -419,23 +419,24 @@ event_log_file << "Sub-leading leptons: Muons: " << nSubMuons
 
 // === Jets ===
 int nJets = 0, nLightJets = 0, nLooseBJets = 0, nMediumBJets = 0;
+
 for (int i = 0; i < jet.size(); i++) {
     currentJet = new objectJet(jet[i].pt, jet[i].eta, jet[i].phi, jet[i].mass);
     currentJet->bTagCSV = jet[i].btagUParTAK4B;
 
     float pt = jet[i].pt;
     float eta = jet[i].eta;
-    float nhf = jet[i].neHEF; // neutral hadron fraction
-    float nemf = jet[i].neEmEF; // neutral EM fraction
-    float chf = jet[i].chHEF; // charged hadron fraction
-    float chemf = jet[i].chEmEF; // charged EM fraction
-    float muf = jet[i].muEF; // muon energy fraction
+    float nhf = jet[i].neHEF;       // neutral hadron energy fraction
+    float nemf = jet[i].neEmEF;     // neutral EM energy fraction
+    float chf = jet[i].chHEF;       // charged hadron energy fraction
+    float chemf = jet[i].chEmEF;    // charged EM energy fraction
+    float muf = jet[i].muEF;        // muon energy fraction
     int chm = jet[i].chMultiplicity;
     int numConst = jet[i].nConstituents;
     int numNeutral = jet[i].neMultiplicity;
 
-    bool passJetID = false;
     float absEta = fabs(eta);
+    bool passJetID = false;
 
     if (absEta <= 2.6) {
         passJetID = (
@@ -465,25 +466,31 @@ for (int i = 0; i < jet.size(); i++) {
         );
     }
 
-    // [ESPACO RESERVADO] --- Pileup Jet ID (não implementado para Run 3 ainda)
-    bool passPUJetID = true; // por enquanto, sempre true
+    // [RESERVED] --- Pileup Jet ID (not implemented yet for Run 3)
+    bool passPUJetID = true;
     /*
     if (pt < 50) {
-        if (jet[i].puIdDisc < 0.2) passPUJetID = false;
+        float puid = jet[i].puIdDisc;
+        if (puid < 0.2) passPUJetID = false; // Placeholder WP
     }
     */
 
-    // Aplica JES/JER e MET
+    // Apply JES/JER and MET shifts
     if (_sys && sysType == kJES) {
         if (jet[i].btagUParTAK4B > currentJet->getValbTagMedium(_year))
             currentJet->scale(getSysJES(_hbJES, currentJet->getp4()->Pt()), up);
         else
             currentJet->scale(getSysJES(_hJES, currentJet->getp4()->Pt()), up);
-        if (up) thisEvent->getMET()->subtractp4(currentJet->getOffset());
-        else thisEvent->getMET()->addp4(currentJet->getOffset());
+
+        if (up)
+            thisEvent->getMET()->subtractp4(currentJet->getOffset());
+        else
+            thisEvent->getMET()->addp4(currentJet->getOffset());
     } else if (_sys && sysType == kJER) {
-        if (up) currentJet->scale(getSysJER(0.03));
-        else currentJet->scale(getSysJER(0.001));
+        if (up)
+            currentJet->scale(getSysJER(0.03));
+        else
+            currentJet->scale(getSysJER(0.001));
         thisEvent->getMET()->subtractp4(currentJet->getOffset());
     }
 
