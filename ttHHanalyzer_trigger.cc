@@ -419,50 +419,102 @@ event_log_file << "Sub-leading leptons: Muons: " << nSubMuons
 
 // === Jets ===
 int nJets = 0, nLightJets = 0, nLooseBJets = 0, nMediumBJets = 0;
-for(int i=0; i < jet.size(); i++){
+for (int i = 0; i < jet.size(); i++) {
     currentJet = new objectJet(jet[i].pt, jet[i].eta, jet[i].phi, jet[i].mass);
     currentJet->bTagCSV = jet[i].btagUParTAK4B;
-    currentJet->jetID = jet[i].jetId;
-    currentJet->jetPUid = jet[i].puId;
+
+    float pt = jet[i].pt;
+    float eta = jet[i].eta;
+    float nhf = jet[i].neHEF; // neutral hadron fraction
+    float nemf = jet[i].neEmEF; // neutral EM fraction
+    float chf = jet[i].chHEF; // charged hadron fraction
+    float chemf = jet[i].chEmEF; // charged EM fraction
+    float muf = jet[i].muEF; // muon energy fraction
+    int chm = jet[i].chMultiplicity;
+    int numConst = jet[i].nConstituents;
+    int numNeutral = jet[i].neMultiplicity;
+
+    bool passJetID = false;
+    float absEta = fabs(eta);
+
+    if (absEta <= 2.6) {
+        passJetID = (
+            chemf < 0.8 &&
+            chm > 0 &&
+            chf > 0.01 &&
+            numConst > 1 &&
+            nemf < 0.9 &&
+            muf < 0.8 &&
+            nhf < 0.99
+        );
+    } else if (absEta > 2.6 && absEta <= 2.7) {
+        passJetID = (
+            chemf < 0.8 &&
+            nemf < 0.99 &&
+            muf < 0.8 &&
+            nhf < 0.9
+        );
+    } else if (absEta > 2.7 && absEta <= 3.0) {
+        passJetID = (
+            nhf < 0.99
+        );
+    } else if (absEta > 3.0) {
+        passJetID = (
+            nemf < 0.4 &&
+            numNeutral >= 2
+        );
+    }
+
+    // [ESPACO RESERVADO] --- Pileup Jet ID (não implementado para Run 3 ainda)
+    bool passPUJetID = true; // por enquanto, sempre true
+    /*
+    if (pt < 50) {
+        if (jet[i].puIdDisc < 0.2) passPUJetID = false;
+    }
+    */
 
     // Aplica JES/JER e MET
-    if(_sys && sysType == kJES){
-        if(jet[i].btagUParTAK4B > currentJet->getValbTagMedium(_year))
+    if (_sys && sysType == kJES) {
+        if (jet[i].btagUParTAK4B > currentJet->getValbTagMedium(_year))
             currentJet->scale(getSysJES(_hbJES, currentJet->getp4()->Pt()), up);
         else
             currentJet->scale(getSysJES(_hJES, currentJet->getp4()->Pt()), up);
-        if(up) thisEvent->getMET()->subtractp4(currentJet->getOffset());
+        if (up) thisEvent->getMET()->subtractp4(currentJet->getOffset());
         else thisEvent->getMET()->addp4(currentJet->getOffset());
-    } else if(_sys && sysType == kJER){
-        if(up) currentJet->scale(getSysJER(0.03));
+    } else if (_sys && sysType == kJER) {
+        if (up) currentJet->scale(getSysJER(0.03));
         else currentJet->scale(getSysJER(0.001));
         thisEvent->getMET()->subtractp4(currentJet->getOffset());
     }
 
-    if(currentJet->getp4()->Pt() > cut["jetPt"] && fabs(currentJet->getp4()->Eta()) < abs(cut["jetEta"]) && currentJet->jetID >= cut["jetID"]){
-        if((currentJet->getp4()->Pt() < cut["maxPt_PU"] && currentJet->jetPUid >= cut["jetPUid"]) || (currentJet->getp4()->Pt() >= cut["maxPt_PU"])){
-            thisEvent->selectJet(currentJet);
-            nJets++;
+    if (currentJet->getp4()->Pt() > cut["jetPt"] &&
+        fabs(currentJet->getp4()->Eta()) < abs(cut["jetEta"]) &&
+        passJetID &&
+        passPUJetID) {
 
-            if(jet[i].btagUParTAK4B <= currentJet->getValbTagLoose(_year)){
-                thisEvent->selectLightJet(currentJet);
-                nLightJets++;
-            } else if(jet[i].btagUParTAK4B > currentJet->getValbTagMedium(_year)){
-                thisEvent->selectbJet(currentJet);
-                nMediumBJets++;
-            }
+        thisEvent->selectJet(currentJet);
+        nJets++;
 
-            if(jet[i].btagUParTAK4B > currentJet->getValbTagLoose(_year)){
-                thisEvent->selectLoosebJet(currentJet);
-                nLooseBJets++;
-            }
+        if (jet[i].btagUParTAK4B <= currentJet->getValbTagLoose(_year)) {
+            thisEvent->selectLightJet(currentJet);
+            nLightJets++;
+        } else if (jet[i].btagUParTAK4B > currentJet->getValbTagMedium(_year)) {
+            thisEvent->selectbJet(currentJet);
+            nMediumBJets++;
+        }
+
+        if (jet[i].btagUParTAK4B > currentJet->getValbTagLoose(_year)) {
+            thisEvent->selectLoosebJet(currentJet);
+            nLooseBJets++;
         }
     }
 }
+
 event_log_file << "Jets selecionados: " << nJets 
                << " | Light: " << nLightJets 
                << " | Loose b-jets: " << nLooseBJets 
                << " | Medium b-jets: " << nMediumBJets << std::endl;
+
 
 // === GenPart (b-quarks com Higgs ou Top mãe) ===
 int nGenBJets = 0, nFromHiggs = 0, nFromTop = 0;
