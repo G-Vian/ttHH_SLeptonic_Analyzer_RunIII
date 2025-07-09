@@ -110,15 +110,18 @@ for (int entry = 0; entry < nevents; entry++) {
     hCutFlow->Write();
     hCutFlow_w->Write();
 } // fim do método loop
+
+
+
+void ttHHanalyzer::createObjects(event * thisEvent, sysName sysType, bool up){
+
 ////Log of selection///
 static std::ofstream event_log_file("event_selection_log.txt"); 
 static int event_counter = 0;
 event_counter++;
 event_log_file << "==== Evento " << event_counter << " ====" << std::endl;
 /////
-
-
-void ttHHanalyzer::createObjects(event * thisEvent, sysName sysType, bool up){
+	
 cutflow["noCut"]+=1;
 hCutFlow->Fill("noCut",1);
 hCutFlow_w->Fill("noCut",_weight);
