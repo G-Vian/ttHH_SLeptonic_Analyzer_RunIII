@@ -110,6 +110,13 @@ for (int entry = 0; entry < nevents; entry++) {
     hCutFlow->Write();
     hCutFlow_w->Write();
 } // fim do método loop
+////Log of selection///
+static std::ofstream event_log_file("event_selection_log.txt"); 
+static int event_counter = 0;
+event_counter++;
+event_log_file << "==== Evento " << event_counter << " ====" << std::endl;
+/////
+
 
 void ttHHanalyzer::createObjects(event * thisEvent, sysName sysType, bool up){
 cutflow["noCut"]+=1;
@@ -340,7 +347,8 @@ for(int i=0; i < boostedJet.size(); i++){
         }
     }
 }
-std::cout << "[LOG] Boosted jets selecionados: " << nBoostedJets << ", Hadronic Higgs: " << nHadronicHiggs << std::endl;
+event_log_file << "Boosted jets selecionados: " << nBoostedJets 
+               << ", Hadronic Higgs: " << nHadronicHiggs << std::endl;
 
 // === Lepton Leading Selection ===
 bool thereIsALeadLepton = false;
@@ -368,9 +376,9 @@ if(!thereIsALeadLepton){
         }
     }
 }
-std::cout << "[LOG] Lepton líder encontrado? " << (thereIsALeadLepton ? "SIM" : "NÃO") 
-          << " | Muons líderes: " << nLeadingMuons 
-          << " | Elétrons líderes: " << nLeadingElectrons << std::endl;
+event_log_file << "Lepton líder encontrado? " << (thereIsALeadLepton ? "SIM" : "NÃO") 
+               << " | Muons líderes: " << nLeadingMuons 
+               << " | Elétrons líderes: " << nLeadingElectrons << std::endl;
 
 // === Subleading Leptons ===
 int nSubMuons = 0;
@@ -403,7 +411,8 @@ if(thereIsALeadLepton){
         }
     }
 }
-std::cout << "[LOG] Sub-leading leptons: Muons: " << nSubMuons << ", Electrons: " << nSubEles << std::endl;
+event_log_file << "Sub-leading leptons: Muons: " << nSubMuons 
+               << ", Electrons: " << nSubEles << std::endl;
 
 // === Jets ===
 int nJets = 0, nLightJets = 0, nLooseBJets = 0, nMediumBJets = 0;
@@ -413,12 +422,12 @@ for(int i=0; i < jet.size(); i++){
     currentJet->jetID = jet[i].jetId;
     currentJet->jetPUid = jet[i].puId;
 
+    // Aplica JES/JER e MET
     if(_sys && sysType == kJES){
-        if(jet[i].btagUParTAK4B > currentJet->getValbTagMedium(_year)){  	       
+        if(jet[i].btagUParTAK4B > currentJet->getValbTagMedium(_year))
             currentJet->scale(getSysJES(_hbJES, currentJet->getp4()->Pt()), up);
-        } else {
+        else
             currentJet->scale(getSysJES(_hJES, currentJet->getp4()->Pt()), up);
-        }
         if(up) thisEvent->getMET()->subtractp4(currentJet->getOffset());
         else thisEvent->getMET()->addp4(currentJet->getOffset());
     } else if(_sys && sysType == kJER){
@@ -432,52 +441,25 @@ for(int i=0; i < jet.size(); i++){
             thisEvent->selectJet(currentJet);
             nJets++;
 
-            if(jet[i].btagUParTAK4B <= currentJet->getValbTagLoose(_year)){  	     
+            if(jet[i].btagUParTAK4B <= currentJet->getValbTagLoose(_year)){
                 thisEvent->selectLightJet(currentJet);
                 nLightJets++;
-            } else if(jet[i].btagUParTAK4B > currentJet->getValbTagMedium(_year)){ 
+            } else if(jet[i].btagUParTAK4B > currentJet->getValbTagMedium(_year)){
                 thisEvent->selectbJet(currentJet);
                 nMediumBJets++;
-
-                if(!_sys || sysType == noSys) _hbJetEff->Fill(currentJet->getp4()->Pt());
-                if(_sys && sysType==kbTag){
-                    e = _hbJetEff->GetBinContent(_hbJetEff->FindBin(currentJet->getp4()->Pt()));
-                    if(e < cEps) e = cEps;
-                    pe *= e; 
-                    if(up)
-                        pes *= (1.+_hSysbTagM->GetBinContent(_hSysbTagM->FindBin(currentJet->getp4()->Pt())))*e;
-                    else 
-                        pes *= (1.-_hSysbTagM->GetBinContent(_hSysbTagM->FindBin(currentJet->getp4()->Pt())))*e;
-                }
-            } else {
-                if(_sys && sysType==kbTag){
-                    me = _hbJetEff->GetBinContent(_hbJetEff->FindBin(currentJet->getp4()->Pt()));
-                    if(me < cEps) me = cEps;
-                    else if(me == 1) me = 1 - cEps;
-                    pme *= 1 - me;
-                    if(up)
-                        pmes *= (1. - me * (1.+_hSysbTagM->GetBinContent(_hSysbTagM->FindBin(currentJet->getp4()->Pt()))));
-                    else
-                        pmes *= (1. - me * (1.-_hSysbTagM->GetBinContent(_hSysbTagM->FindBin(currentJet->getp4()->Pt()))));
-                }
             }
 
-            if(!_sys || sysType == noSys) _hJetEff->Fill(currentJet->getp4()->Pt());
-
-            if(jet[i].btagUParTAK4B > currentJet->getValbTagLoose(_year)){       	   
+            if(jet[i].btagUParTAK4B > currentJet->getValbTagLoose(_year)){
                 thisEvent->selectLoosebJet(currentJet);
                 nLooseBJets++;
             }
-        }	    
+        }
     }
 }
-if(_sys && sysType==kbTag) thisEvent->setbTagSys( pes*pmes/(pe*pme));
-else thisEvent->setbTagSys(1.);
-
-std::cout << "[LOG] Jets selecionados: " << nJets 
-          << " | Light: " << nLightJets 
-          << " | Loose b-jets: " << nLooseBJets 
-          << " | Medium b-jets: " << nMediumBJets << std::endl;
+event_log_file << "Jets selecionados: " << nJets 
+               << " | Light: " << nLightJets 
+               << " | Loose b-jets: " << nLooseBJets 
+               << " | Medium b-jets: " << nMediumBJets << std::endl;
 
 // === GenPart (b-quarks com Higgs ou Top mãe) ===
 int nGenBJets = 0, nFromHiggs = 0, nFromTop = 0;
@@ -505,9 +487,11 @@ for (int i = 0; i < genPart.size(); i++){
         if (currentGenPart->hasTopMother) nFromTop++;
     }
 }
-std::cout << "[LOG] Gen b-quarks selecionados: " << nGenBJets 
-          << " | Com mãe Higgs: " << nFromHiggs 
-          << " | Com mãe Top: " << nFromTop << std::endl;
+event_log_file << "Gen b-quarks selecionados: " << nGenBJets 
+               << " | Com mãe Higgs: " << nFromHiggs 
+               << " | Com mãe Top: " << nFromTop << std::endl;
+event_log_file << std::endl;
+
 }
 ///////////////////
 
