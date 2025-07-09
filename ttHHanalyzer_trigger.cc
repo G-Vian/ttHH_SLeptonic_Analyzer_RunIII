@@ -508,7 +508,7 @@ for (int i = 0; i < genPart.size(); i++){
 std::cout << "[LOG] Gen b-quarks selecionados: " << nGenBJets 
           << " | Com mãe Higgs: " << nFromHiggs 
           << " | Com mãe Top: " << nFromTop << std::endl;
-
+}
 ///////////////////
 
 bool ttHHanalyzer::selectObjects(event *thisEvent){
