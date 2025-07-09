@@ -155,7 +155,7 @@ hCutFlow_w->Fill("noCut",_weight);
     float e = 1., es  = 1., pe = 1., pes = 1.;
     float me = 1., mes = 1., pme = 1.,  pmes = 1.;   
     thisEvent->setMET(MET);
-
+/*
 
     for(int i=0; i < boostedJet.size(); i++){
        	currentBoostedJet = new objectBoostedJet(boostedJet[i].pt, boostedJet[i].eta, boostedJet[i].phi, boostedJet[i].mass);
@@ -320,7 +320,196 @@ hCutFlow_w->Fill("noCut",_weight);
     }
 }
 
+*/
 
+///Test with logs ////
+// === Boosted Jets ===
+int nBoostedJets = 0;
+int nHadronicHiggs = 0;
+for(int i=0; i < boostedJet.size(); i++){
+    currentBoostedJet = new objectBoostedJet(boostedJet[i].pt, boostedJet[i].eta, boostedJet[i].phi, boostedJet[i].mass);
+    currentBoostedJet->softDropMass = boostedJet[i].msoftdrop;
+    if(currentBoostedJet->getp4()->Pt() > cut["boostedJetPt"] && fabs(currentBoostedJet->getp4()->Eta()) < fabs(cut["boostedJetEta"])){
+        thisEvent->selectBoostedJet(currentBoostedJet);	
+        nBoostedJets++;
+        if(currentBoostedJet->getp4()->Pt() > cut["hadHiggsPt"]){
+            if(boostedJet[i].particleNet_HbbvsQCD > cut["bTagDisc"]){
+                thisEvent->selectHadronicHiggs(currentBoostedJet);
+                nHadronicHiggs++;
+            }
+        }
+    }
+}
+std::cout << "[LOG] Boosted jets selecionados: " << nBoostedJets << ", Hadronic Higgs: " << nHadronicHiggs << std::endl;
+
+// === Lepton Leading Selection ===
+bool thereIsALeadLepton = false;
+int nLeadingMuons = 0;
+int nLeadingElectrons = 0;
+for(int i = 0; i < muonT.size(); i++){
+    if(fabs(muonT[i].eta) < cut["muonEta"] && muonT[i].tightId && muonT[i].pfRelIso04_all < cut["muonIso"]){
+        if(muonT[i].pt > cut["leadMuonPt"]){
+            thereIsALeadLepton = true;
+            nLeadingMuons++;
+            break;
+        }
+    }
+}
+if(!thereIsALeadLepton){
+    for(int i = 0; i < ele.size(); i++){
+        if(fabs(ele[i].deltaEtaSC + ele[i].eta) < 1.4442 || fabs(ele[i].deltaEtaSC + ele[i].eta) > 1.5660){
+            if(fabs(ele[i].eta) < cut["eleEta"] && ele[i].mvaIso_WP90){
+                if(ele[i].pt > cut["leadElePt"]){
+                    thereIsALeadLepton = true;
+                    nLeadingElectrons++;
+                    break;
+                }
+            }
+        }
+    }
+}
+std::cout << "[LOG] Lepton líder encontrado? " << (thereIsALeadLepton ? "SIM" : "NÃO") 
+          << " | Muons líderes: " << nLeadingMuons 
+          << " | Elétrons líderes: " << nLeadingElectrons << std::endl;
+
+// === Subleading Leptons ===
+int nSubMuons = 0;
+int nSubEles = 0;
+if(thereIsALeadLepton){
+    for(int i = 0; i < muonT.size(); i++){
+        if(fabs(muonT[i].eta) < cut["muonEta"] && muonT[i].tightId && muonT[i].pfRelIso04_all < cut["muonIso"]){
+            if(muonT[i].pt > cut["subLeadMuonPt"]){
+                currentMuon = new objectLep(muonT[i].pt, muonT[i].eta, muonT[i].phi, 0.);
+                currentMuon->charge = muonT[i].charge;
+                currentMuon->miniPFRelIso = muonT[i].miniPFRelIso_all;
+                currentMuon->pfRelIso04 = muonT[i].pfRelIso04_all;
+                thisEvent->selectMuon(currentMuon);
+                nSubMuons++;
+            }
+        }
+    }
+    for(int i = 0; i < ele.size(); i++){
+        if(fabs(ele[i].deltaEtaSC + ele[i].eta) < 1.4442 || fabs(ele[i].deltaEtaSC + ele[i].eta) > 1.5660){
+            if(fabs(ele[i].eta) < cut["eleEta"] && ele[i].mvaIso_WP90){
+                if(ele[i].pt > cut["subLeadElePt"]){
+                    currentEle = new objectLep(ele[i].pt, ele[i].eta, ele[i].phi, 0.);
+                    currentEle->charge = ele[i].charge;
+                    currentEle->miniPFRelIso = ele[i].miniPFRelIso_all;
+                    currentEle->pfRelIso03 = ele[i].pfRelIso03_all;
+                    thisEvent->selectEle(currentEle);
+                    nSubEles++;
+                }
+            }
+        }
+    }
+}
+std::cout << "[LOG] Sub-leading leptons: Muons: " << nSubMuons << ", Electrons: " << nSubEles << std::endl;
+
+// === Jets ===
+int nJets = 0, nLightJets = 0, nLooseBJets = 0, nMediumBJets = 0;
+for(int i=0; i < jet.size(); i++){
+    currentJet = new objectJet(jet[i].pt, jet[i].eta, jet[i].phi, jet[i].mass);
+    currentJet->bTagCSV = jet[i].btagUParTAK4B;
+    currentJet->jetID = jet[i].jetId;
+    currentJet->jetPUid = jet[i].puId;
+
+    if(_sys && sysType == kJES){
+        if(jet[i].btagUParTAK4B > currentJet->getValbTagMedium(_year)){  	       
+            currentJet->scale(getSysJES(_hbJES, currentJet->getp4()->Pt()), up);
+        } else {
+            currentJet->scale(getSysJES(_hJES, currentJet->getp4()->Pt()), up);
+        }
+        if(up) thisEvent->getMET()->subtractp4(currentJet->getOffset());
+        else thisEvent->getMET()->addp4(currentJet->getOffset());
+    } else if(_sys && sysType == kJER){
+        if(up) currentJet->scale(getSysJER(0.03));
+        else currentJet->scale(getSysJER(0.001));
+        thisEvent->getMET()->subtractp4(currentJet->getOffset());
+    }
+
+    if(currentJet->getp4()->Pt() > cut["jetPt"] && fabs(currentJet->getp4()->Eta()) < abs(cut["jetEta"]) && currentJet->jetID >= cut["jetID"]){
+        if((currentJet->getp4()->Pt() < cut["maxPt_PU"] && currentJet->jetPUid >= cut["jetPUid"]) || (currentJet->getp4()->Pt() >= cut["maxPt_PU"])){
+            thisEvent->selectJet(currentJet);
+            nJets++;
+
+            if(jet[i].btagUParTAK4B <= currentJet->getValbTagLoose(_year)){  	     
+                thisEvent->selectLightJet(currentJet);
+                nLightJets++;
+            } else if(jet[i].btagUParTAK4B > currentJet->getValbTagMedium(_year)){ 
+                thisEvent->selectbJet(currentJet);
+                nMediumBJets++;
+
+                if(!_sys || sysType == noSys) _hbJetEff->Fill(currentJet->getp4()->Pt());
+                if(_sys && sysType==kbTag){
+                    e = _hbJetEff->GetBinContent(_hbJetEff->FindBin(currentJet->getp4()->Pt()));
+                    if(e < cEps) e = cEps;
+                    pe *= e; 
+                    if(up)
+                        pes *= (1.+_hSysbTagM->GetBinContent(_hSysbTagM->FindBin(currentJet->getp4()->Pt())))*e;
+                    else 
+                        pes *= (1.-_hSysbTagM->GetBinContent(_hSysbTagM->FindBin(currentJet->getp4()->Pt())))*e;
+                }
+            } else {
+                if(_sys && sysType==kbTag){
+                    me = _hbJetEff->GetBinContent(_hbJetEff->FindBin(currentJet->getp4()->Pt()));
+                    if(me < cEps) me = cEps;
+                    else if(me == 1) me = 1 - cEps;
+                    pme *= 1 - me;
+                    if(up)
+                        pmes *= (1. - me * (1.+_hSysbTagM->GetBinContent(_hSysbTagM->FindBin(currentJet->getp4()->Pt()))));
+                    else
+                        pmes *= (1. - me * (1.-_hSysbTagM->GetBinContent(_hSysbTagM->FindBin(currentJet->getp4()->Pt()))));
+                }
+            }
+
+            if(!_sys || sysType == noSys) _hJetEff->Fill(currentJet->getp4()->Pt());
+
+            if(jet[i].btagUParTAK4B > currentJet->getValbTagLoose(_year)){       	   
+                thisEvent->selectLoosebJet(currentJet);
+                nLooseBJets++;
+            }
+        }	    
+    }
+}
+if(_sys && sysType==kbTag) thisEvent->setbTagSys( pes*pmes/(pe*pme));
+else thisEvent->setbTagSys(1.);
+
+std::cout << "[LOG] Jets selecionados: " << nJets 
+          << " | Light: " << nLightJets 
+          << " | Loose b-jets: " << nLooseBJets 
+          << " | Medium b-jets: " << nMediumBJets << std::endl;
+
+// === GenPart (b-quarks com Higgs ou Top mãe) ===
+int nGenBJets = 0, nFromHiggs = 0, nFromTop = 0;
+for (int i = 0; i < genPart.size(); i++){
+    if ((abs(genPart[i].pdgId) == 5) && (genPart[i].statusFlags & 256)){
+        currentGenPart = new objectGenPart(genPart[i].pt, genPart[i].eta, genPart[i].phi, genPart[i].mass);
+        currentGenPart->hasHiggsMother = false;
+        currentGenPart->hasTopMother = false;
+        int motherInd = genPart[i].genPartIdxMother;
+        if (motherInd >= 0 && motherInd < genPart.size()) {
+            while (motherInd > 1) {
+                int pdg = abs(genPart[motherInd].pdgId);
+                if ((pdg == 25 || pdg == 6) && (genPart[motherInd].statusFlags & 256)) {
+                    if (pdg == 25) currentGenPart->hasHiggsMother = true;
+                    if (pdg == 6) currentGenPart->hasTopMother = true;
+                    break;
+                }
+                motherInd = genPart[motherInd].genPartIdxMother;
+                if (motherInd < 0 || motherInd >= genPart.size()) break;
+            }
+        }
+        thisEvent->selectGenPart(currentGenPart);
+        nGenBJets++;
+        if (currentGenPart->hasHiggsMother) nFromHiggs++;
+        if (currentGenPart->hasTopMother) nFromTop++;
+    }
+}
+std::cout << "[LOG] Gen b-quarks selecionados: " << nGenBJets 
+          << " | Com mãe Higgs: " << nFromHiggs 
+          << " | Com mãe Top: " << nFromTop << std::endl;
+
+///////////////////
 
 bool ttHHanalyzer::selectObjects(event *thisEvent){
     //    std::cout << "bjet CSV: " << thisEvent->getSelbJets()->at(0)->bTagCSV << std::endl;
