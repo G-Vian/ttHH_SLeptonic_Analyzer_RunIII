@@ -277,6 +277,8 @@ struct eventBuffer
   std::vector<int>	Jet_nConstituents;
   std::vector<int>	Jet_nElectrons;
   std::vector<int>	Jet_nMuons;
+  std::vector<int>      Jet_chMultiplicity;
+  std::vector<int>      Jet_neMultiplicity;
   std::vector<float>	Jet_neEmEF;
   std::vector<float>	Jet_neHEF;
   std::vector<int>	Jet_partonFlavour;
@@ -1656,6 +1658,8 @@ struct eventBuffer
     int	nConstituents;
     int	nElectrons;
     int	nMuons;
+    int	chMultiplicity;
+    int	neMultiplicity;
     float	neEmEF;
     float	neHEF;
     int	partonFlavour;
@@ -1722,6 +1726,8 @@ struct eventBuffer
       sprintf(r, "  %-32s: %f\n", "nConstituents", ( double)nConstituents); os << r;
       sprintf(r, "  %-32s: %f\n", "nElectrons", ( double)nElectrons); os << r;
       sprintf(r, "  %-32s: %f\n", "nMuons", ( double)nMuons); os << r;
+      sprintf(r, "  %-32s: %f\n", "neMultiplicity", ( double)neMultiplicity); os << r;
+      sprintf(r, "  %-32s: %f\n", "chMultiplicity", ( double)chMultiplicity); os << r;
       sprintf(r, "  %-32s: %f\n", "neEmEF", ( double)neEmEF); os << r;
       sprintf(r, "  %-32s: %f\n", "neHEF", ( double)neHEF); os << r;
       sprintf(r, "  %-32s: %f\n", "partonFlavour", ( double)partonFlavour); os << r;
@@ -2534,6 +2540,8 @@ struct eventBuffer
         Jet[i].nConstituents	= Jet_nConstituents[i];
         Jet[i].nElectrons	= Jet_nElectrons[i];
         Jet[i].nMuons	= Jet_nMuons[i];
+	Jet[i].chMultiplicity	= Jet_chMultiplicity[i];
+        Jet[i].neMultiplicity	= Jet_neMultiplicity[i];
         Jet[i].neEmEF	= Jet_neEmEF[i];
         Jet[i].neHEF	= Jet_neHEF[i];
         Jet[i].partonFlavour	= Jet_partonFlavour[i];
@@ -3270,6 +3278,8 @@ struct eventBuffer
             Jet_nConstituents[i]	= Jet_nConstituents[j];
             Jet_nElectrons[i]	= Jet_nElectrons[j];
             Jet_nMuons[i]	= Jet_nMuons[j];
+            Jet_neMultiplicity[i]	= Jet_neMultiplicity[j];
+            Jet_chMultiplicity[i]	= Jet_chMultiplicity[j];
             Jet_neEmEF[i]	= Jet_neEmEF[j];
             Jet_neHEF[i]	= Jet_neHEF[j];
             Jet_partonFlavour[i]	= Jet_partonFlavour[j];
@@ -4346,6 +4356,8 @@ struct eventBuffer
     choose["Jet_nConstituents"]	= DEFAULT;
     choose["Jet_nElectrons"]	= DEFAULT;
     choose["Jet_nMuons"]	= DEFAULT;
+    choose["Jet_chMultiplicity"]	= DEFAULT;
+    choose["Jet_neMultiplicity"]	= DEFAULT;
     choose["Jet_neEmEF"]	= DEFAULT;
     choose["Jet_neHEF"]	= DEFAULT;
     choose["Jet_partonFlavour"]	= DEFAULT;
@@ -6462,6 +6474,10 @@ struct eventBuffer
       input->select("Events/Jet_nElectrons", 	Jet_nElectrons);
     if ( choose["Jet_nMuons"] )
       input->select("Events/Jet_nMuons", 	Jet_nMuons);
+    if ( choose["Jet_neMultiplicity"] )
+      input->select("Events/Jet_neMultiplicity", 	Jet_neMultiplicity);
+    if ( choose["Jet_chMultiplicity"] )
+      input->select("Events/Jet_chMultiplicity", 	Jet_chMultiplicity);
     if ( choose["Jet_neEmEF"] )
       input->select("Events/Jet_neEmEF", 	Jet_neEmEF);
     if ( choose["Jet_neHEF"] )
@@ -8272,6 +8288,8 @@ struct eventBuffer
     output->add("Events/Jet_nConstituents[nJet]", 	Jet_nConstituents);
     output->add("Events/Jet_nElectrons[nJet]", 	Jet_nElectrons);
     output->add("Events/Jet_nMuons[nJet]", 	Jet_nMuons);
+    output->add("Events/Jet_chMultiplicity[nJet]", 	Jet_chMultiplicity);
+    output->add("Events/Jet_neMultiplicity[nJet]", 	Jet_neMultiplicity);
     output->add("Events/Jet_neEmEF[nJet]", 	Jet_neEmEF);
     output->add("Events/Jet_neHEF[nJet]", 	Jet_neHEF);
     output->add("Events/Jet_partonFlavour[nJet]", 	Jet_partonFlavour);
@@ -8931,6 +8949,8 @@ struct eventBuffer
     Jet_nConstituents	= std::vector<int>(45,0);
     Jet_nElectrons	= std::vector<int>(45,0);
     Jet_nMuons	= std::vector<int>(45,0);
+    Jet_chMultiplicity	= std::vector<int>(45,0);
+    Jet_neMultiplicity	= std::vector<int>(45,0);
     Jet_neEmEF	= std::vector<float>(45,0);
     Jet_neHEF	= std::vector<float>(45,0);
     Jet_partonFlavour	= std::vector<int>(45,0);
