@@ -865,7 +865,7 @@ void ttHHanalyzer::initMuonTriggerSF() {
     if (_year == "2022") {
         sfFilePath = repoPath + "/Run3/2022/2022_Z/HLT/json/ScaleFactors_Muon_Z_HLT_2022_eta_pt_schemaV2.json";
     } else if (_year == "2022EE") {
-        sfFilePath = repoPath + "/Run3/2022EE/2022EE_Z/HLT/json/ScaleFactors_Muon_Z_HLT_2022EE_eta_pt_schemaV2.json";
+        sfFilePath = repoPath + "/Run3/2022_EE/2022_Z/HLT/json/ScaleFactors_Muon_Z_HLT_2022_EE_eta_pt_schemaV2.json";
     } else if (_year == "2023") {
         sfFilePath = repoPath + "/Run3/2023/2023_Z/HLT/json/ScaleFactors_Muon_Z_HLT_2023_eta_pt_schemaV2.json";
     } else if (_year == "2023B") {
