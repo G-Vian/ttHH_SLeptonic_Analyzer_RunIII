@@ -869,9 +869,9 @@ void ttHHanalyzer::initMuonTriggerSF() {
     } else if (_year == "2023") {
         sfFilePath = repoPath + "/Run3/2023/2023_Z/HLT/json/ScaleFactors_Muon_Z_HLT_2023_eta_pt_schemaV2.json";
     } else if (_year == "2023B") {
-        sfFilePath = repoPath + "/Run3/2023BPix/2023BPix_Z/HLT/json/ScaleFactors_Muon_Z_HLT_2023BPix_eta_pt_schemaV2.json";
+        sfFilePath = repoPath + "/Run3/2023BPix/2023BPix_Z/HLT/json/ScaleFactors_Muon_Z_HLT_2023_BPix_eta_pt_schemaV2.json";
     } else if (_year == "2024") {
-        sfFilePath = repoPath + "/Run3/2023BPix/2023BPix_Z/HLT/json/ScaleFactors_Muon_Z_HLT_2023BPix_eta_pt_schemaV2.json";
+        sfFilePath = repoPath + "/Run3/2023BPix/2023BPix_Z/HLT/json/ScaleFactors_Muon_Z_HLT_2023_BPix_eta_pt_schemaV2.json";
     } else {
         std::cerr << "Ano não suportado para SF de muons: " << _year << std::endl;
         return;
