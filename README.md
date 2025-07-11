@@ -73,7 +73,7 @@ voms-proxy-info -file ./proxy.cert --timeleft
 ```bash
 # ./<exe name> <path of the file list> <output name> <weight> <year> <MC or Data> <run name - just name it you want>
 ./ttHHanalyzer_trigger filelistTest/file_ttHH_0.txt ttHH.root 0.0000092849 2023 MC ttHH_MC_Test
-./ttHHanalyzer_trigger filelistTest/ttHH_V15.txt ttHH_V15.root 0.000153 2023  MC ttHH_MC_V15
+./ttHHanalyzer_trigger filelistTest/ttHH_V15.txt ttHH_V15.root 0.000153 2024  MC ttHH_MC_V15
 (small sample of 2024 with 50400 events)
 ```
 
