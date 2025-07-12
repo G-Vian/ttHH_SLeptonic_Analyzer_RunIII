@@ -875,7 +875,7 @@ void ttHHanalyzer::initMuonTriggerSF() {
     } else {
         std::cerr << "Ano não suportado para SF de muons: " << _year << std::endl;
         return;
-
+    }
     // Lê o arquivo como texto para poder manipular o conteúdo
     std::ifstream input(sfFilePath.Data());
     if (!input.is_open()) {
