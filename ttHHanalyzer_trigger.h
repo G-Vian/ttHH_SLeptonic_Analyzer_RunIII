@@ -1133,6 +1133,7 @@ class ttHHanalyzer {
     TH1F* h_effMC_vs_pt_avg;
     TH1F* h_effMC_vs_eta_avg;
 ///////////////////////
+    void openRootFileWithLogging(); // to log the root file opening
 ///////////////////////Muon trigger SF
     // Histogramas dos SFs de muons
     TH1F* h_sf_muon_vs_pt         = nullptr;
