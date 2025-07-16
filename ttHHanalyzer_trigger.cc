@@ -1,5 +1,5 @@
 #include "tnm.h"
-#include <cmath> 
+#include <cmath>
 #include <algorithm>
 #include <vector>
 #include <map>
@@ -7,43 +7,69 @@
 #include "ttHHanalyzer_trigger.h"
 #include <iostream>
 #include <fstream>
-#include "TH2.h"//Trigger SF for electron
+#include <cstdlib>
+#include <ctime>
+#include "TH2.h" // Trigger SF for electron
+#include "json.hpp" // For MUON trigger SF
+#include <TFile.h>
+#include <TSystem.h>
+
+using json = nlohmann::json;
 using namespace std;
+
 static std::ofstream sf_log_file("log_electron_trigger_sf.txt");
-#include <cstdlib>/// this is for MUON trigger SF
-#include "json.hpp"// this is for MUON trigger SF
-using json = nlohmann::json;  /// this is for MUON trigger SF 
-json muonTrigSFJson; /// this is for MUON trigger SF 
+json muonTrigSFJson;  // MUON trigger SF
 
+void ttHHanalyzer::openRootFileWithLogging(const std::string& filename) {
+    std::ofstream log("logrootfiles.txt", std::ios_base::app); // modo append
+    auto now = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
 
+    log << "====================================================================================\n";
+    log << "[INFO] Attempting to open file:\n" << filename << "\n";
+    log << "[INFO] Time: " << std::ctime(&now);  // já inclui '\n'
 
+    std::cout << "[INFO] Trying to open: " << filename << std::endl;
 
-void ttHHanalyzer::performAnalysis(){
-    loop(noSys, false);
-    /*    getbJetEffMap();
-    initHistograms(kJES, false);
-    initTree(kJES, false);
-    loop(kJES, false);
-    initHistograms(kJES, true);
-    initTree(kJES, true);
-    loop(kJES, true);
+    TFile* file = TFile::Open(filename.c_str());
 
-    initHistograms(kJER, false);
-    initTree(kJER, false);
-    loop(kJER, false);
-    initHistograms(kJER, true);
-    initTree(kJER, true);
-    loop(kJER, true);
+    if (!file) {
+        log << "[ERROR] TFile::Open returned nullptr.\n";
+        log << "[ERROR] This might be due to:\n"
+            << "        - Network issues\n"
+            << "        - Incorrect file path or URL\n"
+            << "        - XRootD server downtime\n"
+            << "        - File not available in any SE\n";
+        log << "[ROOT ERROR] " << gSystem->GetErrorStr() << "\n";
+        std::cerr << "[ERROR] Failed to open file (nullptr): " << filename << std::endl;
+        log << "====================================================================================\n\n";
+        return;
+    }
 
-    initHistograms(kbTag, false);
-    initTree(kbTag, false);
-    loop(kbTag, false);
-    initHistograms(kbTag, true);
-    initTree(kbTag, true);
-    loop(kbTag, true); */
+    if (file->IsZombie()) {
+        log << "[ERROR] File opened but is marked as Zombie.\n";
+        log << "[ERROR] Likely causes:\n"
+            << "        - File does not exist\n"
+            << "        - Permission denied\n"
+            << "        - Corrupted ROOT file header\n";
+        log << "[ROOT ERROR] " << gSystem->GetErrorStr() << "\n";
+        std::cerr << "[ERROR] File is Zombie: " << filename << std::endl;
+        delete file;
+        log << "====================================================================================\n\n";
+        return;
+    }
 
+    if (file->TestBit(TFile::kRecovered)) {
+        log << "[WARNING] File was recovered. It may be incomplete or corrupted.\n";
+    }
+
+    log << "[SUCCESS] File opened successfully!\n";
+    log << "====================================================================================\n\n";
+    file->Close();
+    delete file;
 }
 
+
+// === LOOP DE EVENTOS ===
 void ttHHanalyzer::loop(sysName sysType, bool up) {
     int nevents = _ev->size();
 
@@ -80,21 +106,23 @@ void ttHHanalyzer::loop(sysName sysType, bool up) {
 
     std::string analysisInfo = _year + ", " + _DataOrMC + ", " + _sampleName;
 
-for (int entry = 0; entry < nevents; entry++) {
-    _entryInLoop = entry;  // <<< Atualiza o número do evento atual
+    for (int entry = 0; entry < nevents; entry++) {
+        _entryInLoop = entry;  // Atualiza o número do evento atual
 
-    event *currentEvent = new event;
-    _ev->read(entry);
+        event *currentEvent = new event;
+        _ev->read(entry);
 
-    process(currentEvent, sysType, up);
+        process(currentEvent, sysType, up);
 
-    if (entry % 1000 == 0) {
-        std::cout << "[INFO] Processed events of " << analysisInfo << ": " << entry << std::endl;
-        currentEvent->summarize();
+        if (entry % 1000 == 0) {
+            std::cout << "[INFO] Processed events of " << analysisInfo << ": " << entry << std::endl;
+            currentEvent->summarize();
+        }
+
+        events.push_back(currentEvent);
     }
-
-    events.push_back(currentEvent);
 }
+
 
     // Agora as chamadas a writeHistos e writeTree ficam dentro da função
     writeHistos();
@@ -1272,7 +1300,15 @@ void ttHHanalyzer::analyze(event *thisEvent) {
 
 
 void ttHHanalyzer::process(event* thisEvent, sysName sysType, bool up) {
+    // Loga a tentativa de abrir o arquivo apenas uma vez
+    static bool fileChecked = false;
+    if (!fileChecked && !_currentInputFile.empty()) {
+        openRootFileWithLogging(_currentInputFile);
+        fileChecked = true;
+    }
+
     _weight = _initialWeight;
+
     createObjects(thisEvent, sysType, up);
     if (!selectObjects(thisEvent)) return;
 
