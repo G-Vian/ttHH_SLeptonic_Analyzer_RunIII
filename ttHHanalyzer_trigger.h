@@ -1037,7 +1037,7 @@ class ttHHanalyzer {
        	std::string dummy = "";
 	HypoComb = new tthHypothesisCombinatorics(std::string("data/blrbdtweights_80X_V4/weights_64.xml"), std::string(""));
     }
-    bool loadInputFileFromList(const std::string& fileListPath);// to log the root file opening
+        bool loadInputFileFromList(const std::string& fileListPath, std::vector<std::string>& inputFiles);// to log the root file opening
     void createObjects(event*,sysName,bool);
     bool selectObjects(event*);
     void analyze(event*);
