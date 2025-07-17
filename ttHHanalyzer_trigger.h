@@ -1042,7 +1042,7 @@ class ttHHanalyzer {
     bool selectObjects(event*);
     void analyze(event*);
     void process(event*, sysName, bool);
-    void loop(const std::string& fileListPath, sysName sysType, bool up);
+    void loop(sysName sysType, bool up);
     void performAnalysis();
     void fillHistos(event * thisevent);
     void writeHistos();
