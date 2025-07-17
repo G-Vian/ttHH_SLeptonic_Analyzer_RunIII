@@ -15,24 +15,120 @@
 #include <TSystem.h>
 #include <chrono>
 
+
 using json = nlohmann::json;
 using namespace std;
 
 static std::ofstream sf_log_file("log_electron_trigger_sf.txt");
 json muonTrigSFJson;  // MUON trigger SF
 
-#include <fstream>
-#include <iostream>
-#include <vector>
-#include <chrono>
-#include <ctime>
-#include <TFile.h>
-#include <TSystem.h>
+void ttHHanalyzer::performAnalysis(){
+    loop(noSys, false);
+    /*    getbJetEffMap();
+    initHistograms(kJES, false);
+    initTree(kJES, false);
+    loop(kJES, false);
+    initHistograms(kJES, true);
+    initTree(kJES, true);
+    loop(kJES, true);
+
+    initHistograms(kJER, false);
+    initTree(kJER, false);
+    loop(kJER, false);
+    initHistograms(kJER, true);
+    initTree(kJER, true);
+    loop(kJER, true);
+
+    initHistograms(kbTag, false);
+    initTree(kbTag, false);
+    loop(kbTag, false);
+    initHistograms(kbTag, true);
+    initTree(kbTag, true);
+    loop(kbTag, true); */
+}
+
+bool ttHHanalyzer::loadInputFileFromList(const std::string& fileListPath, std::vector<std::string>& inputFiles) {
+    std::ifstream infile(fileListPath);
+    if (!infile.is_open()) {
+        std::cerr << "[FATAL] Não foi possível abrir o arquivo: " << fileListPath << std::endl;
+        return false;
+    }
+
+    // Cria nome de log com base no nome do arquivo de entrada
+    std::string logName = "logfile_" + fileListPath.substr(fileListPath.find_last_of("/\\") + 1);
+    std::ofstream log(logName);
+    auto now = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+
+    log << "====================================================================================\n";
+    log << "[INFO] Iniciando leitura da lista de arquivos: " << fileListPath << "\n";
+    log << "[INFO] Timestamp: " << std::ctime(&now);
+    log << "[INFO] Hostname: " << gSystem->HostName() << "\n\n";
+
+    std::string line;
+    int count = 0;
+    int validCount = 0;
+
+    while (std::getline(infile, line)) {
+        if (line.empty()) continue;
+
+        log << "[INFO] Arquivo ROOT " << count << ": " << line << "\n";
+        std::cout << "[INFO] Tentando abrir: " << line << std::endl;
+
+        TFile* file = TFile::Open(line.c_str());
+        if (!file) {
+            log << "[ERROR] TFile::Open retornou nullptr.\n";
+            log << "[ROOT ERROR] " << gSystem->GetErrorStr() << "\n\n";
+            count++;
+            continue;
+        }
+
+        if (file->IsZombie()) {
+            log << "[ERROR] Arquivo é um Zombie (inacessível ou corrompido).\n";
+            log << "[ROOT ERROR] " << gSystem->GetErrorStr() << "\n\n";
+            delete file;
+            count++;
+            continue;
+        }
+
+        if (file->TestBit(TFile::kRecovered)) {
+            log << "[WARNING] Arquivo foi recuperado. Pode estar corrompido ou incompleto.\n";
+        }
+
+        log << "[SUCCESS] Arquivo aberto com sucesso!\n\n";
+        inputFiles.push_back(line);
+        file->Close();
+        delete file;
+        validCount++;
+        count++;
+    }
+
+    log << "====================================================================================\n";
+    log << "[INFO] Total de arquivos listados: " << count << "\n";
+    log << "[INFO] Total de arquivos válidos e utilizáveis: " << validCount << "\n";
+    log << "====================================================================================\n\n";
+    log.close();
+
+    if (validCount == 0) {
+        std::cerr << "[FATAL] Nenhum arquivo ROOT pôde ser aberto. Abortando execução.\n";
+        return false;
+    }
+
+    return true;
+}
 
 
 
 // === LOOP DE EVENTOS ===
-void ttHHanalyzer::loop(sysName sysType, bool up) {
+void ttHHanalyzer::loop(const std::string& fileListPath, sysName sysType, bool up) {
+    // Vetor para armazenar os arquivos válidos lidos do txt
+    std::vector<std::string> inputFiles;
+
+    // Tenta carregar a lista e validar os arquivos ROOT
+    if (!loadInputFileFromList(fileListPath, inputFiles)) {
+        std::cerr << "[FATAL] Falha ao carregar arquivos ROOT da lista. Abortando.\n";
+        std::exit(EXIT_FAILURE);
+    }
+
 
     int nevents = _ev->size();
 
