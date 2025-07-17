@@ -101,7 +101,17 @@ bool loadInputFileFromList(const std::string& fileListPath, std::vector<std::str
 
 
 // === LOOP DE EVENTOS ===
-void ttHHanalyzer::loop(sysName sysType, bool up) {
+void ttHHanalyzer::loop(const std::string& fileListPath, sysName sysType, bool up) {
+    // Vetor para armazenar os arquivos válidos lidos do txt
+    std::vector<std::string> inputFiles;
+
+    // Tenta carregar a lista e validar os arquivos ROOT
+    if (!loadInputFileFromList(fileListPath, inputFiles)) {
+        std::cerr << "[FATAL] Falha ao carregar arquivos ROOT da lista. Abortando.\n";
+        std::exit(EXIT_FAILURE);
+    }
+
+
     int nevents = _ev->size();
 
     std::cout << std::endl;
@@ -140,7 +150,7 @@ void ttHHanalyzer::loop(sysName sysType, bool up) {
     for (int entry = 0; entry < nevents; entry++) {
         _entryInLoop = entry;  // Atualiza o número do evento atual
 
-        event *currentEvent = new event;
+        event* currentEvent = new event;
         _ev->read(entry);
 
         process(currentEvent, sysType, up);
@@ -152,17 +162,15 @@ void ttHHanalyzer::loop(sysName sysType, bool up) {
 
         events.push_back(currentEvent);
     }
-}
 
-
-    // Agora as chamadas a writeHistos e writeTree ficam dentro da função
+    // Escrita final
     writeHistos();
     writeTree();
 
-    for (const auto &x : cutflow) {
+    for (const auto& x : cutflow) {
         std::cout << x.first  // string (key)
-                  << ": " 
-                  << x.second // string's value 
+                  << ": "
+                  << x.second // string's value
                   << std::endl;
     }
 
