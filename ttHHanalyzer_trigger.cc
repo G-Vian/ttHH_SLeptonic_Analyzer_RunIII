@@ -1,5 +1,5 @@
 #include "tnm.h"
-#include <cmath>
+#include <cmath> 
 #include <algorithm>
 #include <vector>
 #include <map>
@@ -7,24 +7,20 @@
 #include "ttHHanalyzer_trigger.h"
 #include <iostream>
 #include <fstream>
-#include <cstdlib>
-#include <ctime>
-#include "TH2.h" // Trigger SF for electron
-#include "json.hpp" // For MUON trigger SF
-#include <TFile.h>
-#include <TSystem.h>
-#include <chrono>
-
-
-using json = nlohmann::json;
+#include "TH2.h"//Trigger SF for electron
 using namespace std;
-
 static std::ofstream sf_log_file("log_electron_trigger_sf.txt");
-json muonTrigSFJson;  // MUON trigger SF
+#include <cstdlib>/// this is for MUON trigger SF
+#include "json.hpp"// this is for MUON trigger SF
+using json = nlohmann::json;  /// this is for MUON trigger SF 
+json muonTrigSFJson; /// this is for MUON trigger SF 
+
+
+
 
 void ttHHanalyzer::performAnalysis(){
-    loop(_cl, noSys, false);
-/*    getbJetEffMap();
+    loop(noSys, false);
+    /*    getbJetEffMap();
     initHistograms(kJES, false);
     initTree(kJES, false);
     loop(kJES, false);
@@ -45,91 +41,10 @@ void ttHHanalyzer::performAnalysis(){
     initHistograms(kbTag, true);
     initTree(kbTag, true);
     loop(kbTag, true); */
+
 }
 
-bool ttHHanalyzer::loadInputFileFromList(const std::string& fileListPath, std::vector<std::string>& inputFiles) {
-    std::ifstream infile(fileListPath);
-    if (!infile.is_open()) {
-        std::cerr << "[FATAL] Não foi possível abrir o arquivo: " << fileListPath << std::endl;
-        return false;
-    }
-
-    // Cria nome de log com base no nome do arquivo de entrada
-    std::string logName = "logfile_" + fileListPath.substr(fileListPath.find_last_of("/\\") + 1);
-    std::ofstream log(logName);
-    auto now = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
-
-    log << "====================================================================================\n";
-    log << "[INFO] Iniciando leitura da lista de arquivos: " << fileListPath << "\n";
-    log << "[INFO] Timestamp: " << std::ctime(&now);
-    log << "[INFO] Hostname: " << gSystem->HostName() << "\n\n";
-
-    std::string line;
-    int count = 0;
-    int validCount = 0;
-
-    while (std::getline(infile, line)) {
-        if (line.empty()) continue;
-
-        log << "[INFO] Arquivo ROOT " << count << ": " << line << "\n";
-        std::cout << "[INFO] Tentando abrir: " << line << std::endl;
-
-        TFile* file = TFile::Open(line.c_str());
-        if (!file) {
-            log << "[ERROR] TFile::Open retornou nullptr.\n";
-            log << "[ROOT ERROR] " << gSystem->GetErrorStr() << "\n\n";
-            count++;
-            continue;
-        }
-
-        if (file->IsZombie()) {
-            log << "[ERROR] Arquivo é um Zombie (inacessível ou corrompido).\n";
-            log << "[ROOT ERROR] " << gSystem->GetErrorStr() << "\n\n";
-            delete file;
-            count++;
-            continue;
-        }
-
-        if (file->TestBit(TFile::kRecovered)) {
-            log << "[WARNING] Arquivo foi recuperado. Pode estar corrompido ou incompleto.\n";
-        }
-
-        log << "[SUCCESS] Arquivo aberto com sucesso!\n\n";
-        inputFiles.push_back(line);
-        file->Close();
-        delete file;
-        validCount++;
-        count++;
-    }
-
-    log << "====================================================================================\n";
-    log << "[INFO] Total de arquivos listados: " << count << "\n";
-    log << "[INFO] Total de arquivos válidos e utilizáveis: " << validCount << "\n";
-    log << "====================================================================================\n\n";
-    log.close();
-
-    if (validCount == 0) {
-        std::cerr << "[FATAL] Nenhum arquivo ROOT pôde ser aberto. Abortando execução.\n";
-        return false;
-    }
-
-    return true;
-}
-
-
-
-// === LOOP DE EVENTOS ===
-void ttHHanalyzer::loop(const std::string& fileListPath, sysName sysType, bool up) {
-    // Vetor para armazenar os arquivos válidos lidos do txt
-    std::vector<std::string> inputFiles;
-
-    // Tenta carregar a lista e validar os arquivos ROOT
-    if (!loadInputFileFromList(fileListPath, inputFiles)) {
-        std::cerr << "[FATAL] Falha ao carregar arquivos ROOT da lista. Abortando.\n";
-        std::exit(EXIT_FAILURE);
-    }
-
-
+void ttHHanalyzer::loop(sysName sysType, bool up) {
     int nevents = _ev->size();
 
     std::cout << std::endl;
@@ -165,30 +80,30 @@ void ttHHanalyzer::loop(const std::string& fileListPath, sysName sysType, bool u
 
     std::string analysisInfo = _year + ", " + _DataOrMC + ", " + _sampleName;
 
-    for (int entry = 0; entry < nevents; entry++) {
-        _entryInLoop = entry;  // Atualiza o número do evento atual
+for (int entry = 0; entry < nevents; entry++) {
+    _entryInLoop = entry;  // <<< Atualiza o número do evento atual
 
-        event *currentEvent = new event;
-        _ev->read(entry);
+    event *currentEvent = new event;
+    _ev->read(entry);
 
-        process(currentEvent, sysType, up);
+    process(currentEvent, sysType, up);
 
-        if (entry % 1000 == 0) {
-            std::cout << "[INFO] Processed events of " << analysisInfo << ": " << entry << std::endl;
-            currentEvent->summarize();
-        }
-
-        events.push_back(currentEvent);
+    if (entry % 1000 == 0) {
+        std::cout << "[INFO] Processed events of " << analysisInfo << ": " << entry << std::endl;
+        currentEvent->summarize();
     }
 
-    // Escrita final
+    events.push_back(currentEvent);
+}
+
+    // Agora as chamadas a writeHistos e writeTree ficam dentro da função
     writeHistos();
     writeTree();
 
     for (const auto &x : cutflow) {
         std::cout << x.first  // string (key)
-                  << ": "
-                  << x.second // string's value
+                  << ": " 
+                  << x.second // string's value 
                   << std::endl;
     }
 
@@ -1119,9 +1034,8 @@ void ttHHanalyzer::diMotherReco(const TLorentzVector & dPar1p4,const TLorentzVec
     }
 } 
 
+///////////////electron trigger scale factor --> apply SF only to events with one electron!
 void ttHHanalyzer::analyze(event *thisEvent) {
-///////////////muon and electron trigger scale factor --> apply SF only to events with one electron (muon)!
-	
     std::vector<objectLep*>* selectedElectrons = thisEvent->getSelElectrons();
     std::vector<objectLep*>* selectedMuons = thisEvent->getSelMuons();
 
@@ -1358,9 +1272,7 @@ void ttHHanalyzer::analyze(event *thisEvent) {
 
 
 void ttHHanalyzer::process(event* thisEvent, sysName sysType, bool up) {
-
     _weight = _initialWeight;
-
     createObjects(thisEvent, sysType, up);
     if (!selectObjects(thisEvent)) return;
 
