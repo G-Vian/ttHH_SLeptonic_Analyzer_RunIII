@@ -150,7 +150,7 @@ void ttHHanalyzer::loop(const std::string& fileListPath, sysName sysType, bool u
     for (int entry = 0; entry < nevents; entry++) {
         _entryInLoop = entry;  // Atualiza o número do evento atual
 
-        event* currentEvent = new event;
+        event *currentEvent = new event;
         _ev->read(entry);
 
         process(currentEvent, sysType, up);
@@ -167,7 +167,7 @@ void ttHHanalyzer::loop(const std::string& fileListPath, sysName sysType, bool u
     writeHistos();
     writeTree();
 
-    for (const auto& x : cutflow) {
+    for (const auto &x : cutflow) {
         std::cout << x.first  // string (key)
                   << ": "
                   << x.second // string's value
