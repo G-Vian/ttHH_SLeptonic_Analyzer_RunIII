@@ -29,7 +29,7 @@ json muonTrigSFJson;  // MUON trigger SF
 #include <TFile.h>
 #include <TSystem.h>
 
-bool loadInputFileFromList(const std::string& fileListPath, std::vector<std::string>& inputFiles) {
+bool ttHHanalyzer::loadInputFileFromList(const std::string& fileListPath, std::vector<std::string>& inputFiles) {
     std::ifstream infile(fileListPath);
     if (!infile.is_open()) {
         std::cerr << "[FATAL] Não foi possível abrir o arquivo: " << fileListPath << std::endl;
@@ -1340,12 +1340,6 @@ void ttHHanalyzer::analyze(event *thisEvent) {
 
 
 void ttHHanalyzer::process(event* thisEvent, sysName sysType, bool up) {
-    // Loga a tentativa de abrir o arquivo apenas uma vez
-    static bool fileChecked = false;
-    if (!fileChecked && !_currentInputFile.empty()) {
-        openRootFileWithLogging(_currentInputFile);
-        fileChecked = true;
-    }
 
     _weight = _initialWeight;
 
