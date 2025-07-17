@@ -23,8 +23,8 @@ static std::ofstream sf_log_file("log_electron_trigger_sf.txt");
 json muonTrigSFJson;  // MUON trigger SF
 
 void ttHHanalyzer::performAnalysis(){
-    loop(noSys, false);
-    /*    getbJetEffMap();
+    loop(_cl, noSys, false);
+/*    getbJetEffMap();
     initHistograms(kJES, false);
     initTree(kJES, false);
     loop(kJES, false);
