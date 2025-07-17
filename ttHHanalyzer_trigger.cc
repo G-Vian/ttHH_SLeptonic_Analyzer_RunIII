@@ -13,6 +13,7 @@
 #include "json.hpp" // For MUON trigger SF
 #include <TFile.h>
 #include <TSystem.h>
+#include <chrono>
 
 using json = nlohmann::json;
 using namespace std;
@@ -20,53 +21,83 @@ using namespace std;
 static std::ofstream sf_log_file("log_electron_trigger_sf.txt");
 json muonTrigSFJson;  // MUON trigger SF
 
-void ttHHanalyzer::openRootFileWithLogging(const std::string& filename) {
-    std::ofstream log("logrootfiles.txt", std::ios_base::app); // modo append
+#include <fstream>
+#include <iostream>
+#include <vector>
+#include <chrono>
+#include <ctime>
+#include <TFile.h>
+#include <TSystem.h>
+
+bool loadInputFileFromList(const std::string& fileListPath, std::vector<std::string>& inputFiles) {
+    std::ifstream infile(fileListPath);
+    if (!infile.is_open()) {
+        std::cerr << "[FATAL] Não foi possível abrir o arquivo: " << fileListPath << std::endl;
+        return false;
+    }
+
+    // Cria nome de log com base no nome do arquivo de entrada
+    std::string logName = "logfile_" + fileListPath.substr(fileListPath.find_last_of("/\\") + 1);
+    std::ofstream log(logName);
     auto now = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
 
     log << "====================================================================================\n";
-    log << "[INFO] Attempting to open file:\n" << filename << "\n";
-    log << "[INFO] Time: " << std::ctime(&now);  // já inclui '\n'
+    log << "[INFO] Iniciando leitura da lista de arquivos: " << fileListPath << "\n";
+    log << "[INFO] Timestamp: " << std::ctime(&now);
+    log << "[INFO] Hostname: " << gSystem->HostName() << "\n\n";
 
-    std::cout << "[INFO] Trying to open: " << filename << std::endl;
+    std::string line;
+    int count = 0;
+    int validCount = 0;
 
-    TFile* file = TFile::Open(filename.c_str());
+    while (std::getline(infile, line)) {
+        if (line.empty()) continue;
 
-    if (!file) {
-        log << "[ERROR] TFile::Open returned nullptr.\n";
-        log << "[ERROR] This might be due to:\n"
-            << "        - Network issues\n"
-            << "        - Incorrect file path or URL\n"
-            << "        - XRootD server downtime\n"
-            << "        - File not available in any SE\n";
-        log << "[ROOT ERROR] " << gSystem->GetErrorStr() << "\n";
-        std::cerr << "[ERROR] Failed to open file (nullptr): " << filename << std::endl;
-        log << "====================================================================================\n\n";
-        return;
-    }
+        log << "[INFO] Arquivo ROOT " << count << ": " << line << "\n";
+        std::cout << "[INFO] Tentando abrir: " << line << std::endl;
 
-    if (file->IsZombie()) {
-        log << "[ERROR] File opened but is marked as Zombie.\n";
-        log << "[ERROR] Likely causes:\n"
-            << "        - File does not exist\n"
-            << "        - Permission denied\n"
-            << "        - Corrupted ROOT file header\n";
-        log << "[ROOT ERROR] " << gSystem->GetErrorStr() << "\n";
-        std::cerr << "[ERROR] File is Zombie: " << filename << std::endl;
+        TFile* file = TFile::Open(line.c_str());
+        if (!file) {
+            log << "[ERROR] TFile::Open retornou nullptr.\n";
+            log << "[ROOT ERROR] " << gSystem->GetErrorStr() << "\n\n";
+            count++;
+            continue;
+        }
+
+        if (file->IsZombie()) {
+            log << "[ERROR] Arquivo é um Zombie (inacessível ou corrompido).\n";
+            log << "[ROOT ERROR] " << gSystem->GetErrorStr() << "\n\n";
+            delete file;
+            count++;
+            continue;
+        }
+
+        if (file->TestBit(TFile::kRecovered)) {
+            log << "[WARNING] Arquivo foi recuperado. Pode estar corrompido ou incompleto.\n";
+        }
+
+        log << "[SUCCESS] Arquivo aberto com sucesso!\n\n";
+        inputFiles.push_back(line);
+        file->Close();
         delete file;
-        log << "====================================================================================\n\n";
-        return;
+        validCount++;
+        count++;
     }
 
-    if (file->TestBit(TFile::kRecovered)) {
-        log << "[WARNING] File was recovered. It may be incomplete or corrupted.\n";
-    }
-
-    log << "[SUCCESS] File opened successfully!\n";
+    log << "====================================================================================\n";
+    log << "[INFO] Total de arquivos listados: " << count << "\n";
+    log << "[INFO] Total de arquivos válidos e utilizáveis: " << validCount << "\n";
     log << "====================================================================================\n\n";
-    file->Close();
-    delete file;
+    log.close();
+
+    if (validCount == 0) {
+        std::cerr << "[FATAL] Nenhum arquivo ROOT pôde ser aberto. Abortando execução.\n";
+        return false;
+    }
+
+    return true;
 }
+
 
 
 // === LOOP DE EVENTOS ===
@@ -1062,8 +1093,9 @@ void ttHHanalyzer::diMotherReco(const TLorentzVector & dPar1p4,const TLorentzVec
     }
 } 
 
-///////////////electron trigger scale factor --> apply SF only to events with one electron!
 void ttHHanalyzer::analyze(event *thisEvent) {
+///////////////muon and electron trigger scale factor --> apply SF only to events with one electron (muon)!
+	
     std::vector<objectLep*>* selectedElectrons = thisEvent->getSelElectrons();
     std::vector<objectLep*>* selectedMuons = thisEvent->getSelMuons();
 
