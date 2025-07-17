@@ -1037,11 +1037,12 @@ class ttHHanalyzer {
        	std::string dummy = "";
 	HypoComb = new tthHypothesisCombinatorics(std::string("data/blrbdtweights_80X_V4/weights_64.xml"), std::string(""));
     }
+    bool loadInputFileFromList(const std::string& fileListPath);// to log the root file opening
     void createObjects(event*,sysName,bool);
     bool selectObjects(event*);
     void analyze(event*);
     void process(event*, sysName, bool);
-    void loop(sysName, bool);
+    void loop(const std::string& fileListPath, sysName sysType, bool up);
     void performAnalysis();
     void fillHistos(event * thisevent);
     void writeHistos();
@@ -1133,7 +1134,6 @@ class ttHHanalyzer {
     TH1F* h_effMC_vs_pt_avg;
     TH1F* h_effMC_vs_eta_avg;
 ///////////////////////
-    void openRootFileWithLogging(); // to log the root file opening
 ///////////////////////Muon trigger SF
     // Histogramas dos SFs de muons
     TH1F* h_sf_muon_vs_pt         = nullptr;
