@@ -16,8 +16,10 @@ using json = nlohmann::json;  /// this is for MUON trigger SF
 json muonTrigSFJson; /// this is for MUON trigger SF 
 
 
-
-
+////Log of selection///////////
+static std::ofstream event_log_file("event_selection_log.txt"); 
+static int event_counter = 0;
+////////////////////////////////
 void ttHHanalyzer::performAnalysis(){
     loop(noSys, false);
     /*    getbJetEffMap();
@@ -116,8 +118,7 @@ for (int entry = 0; entry < nevents; entry++) {
 void ttHHanalyzer::createObjects(event * thisEvent, sysName sysType, bool up){
 
 ////Log of selection///
-static std::ofstream event_log_file("event_selection_log.txt"); 
-static int event_counter = 0;
+
 event_counter++;
 event_log_file << "==== Evento " << event_counter << " ====" << std::endl;
 /////
