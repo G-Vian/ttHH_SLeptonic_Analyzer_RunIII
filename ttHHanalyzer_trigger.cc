@@ -613,28 +613,39 @@ event_log_file << std::endl;
 
 bool ttHHanalyzer::selectObjects(event *thisEvent){
     // Trigger cut
-    if (cut["trigger"] > 0 && thisEvent->getTriggerAccept() == false) {
-        return false;
-    }
-    cutflow["nTrigger"] += 1;
-    hCutFlow->Fill("nTrigger", 1);
-    hCutFlow_w->Fill("nTrigger", _weight);
-
-    // MET filters cut
-    if (cut["filter"] > 0 && thisEvent->getMETFilter() == false) {
-        return false;
-    }
-    cutflow["nFilter"] += 1;
-    hCutFlow->Fill("nFilter", 1);
-    hCutFlow_w->Fill("nFilter", _weight);
-
-    // Primary vertex cut
-if (cut["pv"] > 0 && thisEvent->getPVvalue() == false) {
+// Trigger cut
+if (cut["trigger"] > 0 && thisEvent->getTriggerAccept() == false) {
+    event_log_file << "Esse evento foi rejeitado pelo trigger." << std::endl;
     return false;
+} else if (cut["trigger"] > 0 && thisEvent->getTriggerAccept() == true) {
+    event_log_file << "Esse evento passou pelo trigger." << std::endl;
 }
+
+    cutflow["nTrigger"] += 1;
+    hCutFlow->Fill("nTrigger",1);
+    hCutFlow_w->Fill("nTrigger",_weight);
+
+
+// Filter cut
+if (cut["filter"] > 0 && thisEvent->getMETFilter() == false) {
+    event_log_file << "Esse evento foi rejeitado pelo MET filter." << std::endl;
+    return false;
+} else if (cut["filter"] > 0 && thisEvent->getMETFilter() == true) {
+    event_log_file << "Esse evento passou pelo MET filter." << std::endl;
+}
+
+
+// Primary vertex cut
+if (cut["pv"] > 0 && thisEvent->getPVvalue() == false) {
+    event_log_file << "Esse evento foi rejeitado pelo corte de primary vertex." << std::endl;
+    return false;
+} else if (cut["pv"] > 0 && thisEvent->getPVvalue() == true) {
+    event_log_file << "Esse evento passou pelo corte de primary vertex." << std::endl;
+}
+
     cutflow["nPV"] += 1;
-    hCutFlow->Fill("nPV", 1);
-    hCutFlow_w->Fill("nPV", _weight);
+    hCutFlow->Fill("nPV",1);
+    hCutFlow_w->Fill("nPV",_weight);
 
     // Jet multiplicity cut
     if (!(thisEvent->getnSelJet() >= cut["nJets"])) {
