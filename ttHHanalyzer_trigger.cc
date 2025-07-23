@@ -130,16 +130,16 @@ hCutFlow_w->Fill("noCut",_weight);
 
 // This trigger paths are for the SL channel!
     if(_year == "2022" or _year == "2022EE" or _year == "2023" or _year == "2023B" or _year == "2024" ){
-	    if(_DataOrMC == "MC" or _DataOrMC == "Data"){ thisEvent->setFilter(true);
+	  
 
-	//if(_DataOrMC == "MC" or _DataOrMC == "Data"){thisEvent->setFilter(_ev->Flag_goodVertices ||				 
-	//	  					  _ev->Flag_globalSuperTightHalo2016Filter ||		
-	//	                                          _ev->Flag_EcalDeadCellTriggerPrimitiveFilter ||	
-	//	                                          _ev->Flag_BadPFMuonFilter ||
-        //                                                _ev->Flag_BadPFMuonDzFilter ||	
-        //                                              _ev->Flag_hfNoisyHitsFilter ||
-	//	                        		  _ev->Flag_eeBadScFilter ||				 
-	//	                                          _ev->Flag_ecalBadCalibFilter);
+	if(_DataOrMC == "MC" or _DataOrMC == "Data"){thisEvent->setFilter(_ev->Flag_goodVertices ||				 
+		  					  _ev->Flag_globalSuperTightHalo2016Filter ||		
+		                                          _ev->Flag_EcalDeadCellTriggerPrimitiveFilter ||	
+		                                          _ev->Flag_BadPFMuonFilter ||
+                                                          _ev->Flag_BadPFMuonDzFilter ||	
+	                                                  _ev->Flag_hfNoisyHitsFilter ||
+		                        		  _ev->Flag_eeBadScFilter ||				 
+		                                          _ev->Flag_ecalBadCalibFilter);
 
 							 
 	    thisEvent->setTrigger(
@@ -558,11 +558,6 @@ event_log_file << std::endl;
 ///////////////////
 
 bool ttHHanalyzer::selectObjects(event *thisEvent){
-    //    std::cout << "bjet CSV: " << thisEvent->getSelbJets()->at(0)->bTagCSV << std::endl;
-	
-//    cutflow["noCut"]+=1;
-//    hCutFlow->Fill("noCut",1);
-//    hCutFlow_w->Fill("noCut",_weight);
 //Checks if the event was accepted by the triggers
     if(cut["trigger"] > 0 && thisEvent->getTriggerAccept() == false){
 	return false;
@@ -727,8 +722,58 @@ else if (thisEvent->getSelElectrons()->size() == 1 && thisEvent->getSelMuons()->
 		  << x.second // string's value 
 		  << std::endl;
 		  } */
-	
 
+	
+//////////////////////LOG OF EFFICIENCIES///////////////////////// 	
+event_log_file << "==== Event " << event_counter << " ====" << std::endl;
+event_log_file << "Event passed all selection cuts." << std::endl;
+event_log_file << "Cutflow summary with efficiencies:" << std::endl;
+
+event_log_file << "  Trigger      : " << cutflow["nTrigger"]
+               << " | Abs eff: "
+               << 100.0 * cutflow["nTrigger"] / cutflow["noCut"] << "%"
+               << " | Seq eff: N/A" << std::endl;
+
+event_log_file << "  MET Filters  : " << cutflow["nFilter"]
+               << " | Abs eff: "
+               << 100.0 * cutflow["nFilter"] / cutflow["noCut"] << "%"
+               << " | Seq eff: "
+               << 100.0 * cutflow["nFilter"] / cutflow["nTrigger"] << "%" << std::endl;
+
+event_log_file << "  Good PV      : " << cutflow["nPV"]
+               << " | Abs eff: "
+               << 100.0 * cutflow["nPV"] / cutflow["noCut"] << "%"
+               << " | Seq eff: "
+               << 100.0 * cutflow["nPV"] / cutflow["nFilter"] << "%" << std::endl;
+
+event_log_file << "  nJets > 5    : " << cutflow["njets>5"]
+               << " | Abs eff: "
+               << 100.0 * cutflow["njets>5"] / cutflow["noCut"] << "%"
+               << " | Seq eff: "
+               << 100.0 * cutflow["njets>5"] / cutflow["nPV"] << "%" << std::endl;
+
+event_log_file << "  nbJets > 4   : " << cutflow["nbjets>4"]
+               << " | Abs eff: "
+               << 100.0 * cutflow["nbjets>4"] / cutflow["noCut"] << "%"
+               << " | Seq eff: "
+               << 100.0 * cutflow["nbjets>4"] / cutflow["njets>5"] << "%" << std::endl;
+
+event_log_file << "  nLeptons==1  : " << cutflow["nlepton==1"]
+               << " | Abs eff: "
+               << 100.0 * cutflow["nlepton==1"] / cutflow["noCut"] << "%"
+               << " | Seq eff: "
+               << 100.0 * cutflow["nlepton==1"] / cutflow["nbjets>4"] << "%" << std::endl;
+
+event_log_file << "  MET > 20     : " << cutflow["MET>20"]
+               << " | Abs eff: "
+               << 100.0 * cutflow["MET>20"] / cutflow["noCut"] << "%"
+               << " | Seq eff: "
+               << 100.0 * cutflow["MET>20"] / cutflow["nlepton==1"] << "%" << std::endl;
+
+event_log_file << std::endl;
+
+
+/////////////////////////////////////////////////////////////////	
     return true;
 }
 //////////////////////Electron Trigger Scale Factors////////////////////////////////////////////////
