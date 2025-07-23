@@ -559,58 +559,54 @@ event_log_file << std::endl;
 ///////////////////
 
 bool ttHHanalyzer::selectObjects(event *thisEvent){
-//Checks if the event was accepted by the triggers
-    if(cut["trigger"] > 0 && thisEvent->getTriggerAccept() == false){
-	return false;
+    // Trigger cut
+    if (cut["trigger"] > 0 && thisEvent->getTriggerAccept() == false) {
+        return false;
     }
+    cutflow["nTrigger"] += 1;
+    hCutFlow->Fill("nTrigger", 1);
+    hCutFlow_w->Fill("nTrigger", _weight);
 
-    cutflow["nTrigger"]+=1;
-    hCutFlow->Fill("nTrigger",1);
-    hCutFlow_w->Fill("nTrigger",_weight);
-	
-//Checks if the event passes the filters
-    if(cut["filter"] > 0 && thisEvent->getMETFilter() == false){
-	return false;
+    // MET filters cut
+    if (cut["filter"] > 0 && thisEvent->getMETFilter() == false) {
+        return false;
     }
+    cutflow["nFilter"] += 1;
+    hCutFlow->Fill("nFilter", 1);
+    hCutFlow_w->Fill("nFilter", _weight);
 
-    cutflow["nFilter"]+=1;
-    hCutFlow->Fill("nFilter",1);
-    hCutFlow_w->Fill("nFilter",_weight);
-//Checks if the event has a valid primary vertex 
-    if(cut["pv"] < 0 && thisEvent->getPVvalue() == false){
-	return false;
-    } 
-
-    cutflow["nPV"]+=1;
-    hCutFlow->Fill("nPV",1);
-    hCutFlow_w->Fill("nPV",_weight);
-
-
-	
-    if(!(thisEvent->getnSelJet()  >=  cut["nJets"] )){
-	return false;
+    // Primary vertex cut
+    if (cut["pv"] < 0 && thisEvent->getPVvalue() == false) {
+        return false;
     }
-    
-    cutflow["njets>5"]+=1;
-    hCutFlow->Fill("njets>5",1);
-    hCutFlow_w->Fill("njets>5",_weight);
-    
-	
-    if(!(thisEvent->getnbJet() >=  cut["nbJets"])){
-	return false;
+    cutflow["nPV"] += 1;
+    hCutFlow->Fill("nPV", 1);
+    hCutFlow_w->Fill("nPV", _weight);
+
+    // Jet multiplicity cut
+    if (!(thisEvent->getnSelJet() >= cut["nJets"])) {
+        return false;
     }
-    
-    cutflow["nbjets>4"]+=1;
-    hCutFlow->Fill("nbjets>4",1);
-    hCutFlow_w->Fill("nbjets>4",_weight);
-   
-    if(!(thisEvent->getnSelLepton() == cut["nLeptons"])){
-	return false;
+    cutflow["njets>5"] += 1;
+    hCutFlow->Fill("njets>5", 1);
+    hCutFlow_w->Fill("njets>5", _weight);
+
+    // b-jet multiplicity cut
+    if (!(thisEvent->getnbJet() >= cut["nbJets"])) {
+        return false;
     }
-    
-    cutflow["nlepton==1"]+=1;
-    hCutFlow->Fill("nlepton==1",1);
-    hCutFlow_w->Fill("nlepton==1",_weight);
+    cutflow["nbjets>4"] += 1;
+    hCutFlow->Fill("nbjets>4", 1);
+    hCutFlow_w->Fill("nbjets>4", _weight);
+
+    // Lepton multiplicity cut
+    if (!(thisEvent->getnSelLepton() == cut["nLeptons"])) {
+        return false;
+    }
+    cutflow["nlepton==1"] += 1;
+    hCutFlow->Fill("nlepton==1", 1);
+    hCutFlow_w->Fill("nlepton==1", _weight);
+
 	
 
 	
@@ -709,72 +705,62 @@ else if (thisEvent->getSelElectrons()->size() == 1 && thisEvent->getSelMuons()->
 */
 
 //////////////////////////////	
-    if(!(thisEvent->getMET()->getp4()->Pt() > cut["MET"] )){
+    // MET cut
+    if (!(thisEvent->getMET()->getp4()->Pt() > cut["MET"])) {
         return false;
-    	}
-/////////////////////////////
+    }
+    cutflow["MET>20"] += 1;
+    hCutFlow->Fill("MET>20", 1);
+    hCutFlow_w->Fill("MET>20", _weight);
 
-    cutflow["MET>20"]+=1;
-    hCutFlow->Fill("MET>20",1);
-    hCutFlow_w->Fill("MET>20",_weight);
+    // ==== LOGGING EFFICIENCIES ====
+    event_log_file << "==== Event " << event_counter << " ====" << std::endl;
+    event_log_file << "Event passed all selection cuts." << std::endl;
+    event_log_file << "Cutflow summary with efficiencies:" << std::endl;
 
-    /*	std::cout << x.first  // string (key)
-		  << ':' 
-		  << x.second // string's value 
-		  << std::endl;
-		  } */
+    event_log_file << "  Trigger      : " << cutflow["nTrigger"]
+                   << " | Abs eff: "
+                   << 100.0 * cutflow["nTrigger"] / cutflow["noCut"] << "%"
+                   << " | Seq eff: N/A" << std::endl;
 
-	
-//////////////////////LOG OF EFFICIENCIES///////////////////////// 	
-event_log_file << "==== Event " << event_counter << " ====" << std::endl;
-event_log_file << "Event passed all selection cuts." << std::endl;
-event_log_file << "Cutflow summary with efficiencies:" << std::endl;
+    event_log_file << "  MET Filters  : " << cutflow["nFilter"]
+                   << " | Abs eff: "
+                   << 100.0 * cutflow["nFilter"] / cutflow["noCut"] << "%"
+                   << " | Seq eff: "
+                   << 100.0 * cutflow["nFilter"] / cutflow["nTrigger"] << "%" << std::endl;
 
-event_log_file << "  Trigger      : " << cutflow["nTrigger"]
-               << " | Abs eff: "
-               << 100.0 * cutflow["nTrigger"] / cutflow["noCut"] << "%"
-               << " | Seq eff: N/A" << std::endl;
+    event_log_file << "  Good PV      : " << cutflow["nPV"]
+                   << " | Abs eff: "
+                   << 100.0 * cutflow["nPV"] / cutflow["noCut"] << "%"
+                   << " | Seq eff: "
+                   << 100.0 * cutflow["nPV"] / cutflow["nFilter"] << "%" << std::endl;
 
-event_log_file << "  MET Filters  : " << cutflow["nFilter"]
-               << " | Abs eff: "
-               << 100.0 * cutflow["nFilter"] / cutflow["noCut"] << "%"
-               << " | Seq eff: "
-               << 100.0 * cutflow["nFilter"] / cutflow["nTrigger"] << "%" << std::endl;
+    event_log_file << "  nJets > 5    : " << cutflow["njets>5"]
+                   << " | Abs eff: "
+                   << 100.0 * cutflow["njets>5"] / cutflow["noCut"] << "%"
+                   << " | Seq eff: "
+                   << 100.0 * cutflow["njets>5"] / cutflow["nPV"] << "%" << std::endl;
 
-event_log_file << "  Good PV      : " << cutflow["nPV"]
-               << " | Abs eff: "
-               << 100.0 * cutflow["nPV"] / cutflow["noCut"] << "%"
-               << " | Seq eff: "
-               << 100.0 * cutflow["nPV"] / cutflow["nFilter"] << "%" << std::endl;
+    event_log_file << "  nbJets > 4   : " << cutflow["nbjets>4"]
+                   << " | Abs eff: "
+                   << 100.0 * cutflow["nbjets>4"] / cutflow["noCut"] << "%"
+                   << " | Seq eff: "
+                   << 100.0 * cutflow["nbjets>4"] / cutflow["njets>5"] << "%" << std::endl;
 
-event_log_file << "  nJets > 5    : " << cutflow["njets>5"]
-               << " | Abs eff: "
-               << 100.0 * cutflow["njets>5"] / cutflow["noCut"] << "%"
-               << " | Seq eff: "
-               << 100.0 * cutflow["njets>5"] / cutflow["nPV"] << "%" << std::endl;
+    event_log_file << "  nLeptons==1  : " << cutflow["nlepton==1"]
+                   << " | Abs eff: "
+                   << 100.0 * cutflow["nlepton==1"] / cutflow["noCut"] << "%"
+                   << " | Seq eff: "
+                   << 100.0 * cutflow["nlepton==1"] / cutflow["nbjets>4"] << "%" << std::endl;
 
-event_log_file << "  nbJets > 4   : " << cutflow["nbjets>4"]
-               << " | Abs eff: "
-               << 100.0 * cutflow["nbjets>4"] / cutflow["noCut"] << "%"
-               << " | Seq eff: "
-               << 100.0 * cutflow["nbjets>4"] / cutflow["njets>5"] << "%" << std::endl;
+    event_log_file << "  MET > 20     : " << cutflow["MET>20"]
+                   << " | Abs eff: "
+                   << 100.0 * cutflow["MET>20"] / cutflow["noCut"] << "%"
+                   << " | Seq eff: "
+                   << 100.0 * cutflow["MET>20"] / cutflow["nlepton==1"] << "%" << std::endl;
 
-event_log_file << "  nLeptons==1  : " << cutflow["nlepton==1"]
-               << " | Abs eff: "
-               << 100.0 * cutflow["nlepton==1"] / cutflow["noCut"] << "%"
-               << " | Seq eff: "
-               << 100.0 * cutflow["nlepton==1"] / cutflow["nbjets>4"] << "%" << std::endl;
+    event_log_file << std::endl;
 
-event_log_file << "  MET > 20     : " << cutflow["MET>20"]
-               << " | Abs eff: "
-               << 100.0 * cutflow["MET>20"] / cutflow["noCut"] << "%"
-               << " | Seq eff: "
-               << 100.0 * cutflow["MET>20"] / cutflow["nlepton==1"] << "%" << std::endl;
-
-event_log_file << std::endl;
-
-
-/////////////////////////////////////////////////////////////////	
     return true;
 }
 //////////////////////Electron Trigger Scale Factors////////////////////////////////////////////////
