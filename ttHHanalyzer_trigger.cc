@@ -202,7 +202,8 @@ hCutFlow_w->Fill("noCut",_weight);
     }
     
     
-    thisEvent->setPV(_ev->PV_npvsGood);
+ //   thisEvent->setPV(_ev->PV_npvsGood);
+    thisEvent->setPV(_ev->PV_npvsGood > 0);
     std::vector<eventBuffer::GenPart_s> genPart = _ev->GenPart;      
     std::vector<eventBuffer::Jet_s> jet = _ev->Jet;
     std::vector<eventBuffer::Muon_s> muonT = _ev->Muon;
@@ -628,9 +629,9 @@ bool ttHHanalyzer::selectObjects(event *thisEvent){
     hCutFlow_w->Fill("nFilter", _weight);
 
     // Primary vertex cut
-    if (cut["pv"] < 0 && thisEvent->getPVvalue() == false) {
-        return false;
-    }
+if (cut["pv"] > 0 && thisEvent->getPVvalue() == false) {
+    return false;
+}
     cutflow["nPV"] += 1;
     hCutFlow->Fill("nPV", 1);
     hCutFlow_w->Fill("nPV", _weight);
