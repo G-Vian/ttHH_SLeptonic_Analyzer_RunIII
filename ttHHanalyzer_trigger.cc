@@ -98,6 +98,58 @@ for (int entry = 0; entry < nevents; entry++) {
     events.push_back(currentEvent);
 }
 
+/////Log of efficiencies ////
+    // Depois de processar todos os eventos, imprime o log resumido:
+    event_log_file << "==== Cutflow summary with efficiencies: ====" << std::endl;
+
+    event_log_file << "  Trigger      : " << cutflow["nTrigger"]
+                   << " | Abs eff: "
+                   << 100.0 * cutflow["nTrigger"] / cutflow["noCut"] << "%"
+                   << " | Seq eff: N/A" << std::endl;
+
+    event_log_file << "  MET Filters  : " << cutflow["nFilter"]
+                   << " | Abs eff: "
+                   << 100.0 * cutflow["nFilter"] / cutflow["noCut"] << "%"
+                   << " | Seq eff: "
+                   << 100.0 * cutflow["nFilter"] / cutflow["nTrigger"] << "%" << std::endl;
+
+    event_log_file << "  Good PV      : " << cutflow["nPV"]
+                   << " | Abs eff: "
+                   << 100.0 * cutflow["nPV"] / cutflow["noCut"] << "%"
+                   << " | Seq eff: "
+                   << 100.0 * cutflow["nPV"] / cutflow["nFilter"] << "%" << std::endl;
+
+    event_log_file << "  nJets > 5    : " << cutflow["njets>5"]
+                   << " | Abs eff: "
+                   << 100.0 * cutflow["njets>5"] / cutflow["noCut"] << "%"
+                   << " | Seq eff: "
+                   << 100.0 * cutflow["njets>5"] / cutflow["nPV"] << "%" << std::endl;
+
+    event_log_file << "  nbJets > 4   : " << cutflow["nbjets>4"]
+                   << " | Abs eff: "
+                   << 100.0 * cutflow["nbjets>4"] / cutflow["noCut"] << "%"
+                   << " | Seq eff: "
+                   << 100.0 * cutflow["nbjets>4"] / cutflow["njets>5"] << "%" << std::endl;
+
+    event_log_file << "  nLeptons==1  : " << cutflow["nlepton==1"]
+                   << " | Abs eff: "
+                   << 100.0 * cutflow["nlepton==1"] / cutflow["noCut"] << "%"
+                   << " | Seq eff: "
+                   << 100.0 * cutflow["nlepton==1"] / cutflow["nbjets>4"] << "%" << std::endl;
+
+    event_log_file << "  MET > 20     : " << cutflow["MET>20"]
+                   << " | Abs eff: "
+                   << 100.0 * cutflow["MET>20"] / cutflow["noCut"] << "%"
+                   << " | Seq eff: "
+                   << 100.0 * cutflow["MET>20"] / cutflow["nlepton==1"] << "%" << std::endl;
+
+    event_log_file << std::endl;
+	
+
+////////////////////////////
+	
+
+	
     // Agora as chamadas a writeHistos e writeTree ficam dentro da função
     writeHistos();
     writeTree();
@@ -713,53 +765,6 @@ else if (thisEvent->getSelElectrons()->size() == 1 && thisEvent->getSelMuons()->
     hCutFlow->Fill("MET>20", 1);
     hCutFlow_w->Fill("MET>20", _weight);
 
-    // ==== LOGGING EFFICIENCIES ====
-    event_log_file << "==== Event " << event_counter << " ====" << std::endl;
-    event_log_file << "Event passed all selection cuts." << std::endl;
-    event_log_file << "Cutflow summary with efficiencies:" << std::endl;
-
-    event_log_file << "  Trigger      : " << cutflow["nTrigger"]
-                   << " | Abs eff: "
-                   << 100.0 * cutflow["nTrigger"] / cutflow["noCut"] << "%"
-                   << " | Seq eff: N/A" << std::endl;
-
-    event_log_file << "  MET Filters  : " << cutflow["nFilter"]
-                   << " | Abs eff: "
-                   << 100.0 * cutflow["nFilter"] / cutflow["noCut"] << "%"
-                   << " | Seq eff: "
-                   << 100.0 * cutflow["nFilter"] / cutflow["nTrigger"] << "%" << std::endl;
-
-    event_log_file << "  Good PV      : " << cutflow["nPV"]
-                   << " | Abs eff: "
-                   << 100.0 * cutflow["nPV"] / cutflow["noCut"] << "%"
-                   << " | Seq eff: "
-                   << 100.0 * cutflow["nPV"] / cutflow["nFilter"] << "%" << std::endl;
-
-    event_log_file << "  nJets > 5    : " << cutflow["njets>5"]
-                   << " | Abs eff: "
-                   << 100.0 * cutflow["njets>5"] / cutflow["noCut"] << "%"
-                   << " | Seq eff: "
-                   << 100.0 * cutflow["njets>5"] / cutflow["nPV"] << "%" << std::endl;
-
-    event_log_file << "  nbJets > 4   : " << cutflow["nbjets>4"]
-                   << " | Abs eff: "
-                   << 100.0 * cutflow["nbjets>4"] / cutflow["noCut"] << "%"
-                   << " | Seq eff: "
-                   << 100.0 * cutflow["nbjets>4"] / cutflow["njets>5"] << "%" << std::endl;
-
-    event_log_file << "  nLeptons==1  : " << cutflow["nlepton==1"]
-                   << " | Abs eff: "
-                   << 100.0 * cutflow["nlepton==1"] / cutflow["noCut"] << "%"
-                   << " | Seq eff: "
-                   << 100.0 * cutflow["nlepton==1"] / cutflow["nbjets>4"] << "%" << std::endl;
-
-    event_log_file << "  MET > 20     : " << cutflow["MET>20"]
-                   << " | Abs eff: "
-                   << 100.0 * cutflow["MET>20"] / cutflow["noCut"] << "%"
-                   << " | Seq eff: "
-                   << 100.0 * cutflow["MET>20"] / cutflow["nlepton==1"] << "%" << std::endl;
-
-    event_log_file << std::endl;
 
     return true;
 }
