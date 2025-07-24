@@ -619,12 +619,10 @@ if (cut["trigger"] > 0 && thisEvent->getTriggerAccept() == false) {
     return false;
 } else if (cut["trigger"] > 0 && thisEvent->getTriggerAccept() == true) {
     event_log_file << "Esse evento passou pelo trigger." << std::endl;
-}
-
     cutflow["nTrigger"] += 1;
     hCutFlow->Fill("nTrigger",1);
     hCutFlow_w->Fill("nTrigger",_weight);
-
+}
 
 // Filter cut
 if (cut["filter"] > 0 && thisEvent->getMETFilter() == false) {
@@ -632,8 +630,10 @@ if (cut["filter"] > 0 && thisEvent->getMETFilter() == false) {
     return false;
 } else if (cut["filter"] > 0 && thisEvent->getMETFilter() == true) {
     event_log_file << "Esse evento passou pelo MET filter." << std::endl;
+    cutflow["nMETFilter"] += 1;
+    hCutFlow->Fill("nMETFilter",1);
+    hCutFlow_w->Fill("nMETFilter",_weight);
 }
-
 
 // Primary vertex cut
 if (cut["pv"] > 0 && thisEvent->getPVvalue() == false) {
@@ -641,12 +641,10 @@ if (cut["pv"] > 0 && thisEvent->getPVvalue() == false) {
     return false;
 } else if (cut["pv"] > 0 && thisEvent->getPVvalue() == true) {
     event_log_file << "Esse evento passou pelo corte de primary vertex." << std::endl;
-}
-
     cutflow["nPV"] += 1;
     hCutFlow->Fill("nPV",1);
     hCutFlow_w->Fill("nPV",_weight);
-
+}
     // Jet multiplicity cut
     if (!(thisEvent->getnSelJet() >= cut["nJets"])) {
         return false;
