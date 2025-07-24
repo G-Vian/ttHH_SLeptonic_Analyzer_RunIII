@@ -59,7 +59,7 @@ map<std::string, float> cut {
     , {"bTagDisc", 0.80} // this is not the same as BTagDisc, with capital B. bTagDisc in this case is just a cut for the boosted jets.
     , {"trigger", 1} // trigger
     , {"filter", 1} // MET filter
-    , {"pv", 0}}; // primary vertex  
+    , {"pv", 1}}; // primary vertex  
 
 
 
