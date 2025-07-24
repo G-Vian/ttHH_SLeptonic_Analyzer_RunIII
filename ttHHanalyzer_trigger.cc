@@ -107,7 +107,7 @@ for (int entry = 0; entry < nevents; entry++) {
                    << 100.0 * cutflow["nTrigger"] / cutflow["noCut"] << "%"
                    << " | Seq eff: N/A" << std::endl;
 
-    event_log_file << "  MET Filters  : " << cutflow["nFilter"]
+    event_log_file << " Filters  : " << cutflow["nFilter"]
                    << " | Abs eff: "
                    << 100.0 * cutflow["nFilter"] / cutflow["noCut"] << "%"
                    << " | Seq eff: "
@@ -184,9 +184,8 @@ hCutFlow_w->Fill("noCut",_weight);
 // This trigger paths are for the SL channel!
     if(_year == "2022" or _year == "2022EE" or _year == "2023" or _year == "2023B" or _year == "2024" ){
 	  
-	thisEvent->setFilter(true);
 
-	    /*
+
 	thisEvent->setFilter(_ev->Flag_goodVertices &&
 	                     _ev->Flag_globalSuperTightHalo2016Filter &&
 	                     _ev->Flag_EcalDeadCellTriggerPrimitiveFilter &&
@@ -194,7 +193,7 @@ hCutFlow_w->Fill("noCut",_weight);
 	                     _ev->Flag_BadPFMuonDzFilter &&
 	                     _ev->Flag_hfNoisyHitsFilter &&
 	                     _ev->Flag_eeBadScFilter &&
-	                     _ev->Flag_ecalBadCalibFilter);*/
+	                     _ev->Flag_ecalBadCalibFilter);
 
 							 
 	    thisEvent->setTrigger(
