@@ -612,7 +612,6 @@ event_log_file << std::endl;
 ///////////////////
 
 bool ttHHanalyzer::selectObjects(event *thisEvent){
-    // Trigger cut
 // Trigger cut
 if (cut["trigger"] > 0 && thisEvent->getTriggerAccept() == false) {
     event_log_file << "Esse evento foi rejeitado pelo trigger." << std::endl;
@@ -620,31 +619,45 @@ if (cut["trigger"] > 0 && thisEvent->getTriggerAccept() == false) {
 } else if (cut["trigger"] > 0 && thisEvent->getTriggerAccept() == true) {
     event_log_file << "Esse evento passou pelo trigger." << std::endl;
     cutflow["nTrigger"] += 1;
-    hCutFlow->Fill("nTrigger",1);
-    hCutFlow_w->Fill("nTrigger",_weight);
+    hCutFlow->Fill("nTrigger", 1);
+    hCutFlow_w->Fill("nTrigger", _weight);
 }
 
 // Filter cut
+// Log dos flags MET filter
+event_log_file << "MET filter flags para este evento:\n";
+event_log_file << " - Flag_goodVertices: " << _ev->Flag_goodVertices << "\n";
+event_log_file << " - Flag_globalSuperTightHalo2016Filter: " << _ev->Flag_globalSuperTightHalo2016Filter << "\n";
+event_log_file << " - Flag_EcalDeadCellTriggerPrimitiveFilter: " << _ev->Flag_EcalDeadCellTriggerPrimitiveFilter << "\n";
+event_log_file << " - Flag_BadPFMuonFilter: " << _ev->Flag_BadPFMuonFilter << "\n";
+event_log_file << " - Flag_BadPFMuonDzFilter: " << _ev->Flag_BadPFMuonDzFilter << "\n";
+event_log_file << " - Flag_hfNoisyHitsFilter: " << _ev->Flag_hfNoisyHitsFilter << "\n";
+event_log_file << " - Flag_eeBadScFilter: " << _ev->Flag_eeBadScFilter << "\n";
+event_log_file << " - Flag_ecalBadCalibFilter: " << _ev->Flag_ecalBadCalibFilter << "\n";
+
 if (cut["filter"] > 0 && thisEvent->getMETFilter() == false) {
     event_log_file << "Esse evento foi rejeitado pelo MET filter." << std::endl;
     return false;
 } else if (cut["filter"] > 0 && thisEvent->getMETFilter() == true) {
     event_log_file << "Esse evento passou pelo MET filter." << std::endl;
     cutflow["nFilter"] += 1;
-    hCutFlow->Fill("nFilter",1);
-    hCutFlow_w->Fill("nFilter",_weight);
+    hCutFlow->Fill("nFilter", 1);
+    hCutFlow_w->Fill("nFilter", _weight);
 }
-
 // Primary vertex cut
+// Log do número de vértices
+event_log_file << "Número de vértices primários bons (PV_npvsGood): " << _ev->PV_npvsGood << "\n";
+
 if (cut["pv"] > 0 && thisEvent->getPVvalue() == false) {
     event_log_file << "Esse evento foi rejeitado pelo corte de primary vertex." << std::endl;
     return false;
 } else if (cut["pv"] > 0 && thisEvent->getPVvalue() == true) {
     event_log_file << "Esse evento passou pelo corte de primary vertex." << std::endl;
     cutflow["nPV"] += 1;
-    hCutFlow->Fill("nPV",1);
-    hCutFlow_w->Fill("nPV",_weight);
+    hCutFlow->Fill("nPV", 1);
+    hCutFlow_w->Fill("nPV", _weight);
 }
+
     // Jet multiplicity cut
     if (!(thisEvent->getnSelJet() >= cut["nJets"])) {
         return false;
