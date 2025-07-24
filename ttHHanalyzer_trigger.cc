@@ -630,9 +630,9 @@ if (cut["filter"] > 0 && thisEvent->getMETFilter() == false) {
     return false;
 } else if (cut["filter"] > 0 && thisEvent->getMETFilter() == true) {
     event_log_file << "Esse evento passou pelo MET filter." << std::endl;
-    cutflow["nMETFilter"] += 1;
-    hCutFlow->Fill("nMETFilter",1);
-    hCutFlow_w->Fill("nMETFilter",_weight);
+    cutflow["nFilter"] += 1;
+    hCutFlow->Fill("nFilter",1);
+    hCutFlow_w->Fill("nFilter",_weight);
 }
 
 // Primary vertex cut
