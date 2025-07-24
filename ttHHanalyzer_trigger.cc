@@ -202,8 +202,8 @@ hCutFlow_w->Fill("noCut",_weight);
     
     
     
-    thisEvent->setPV(_ev->PV_npvsGood);
-  //  thisEvent->setPV(_ev->PV_npvsGood > 0);
+   // thisEvent->setPV(_ev->PV_npvsGood);
+    thisEvent->setPV(_ev->PV_npvsGood > 0);
     std::vector<eventBuffer::GenPart_s> genPart = _ev->GenPart;      
     std::vector<eventBuffer::Jet_s> jet = _ev->Jet;
     std::vector<eventBuffer::Muon_s> muonT = _ev->Muon;
@@ -636,7 +636,7 @@ if (cut["filter"] > 0 && thisEvent->getMETFilter() == false) {
 }
 
 // Primary vertex cut
-if (cut["pv"] < 0 && thisEvent->getPVvalue() == false) {
+if (cut["pv"] > 0 && thisEvent->getPVvalue() == false) {
     event_log_file << "Esse evento foi rejeitado pelo corte de primary vertex." << std::endl;
     return false;
 } else if (cut["pv"] > 0 && thisEvent->getPVvalue() == true) {
