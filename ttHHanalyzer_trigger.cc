@@ -185,7 +185,7 @@ hCutFlow_w->Fill("noCut",_weight);
     if(_year == "2022" or _year == "2022EE" or _year == "2023" or _year == "2023B" or _year == "2024" ){
 	  
 
-	thisEvent->setFilter(_ev->Flag_goodVertices &&
+	thisEvent->setFilter(//_ev->Flag_goodVertices &&
 	                     _ev->Flag_globalSuperTightHalo2016Filter &&
 	                     _ev->Flag_EcalDeadCellTriggerPrimitiveFilter &&
 	                     _ev->Flag_BadPFMuonFilter &&
