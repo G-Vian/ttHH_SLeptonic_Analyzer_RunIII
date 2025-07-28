@@ -429,7 +429,7 @@ int Ploter2() {
     unordered_map<string, ProcessInfo> processes = {
 {"TTSL", {"TTSL.root", false, kOrange+1, "TTSL"}},
 //{"TTZ", {"TTZ.root", false, kAzure+1, "TTZ"}},
-{"TTH", {"TTH.root", false, kPink+1, "TTH"}},
+//{"TTH", {"TTH.root", false, kPink+1, "TTH"}},
 {"TT4b", {"TT4b.root", false, kSpring+3, "TT4b"}},
 {"TTZH", {"TTZH.root", false, kTeal+1, "TTZH"}},
 {"TTZZ", {"TTZZ.root", false, kRed+1, "TTZZ"}},
