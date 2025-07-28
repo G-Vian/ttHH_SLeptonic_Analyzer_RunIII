@@ -9,7 +9,7 @@
 #include <fstream>
 #include "TH2.h"//Trigger SF for electron
 using namespace std;
-static std::ofstream sf_log_file("log_electron_trigger_sf.txt");
+static std::ofstream sf_log_file("log_trigger_sf.txt");
 #include <cstdlib>/// this is for MUON trigger SF
 #include "json.hpp"// this is for MUON trigger SF
 using json = nlohmann::json;  /// this is for MUON trigger SF 
