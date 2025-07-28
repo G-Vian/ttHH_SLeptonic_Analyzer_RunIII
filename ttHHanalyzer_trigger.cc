@@ -102,16 +102,16 @@ for (int entry = 0; entry < nevents; entry++) {
     // Depois de processar todos os eventos, imprime o log resumido:
     event_log_file << "==== Cutflow summary with efficiencies: ====" << std::endl;
 
-    event_log_file << "  Trigger      : " << cutflow["nTrigger"]
+    event_log_file << "  Trigger      : " << cutflow["nHLTrigger"]
                    << " | Abs eff: "
-                   << 100.0 * cutflow["nTrigger"] / cutflow["noCut"] << "%"
+                   << 100.0 * cutflow["nHLTrigger"] / cutflow["noCut"] << "%"
                    << " | Seq eff: N/A" << std::endl;
 
     event_log_file << " Filters  : " << cutflow["nFilter"]
                    << " | Abs eff: "
                    << 100.0 * cutflow["nFilter"] / cutflow["noCut"] << "%"
                    << " | Seq eff: "
-                   << 100.0 * cutflow["nFilter"] / cutflow["nTrigger"] << "%" << std::endl;
+                   << 100.0 * cutflow["nFilter"] / cutflow["nHLTrigger"] << "%" << std::endl;
 
     event_log_file << "  Good PV      : " << cutflow["nPV"]
                    << " | Abs eff: "
@@ -619,14 +619,14 @@ if (cut["trigger"] > 0 && thisEvent->getTriggerAccept() == false) {
     return false;
 } else if (cut["trigger"] > 0 && thisEvent->getTriggerAccept() == true) {
     event_log_file << "Esse evento passou pelo trigger." << std::endl;
-    cutflow["nTrigger"] += 1;
-    hCutFlow->Fill("nTrigger", 1);
-    hCutFlow_w->Fill("nTrigger", _weight);
+    cutflow["nHLTrigger"] += 1;
+    hCutFlow->Fill("nHLTrigger", 1);
+    hCutFlow_w->Fill("nHLTrigger", _weight);
 }
 
 // Filter cut
-// Log dos flags MET filter
-event_log_file << "MET filter flags para este evento:\n";
+// Log dos flags Filters
+event_log_file << "Filter flags para este evento:\n";
 event_log_file << " - Flag_goodVertices: " << _ev->Flag_goodVertices << "\n";
 event_log_file << " - Flag_globalSuperTightHalo2016Filter: " << _ev->Flag_globalSuperTightHalo2016Filter << "\n";
 event_log_file << " - Flag_EcalDeadCellTriggerPrimitiveFilter: " << _ev->Flag_EcalDeadCellTriggerPrimitiveFilter << "\n";
@@ -637,10 +637,10 @@ event_log_file << " - Flag_eeBadScFilter: " << _ev->Flag_eeBadScFilter << "\n";
 event_log_file << " - Flag_ecalBadCalibFilter: " << _ev->Flag_ecalBadCalibFilter << "\n";
 
 if (cut["filter"] > 0 && thisEvent->getMETFilter() == false) {
-    event_log_file << "Esse evento foi rejeitado pelo MET filter." << std::endl;
+    event_log_file << "Esse evento foi rejeitado pelo Filters." << std::endl;
     return false;
 } else if (cut["filter"] > 0 && thisEvent->getMETFilter() == true) {
-    event_log_file << "Esse evento passou pelo MET filter." << std::endl;
+    event_log_file << "Esse evento passou pelo Filters." << std::endl;
     cutflow["nFilter"] += 1;
     hCutFlow->Fill("nFilter", 1);
     hCutFlow_w->Fill("nFilter", _weight);
@@ -918,7 +918,7 @@ float ttHHanalyzer::getEleTrigSF(float eta, float pt, float& sf_unc) {
 
 //////////////////////Muon Trigger Scale Factors////////////////////////////////////////////////
 
-void ttHHanalyzer::initMuonTriggerSF() {
+void ttHHanalyzer::initMuonHLTriggerSF() {
     TString repoPath = "muonefficiencies";
     TString sfFilePath;
 
@@ -1347,7 +1347,7 @@ void ttHHanalyzer::process(event* thisEvent, sysName sysType, bool up) {
     // Inicializar SF de trigger - múons
     static bool muonSFInitialized = false;
     if (!muonSFInitialized) {
-        initMuonTriggerSF();
+        initMuonHLTriggerSF();
         muonSFInitialized = true;
     }
 
