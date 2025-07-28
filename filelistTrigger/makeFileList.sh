@@ -55,7 +55,6 @@ dasgoclient --query="file dataset=/TT4B_TuneCP5_13p6TeV_madgraph-pythia8/RunIII2
 dasgoclient --query="file dataset=/TTZH-ZHto4B_TuneCP5_13p6TeV_madgraph-pythia8/RunIII2024Summer24NanoAOD-140X_mcRun3_2024_realistic_v26-v4/NANOAODSIM" | sed 's|^|root://xrootd-cms.infn.it//|' >> full_TTZH_24_14.txt
 #dasgoclient --query="file dataset=/TTZZ-ZZto4B_TuneCP5_13p6TeV_madgraph-pythia8/RunIII2024Summer24NanoAOD-140X_mcRun3_2024_realistic_v26-v3/NANOAODSIM" | sed 's|^|root://xrootd-cms.infn.it//|' >> full_TTZZ_24_14.txt
 dasgoclient --query="file dataset=/TTtoLNu2Q_TuneCP5_13p6TeV_powheg-pythia8/RunIII2024Summer24NanoAOD-140X_mcRun3_2024_realistic_v26-v2/NANOAODSIM" | sed 's|^|root://xrootd-cms.infn.it//|' >> full_TTSL_24_14.txt
-root://cms-xrd-global.cern.ch//
 
 #how to use :
 #  chmod +x makeFileList.sh
