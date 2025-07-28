@@ -1431,30 +1431,30 @@ class ttHHanalyzer {
 	lepton->cd();
 
 /////////////Electron Trigger SF //////////////////
-	h_sf_vs_pt     = new TH1F("h_sf_vs_pt",     "SF vs pT;Electron pT [GeV];SF",        20, 0, 200);
-	h_sf_vs_eta    = new TH1F("h_sf_vs_eta",    "SF vs Eta;Electron #eta;SF",           20, -2.5, 2.5);
-	h_effMC_vs_pt  = new TH1F("h_effMC_vs_pt",  "EffMC vs pT;Electron pT [GeV];Eff.",   20, 0, 200);
-	h_effMC_vs_eta = new TH1F("h_effMC_vs_eta", "EffMC vs Eta;Electron #eta;Eff.",      20, -2.5, 2.5);
-	h_sf_vs_pt_sum    = new TH1F("h_sf_vs_pt_sum",    "Sum SF vs pT",        20, 0, 200);
-	h_sf_vs_pt_count  = new TH1F("h_sf_vs_pt_count",  "Count SF vs pT",      20, 0, 200);
-	h_sf_vs_eta_sum   = new TH1F("h_sf_vs_eta_sum",   "Sum SF vs eta",       20, -2.5, 2.5);
-	h_sf_vs_eta_count = new TH1F("h_sf_vs_eta_count", "Count SF vs eta",     20, -2.5, 2.5);
+	h_sf_vs_pt     = new TH1F("h_sf_vs_pt",     "SF vs pT;Electron pT [GeV];SF",        20, 0, 700);
+	h_sf_vs_eta    = new TH1F("h_sf_vs_eta",    "SF vs Eta;Electron #eta;SF",           20, -5, 5);
+	h_effMC_vs_pt  = new TH1F("h_effMC_vs_pt",  "EffMC vs pT;Electron pT [GeV];Eff.",   20, 0, 700);
+	h_effMC_vs_eta = new TH1F("h_effMC_vs_eta", "EffMC vs Eta;Electron #eta;Eff.",      20, -5, 5);
+	h_sf_vs_pt_sum    = new TH1F("h_sf_vs_pt_sum",    "Sum SF vs pT",        20, 0, 700);
+	h_sf_vs_pt_count  = new TH1F("h_sf_vs_pt_count",  "Count SF vs pT",      20, 0, 700);
+	h_sf_vs_eta_sum   = new TH1F("h_sf_vs_eta_sum",   "Sum SF vs eta",       20, -5, 5);
+	h_sf_vs_eta_count = new TH1F("h_sf_vs_eta_count", "Count SF vs eta",     20, -5, 5);
 	
-	h_effMC_vs_pt_sum    = new TH1F("h_effMC_vs_pt_sum",    "Sum Eff vs pT",      20, 0, 200);
-	h_effMC_vs_pt_count  = new TH1F("h_effMC_vs_pt_count",  "Count Eff vs pT",    20, 0, 200);
-	h_effMC_vs_eta_sum   = new TH1F("h_effMC_vs_eta_sum",   "Sum Eff vs eta",     20, -2.5, 2.5);
-	h_effMC_vs_eta_count = new TH1F("h_effMC_vs_eta_count", "Count Eff vs eta",   20, -2.5, 2.5);
+	h_effMC_vs_pt_sum    = new TH1F("h_effMC_vs_pt_sum",    "Sum Eff vs pT",      20, 0, 700);
+	h_effMC_vs_pt_count  = new TH1F("h_effMC_vs_pt_count",  "Count Eff vs pT",    20, 0, 700);
+	h_effMC_vs_eta_sum   = new TH1F("h_effMC_vs_eta_sum",   "Sum Eff vs eta",     20, -5, 5);
+	h_effMC_vs_eta_count = new TH1F("h_effMC_vs_eta_count", "Count Eff vs eta",   20, -5, 5);
 	
 	//////////////////////////////////////////////////
 	 /////////////Muon Trigger SF //////////////////
-	h_sf_muon_vs_pt        = new TH1F("h_sf_muon_vs_pt", "Muon SF vs pT;Muon pT [GeV];SF", 20, 0, 200);
-	h_sf_muon_vs_eta       = new TH1F("h_sf_muon_vs_eta", "Muon SF vs Eta;Muon #eta;SF", 20, -2.5, 2.5);
-	h_sf_muon_vs_pt_sum    = new TH1F("h_sf_muon_vs_pt_sum", "Sum SF vs pT", 20, 0, 200);
-	h_sf_muon_vs_pt_count  = new TH1F("h_sf_muon_vs_pt_count", "Count SF vs pT", 20, 0, 200);
-	h_sf_muon_vs_eta_sum   = new TH1F("h_sf_muon_vs_eta_sum", "Sum SF vs eta", 20, -2.5, 2.5);
-	h_sf_muon_vs_eta_count = new TH1F("h_sf_muon_vs_eta_count", "Count SF vs eta", 20, -2.5, 2.5);
-	h_sf_muon_vs_pt_avg    = new TH1F("h_sf_muon_vs_pt_avg", "Avg SF vs pT", 20, 0, 200);
-	h_sf_muon_vs_eta_avg   = new TH1F("h_sf_muon_vs_eta_avg", "Avg SF vs eta", 20, -2.5, 2.5);
+	h_sf_muon_vs_pt        = new TH1F("h_sf_muon_vs_pt", "Muon SF vs pT;Muon pT [GeV];SF", 20, 0, 700);
+	h_sf_muon_vs_eta       = new TH1F("h_sf_muon_vs_eta", "Muon SF vs Eta;Muon #eta;SF", 20, -5, 5);
+	h_sf_muon_vs_pt_sum    = new TH1F("h_sf_muon_vs_pt_sum", "Sum SF vs pT", 20, 0, 700);
+	h_sf_muon_vs_pt_count  = new TH1F("h_sf_muon_vs_pt_count", "Count SF vs pT", 20, 0, 700);
+	h_sf_muon_vs_eta_sum   = new TH1F("h_sf_muon_vs_eta_sum", "Sum SF vs eta", 20, -5, 5);
+	h_sf_muon_vs_eta_count = new TH1F("h_sf_muon_vs_eta_count", "Count SF vs eta", 20, -5, 5);
+	h_sf_muon_vs_pt_avg    = new TH1F("h_sf_muon_vs_pt_avg", "Avg SF vs pT", 20, 0, 700);
+	h_sf_muon_vs_eta_avg   = new TH1F("h_sf_muon_vs_eta_avg", "Avg SF vs eta", 20, -5, 5);
 ///////////////////////////////////////////////
 	hLepCharge1 = new TH1F("lepCharge1"+trail, "lepCh1"+trail, 4, -2, 2);
 	hLepCharge2 = new TH1F("lepCharge2"+trail, "lepCh2"+trail, 4, -2, 2);
