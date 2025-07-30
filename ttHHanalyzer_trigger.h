@@ -7,7 +7,7 @@
 #include <vector>
 #include "TVector3.h"
 #include "TH1F.h"
-#include "TH2.h"//Trigger SF for electron
+#include "TH2.h"//Trigger SF for electron (TSFel)
 #include "TFile.h"
 #include <iterator>
 #include <string>
@@ -20,8 +20,8 @@
 #include "include/tthHypothesisCombinatorics.h"
 #include "include/HypothesisCombinatorics.h"
 #include "fifo_map.hpp"
-#include "json.hpp" // muon trigger SF
-using json = nlohmann::json;  /// this is for MUON trigger SF 
+#include "json.hpp" // muon trigger SF (TSFmu)
+using json = nlohmann::json;  /// this is for MUON trigger SF (TSFmu)
 
 //using namespace ROOT::Math;
 using nlohmann::fifo_map;
@@ -1022,7 +1022,7 @@ class ttHHanalyzer {
     ttHHanalyzer(const std::string & cl, eventBuffer * ev, float weight = 1., bool systematics = false,
  		  std::string year= "nothing", std::string DataOrMC = "nothing", std::string sampleName = "nothing"){
 	_weight = weight;
-	_initialWeight = weight;   //Trigger SF for electron
+	_initialWeight = weight;   //Trigger SF for electron (TSFel)
 	_ev = ev;
 	_cl = cl;
 	_sys = systematics;
@@ -1072,7 +1072,7 @@ class ttHHanalyzer {
  private: 
     bool _sys;
     float _weight;
-    float _initialWeight;  //Trigger SF for electron
+    float _initialWeight;  //Trigger SF for electron (TSFel)
 //    int _year;
 //    std::string _data;
 //    std::string _sample;
@@ -1101,7 +1101,7 @@ class ttHHanalyzer {
     float _bbMassMin1HiggsZ, _bbMassMin2HiggsZ, _minChi2HiggsZ = 999999999.;
     float _bbMassMin1Z, _bbMassMin2Z, _minChi2Z = 999999999.;
     TRandom3 _rand;
-///////////////////////Trigger electron
+///////////////////////Trigger electron (TSFel)
     TFile* eleTrigSFFile = nullptr;
     TH2F* h2_eleTrigSF = nullptr;
     TH2F* h2_eleTrigSF_unc = nullptr;
@@ -1133,7 +1133,7 @@ class ttHHanalyzer {
     TH1F* h_effMC_vs_pt_avg;
     TH1F* h_effMC_vs_eta_avg;
 ///////////////////////
-///////////////////////Muon trigger SF
+///////////////////////Muon trigger SF  (TSFmu)
     // Histogramas dos SFs de muons
     TH1F* h_sf_muon_vs_pt         = nullptr;
     TH1F* h_sf_muon_vs_eta        = nullptr;
@@ -1430,7 +1430,7 @@ class ttHHanalyzer {
 	tmpDirs.push_back(lepton);
 	lepton->cd();
 
-/////////////Electron Trigger SF //////////////////
+/////////////Electron Trigger SF //////////////////  (TSFel)
 	h_sf_vs_pt     = new TH1F("h_sf_vs_pt",     "SF vs pT;Electron pT [GeV];SF",        20, 0, 700);
 	h_sf_vs_eta    = new TH1F("h_sf_vs_eta",    "SF vs Eta;Electron #eta;SF",           20, -5, 5);
 	h_effMC_vs_pt  = new TH1F("h_effMC_vs_pt",  "EffMC vs pT;Electron pT [GeV];Eff.",   20, 0, 700);
@@ -1446,7 +1446,7 @@ class ttHHanalyzer {
 	h_effMC_vs_eta_count = new TH1F("h_effMC_vs_eta_count", "Count Eff vs eta",   20, -5, 5);
 	
 	//////////////////////////////////////////////////
-	 /////////////Muon Trigger SF //////////////////
+	 /////////////Muon Trigger SF //////////////////  (TSFmu)
 	h_sf_muon_vs_pt        = new TH1F("h_sf_muon_vs_pt", "Muon SF vs pT;Muon pT [GeV];SF", 20, 0, 700);
 	h_sf_muon_vs_eta       = new TH1F("h_sf_muon_vs_eta", "Muon SF vs Eta;Muon #eta;SF", 20, -5, 5);
 	h_sf_muon_vs_pt_sum    = new TH1F("h_sf_muon_vs_pt_sum", "Sum SF vs pT", 20, 0, 700);
