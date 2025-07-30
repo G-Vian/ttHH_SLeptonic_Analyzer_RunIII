@@ -1634,51 +1634,92 @@ if (muons && !muons->empty()) {
 
 
 void ttHHanalyzer::writeHistos() {
-// Cálculo das médias de SF e Eficiência com clonagem correta
+// ========= Cálculo das médias de SF e Eficiência com proteção contra divisão por zero =========
+
+// h_sf_vs_pt_avg
 if (h_sf_vs_pt_sum && h_sf_vs_pt_count) {
     if (h_sf_vs_pt_avg) delete h_sf_vs_pt_avg;
     h_sf_vs_pt_avg = (TH1F*) h_sf_vs_pt_sum->Clone("h_sf_vs_pt_avg");
-    h_sf_vs_pt_avg->Divide(h_sf_vs_pt_sum, h_sf_vs_pt_count, 1., 1., "B");
+    h_sf_vs_pt_avg->Reset();
+    for (int i = 1; i <= h_sf_vs_pt_avg->GetNbinsX(); ++i) {
+        float sum = h_sf_vs_pt_sum->GetBinContent(i);
+        float count = h_sf_vs_pt_count->GetBinContent(i);
+        h_sf_vs_pt_avg->SetBinContent(i, (count > 0) ? sum / count : 0);
+        h_sf_vs_pt_avg->SetBinError(i, (count > 0) ? std::sqrt(sum) / count : 0);  // erro simplificado
+    }
     h_sf_vs_pt_avg->SetDirectory(0);
 }
 
+// h_sf_vs_eta_avg
 if (h_sf_vs_eta_sum && h_sf_vs_eta_count) {
     if (h_sf_vs_eta_avg) delete h_sf_vs_eta_avg;
     h_sf_vs_eta_avg = (TH1F*) h_sf_vs_eta_sum->Clone("h_sf_vs_eta_avg");
-    h_sf_vs_eta_avg->Divide(h_sf_vs_eta_sum, h_sf_vs_eta_count, 1., 1., "B");
+    h_sf_vs_eta_avg->Reset();
+    for (int i = 1; i <= h_sf_vs_eta_avg->GetNbinsX(); ++i) {
+        float sum = h_sf_vs_eta_sum->GetBinContent(i);
+        float count = h_sf_vs_eta_count->GetBinContent(i);
+        h_sf_vs_eta_avg->SetBinContent(i, (count > 0) ? sum / count : 0);
+        h_sf_vs_eta_avg->SetBinError(i, (count > 0) ? std::sqrt(sum) / count : 0);
+    }
     h_sf_vs_eta_avg->SetDirectory(0);
 }
 
+// h_effMC_vs_pt_avg
 if (h_effMC_vs_pt_sum && h_effMC_vs_pt_count) {
     if (h_effMC_vs_pt_avg) delete h_effMC_vs_pt_avg;
     h_effMC_vs_pt_avg = (TH1F*) h_effMC_vs_pt_sum->Clone("h_effMC_vs_pt_avg");
-    h_effMC_vs_pt_avg->Divide(h_effMC_vs_pt_sum, h_effMC_vs_pt_count, 1., 1., "B");
+    h_effMC_vs_pt_avg->Reset();
+    for (int i = 1; i <= h_effMC_vs_pt_avg->GetNbinsX(); ++i) {
+        float sum = h_effMC_vs_pt_sum->GetBinContent(i);
+        float count = h_effMC_vs_pt_count->GetBinContent(i);
+        h_effMC_vs_pt_avg->SetBinContent(i, (count > 0) ? sum / count : 0);
+        h_effMC_vs_pt_avg->SetBinError(i, (count > 0) ? std::sqrt(sum) / count : 0);
+    }
     h_effMC_vs_pt_avg->SetDirectory(0);
 }
 
+// h_effMC_vs_eta_avg
 if (h_effMC_vs_eta_sum && h_effMC_vs_eta_count) {
     if (h_effMC_vs_eta_avg) delete h_effMC_vs_eta_avg;
     h_effMC_vs_eta_avg = (TH1F*) h_effMC_vs_eta_sum->Clone("h_effMC_vs_eta_avg");
-    h_effMC_vs_eta_avg->Divide(h_effMC_vs_eta_sum, h_effMC_vs_eta_count, 1., 1., "B");
+    h_effMC_vs_eta_avg->Reset();
+    for (int i = 1; i <= h_effMC_vs_eta_avg->GetNbinsX(); ++i) {
+        float sum = h_effMC_vs_eta_sum->GetBinContent(i);
+        float count = h_effMC_vs_eta_count->GetBinContent(i);
+        h_effMC_vs_eta_avg->SetBinContent(i, (count > 0) ? sum / count : 0);
+        h_effMC_vs_eta_avg->SetBinError(i, (count > 0) ? std::sqrt(sum) / count : 0);
+    }
     h_effMC_vs_eta_avg->SetDirectory(0);
 }
 
-// Cálculo das médias de SF dos muons com clonagem correta
-// Média SF vs pT
+// h_sf_muon_vs_pt_avg
 if (h_sf_muon_vs_pt_sum && h_sf_muon_vs_pt_count) {
     if (h_sf_muon_vs_pt_avg) delete h_sf_muon_vs_pt_avg;
     h_sf_muon_vs_pt_avg = (TH1F*) h_sf_muon_vs_pt_sum->Clone("h_sf_muon_vs_pt_avg");
-    h_sf_muon_vs_pt_avg->Divide(h_sf_muon_vs_pt_sum, h_sf_muon_vs_pt_count, 1., 1., "B");
+    h_sf_muon_vs_pt_avg->Reset();
+    for (int i = 1; i <= h_sf_muon_vs_pt_avg->GetNbinsX(); ++i) {
+        float sum = h_sf_muon_vs_pt_sum->GetBinContent(i);
+        float count = h_sf_muon_vs_pt_count->GetBinContent(i);
+        h_sf_muon_vs_pt_avg->SetBinContent(i, (count > 0) ? sum / count : 0);
+        h_sf_muon_vs_pt_avg->SetBinError(i, (count > 0) ? std::sqrt(sum) / count : 0);
+    }
     h_sf_muon_vs_pt_avg->SetDirectory(0);
 }
 
-// Média SF vs eta
+// h_sf_muon_vs_eta_avg
 if (h_sf_muon_vs_eta_sum && h_sf_muon_vs_eta_count) {
     if (h_sf_muon_vs_eta_avg) delete h_sf_muon_vs_eta_avg;
     h_sf_muon_vs_eta_avg = (TH1F*) h_sf_muon_vs_eta_sum->Clone("h_sf_muon_vs_eta_avg");
-    h_sf_muon_vs_eta_avg->Divide(h_sf_muon_vs_eta_sum, h_sf_muon_vs_eta_count, 1., 1., "B");
+    h_sf_muon_vs_eta_avg->Reset();
+    for (int i = 1; i <= h_sf_muon_vs_eta_avg->GetNbinsX(); ++i) {
+        float sum = h_sf_muon_vs_eta_sum->GetBinContent(i);
+        float count = h_sf_muon_vs_eta_count->GetBinContent(i);
+        h_sf_muon_vs_eta_avg->SetBinContent(i, (count > 0) ? sum / count : 0);
+        h_sf_muon_vs_eta_avg->SetBinError(i, (count > 0) ? std::sqrt(sum) / count : 0);
+    }
     h_sf_muon_vs_eta_avg->SetDirectory(0);
 }
+
 
 	
 	
