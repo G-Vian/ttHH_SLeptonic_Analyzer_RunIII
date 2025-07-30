@@ -7,13 +7,13 @@
 #include "ttHHanalyzer_trigger.h"
 #include <iostream>
 #include <fstream>
-#include "TH2.h"//Trigger SF for electron
+#include "TH2.h"//Trigger SF for electron  (TSFel)
 using namespace std;
 static std::ofstream sf_log_file("log_trigger_sf.txt");
-#include <cstdlib>/// this is for MUON trigger SF
-#include "json.hpp"// this is for MUON trigger SF
-using json = nlohmann::json;  /// this is for MUON trigger SF 
-json muonTrigSFJson; /// this is for MUON trigger SF 
+#include <cstdlib>/// this is for MUON trigger SF  (TSFmu)
+#include "json.hpp"// this is for MUON trigger SF (TSFmu)
+using json = nlohmann::json;  /// this is for MUON trigger SF  (TSFmu)
+json muonTrigSFJson; /// this is for MUON trigger SF  (TSFmu)
 
 
 ////Log of selection///////////
@@ -792,7 +792,7 @@ else if (thisEvent->getSelElectrons()->size() == 1 && thisEvent->getSelMuons()->
 
     return true;
 }
-//////////////////////Electron Trigger Scale Factors////////////////////////////////////////////////
+//////////////////////Electron Trigger Scale Factors////////////////////////////////////////////////  (TSFel)
 void ttHHanalyzer::initTriggerSF() {
     TString sfFilePath;
 
@@ -916,7 +916,7 @@ float ttHHanalyzer::getEleTrigSF(float eta, float pt, float& sf_unc) {
 
 ////////////////////////////////////////////////
 
-//////////////////////Muon Trigger Scale Factors////////////////////////////////////////////////
+//////////////////////Muon Trigger Scale Factors////////////////////////////////////////////////  (TSFmu)
 
 void ttHHanalyzer::initMuonHLTriggerSF() {
     TString repoPath = "muonefficiencies";
@@ -1095,7 +1095,7 @@ void ttHHanalyzer::diMotherReco(const TLorentzVector & dPar1p4,const TLorentzVec
     }
 } 
 
-///////////////electron trigger scale factor --> apply SF only to events with one electron!
+///////////////electron trigger scale factor --> apply SF only to events with one electron!  (TSFel)
 void ttHHanalyzer::analyze(event *thisEvent) {
     std::vector<objectLep*>* selectedElectrons = thisEvent->getSelElectrons();
     std::vector<objectLep*>* selectedMuons = thisEvent->getSelMuons();
@@ -1337,14 +1337,14 @@ void ttHHanalyzer::process(event* thisEvent, sysName sysType, bool up) {
     createObjects(thisEvent, sysType, up);
     if (!selectObjects(thisEvent)) return;
 
-    // Inicializar SF de trigger - elétrons
+    // Inicializar SF de trigger - elétrons  (TSFel)
     static bool eleSFInitialized = false;
     if (!eleSFInitialized) {
         initTriggerSF();
         eleSFInitialized = true;
     }
 
-    // Inicializar SF de trigger - múons
+    // Inicializar SF de trigger - múons  (TSFmu)
     static bool muonSFInitialized = false;
     if (!muonSFInitialized) {
         initMuonHLTriggerSF();
@@ -1365,7 +1365,7 @@ void ttHHanalyzer::fillHistos(event * thisEvent){
 	hCutFlow->SetBinContent(i, x.second);
 	i++;
     }
-// /////////////////////////// Electron Trigger SF ///////////////////////////
+// /////////////////////////// Electron Trigger SF ///////////////////////////  (TSFel)
 auto electrons = thisEvent->getSelElectrons();
 if (electrons && !electrons->empty()) {
     for (objectLep* ele : *electrons) {
@@ -1401,7 +1401,7 @@ if (electrons && !electrons->empty()) {
 }
   
 ////////////////////////////////////////////////////////////////
-///////////////Muon Trigger SF 
+///////////////Muon Trigger SF   (TSFmu)
 // Obtém os muons selecionados
 auto muons = thisEvent->getSelMuons();
 if (muons && !muons->empty()) {
@@ -1844,7 +1844,7 @@ if (h_sf_muon_vs_eta_sum && h_sf_muon_vs_eta_count) {
 
     _histoDirs.at(1)->cd();
 
-// ===SF Trigger Electron===
+// ===SF Trigger Electron===  (TSFel)
 if (h_sf_vs_pt)          h_sf_vs_pt->Write();
 if (h_sf_vs_eta)         h_sf_vs_eta->Write();
 if (h_effMC_vs_pt)       h_effMC_vs_pt->Write();
@@ -1858,7 +1858,7 @@ if (h_effMC_vs_eta_avg) h_effMC_vs_eta_avg->Write();
 
 
 //Histograms for muons
-// === SF Trigger Muon ===
+// === SF Trigger Muon ===  (TSFmu)
 if (h_sf_muon_vs_pt)      h_sf_muon_vs_pt->Write();
 if (h_sf_muon_vs_eta)     h_sf_muon_vs_eta->Write();
 if (h_sf_muon_vs_pt_avg)  h_sf_muon_vs_pt_avg->Write();
