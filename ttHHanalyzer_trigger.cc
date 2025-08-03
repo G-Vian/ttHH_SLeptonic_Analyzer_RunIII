@@ -9,7 +9,7 @@
 #include <fstream>
 #include "TH2.h"//Trigger SF for electron  (TSFel)
 using namespace std;
-static std::ofstream sf_log_file("log_trigger_sf.txt");
+static std::ofstream (*sf_log_file)("log_trigger_sf.txt");
 #include <cstdlib>/// this is for MUON trigger SF  (TSFmu)
 #include "json.hpp"// this is for MUON trigger SF (TSFmu)
 using json = nlohmann::json;  /// this is for MUON trigger SF  (TSFmu)
@@ -17,7 +17,7 @@ json muonTrigSFJson; /// this is for MUON trigger SF  (TSFmu)
 
 
 ////Log of selection///////////
-static std::ofstream event_log_file("event_selection_log.txt"); 
+static std::ofstream (*event_log_file)("event_selection_log.txt"); 
 static int event_counter = 0;
 ////////////////////////////////
 void ttHHanalyzer::performAnalysis(){
@@ -47,6 +47,25 @@ void ttHHanalyzer::performAnalysis(){
 }
 
 void ttHHanalyzer::loop(sysName sysType, bool up) {
+    // Inicializa os arquivos de log, se ainda não foram criados
+    if (!(*event_log_file) || !sf_log_file) {
+        if (_sampleName == "nothing") {
+            std::cerr << "[ERROR] SampleName is not defined before log initialization!" << std::endl;
+            std::exit(EXIT_FAILURE);
+        }
+
+        std::string log1_name = "event_selection_log_" + _sampleName + ".txt";
+        std::string log2_name = "log_trigger_sf_" + _sampleName + ".txt";
+
+        (*event_log_file) = std::make_unique<std::ofstream>(log1_name);
+        sf_log_file    = std::make_unique<std::ofstream>(log2_name);
+
+        if (!(*event_log_file)->is_open() || !sf_log_file->is_open()) {
+            std::cerr << "[ERROR] Failed to open log files for writing!" << std::endl;
+            std::exit(EXIT_FAILURE);
+        }
+    }
+
     int nevents = _ev->size();
 
     std::cout << std::endl;
@@ -82,88 +101,67 @@ void ttHHanalyzer::loop(sysName sysType, bool up) {
 
     std::string analysisInfo = _year + ", " + _DataOrMC + ", " + _sampleName;
 
-for (int entry = 0; entry < nevents; entry++) {
-    _entryInLoop = entry;  // <<< Atualiza o número do evento atual
+    for (int entry = 0; entry < nevents; entry++) {
+        _entryInLoop = entry;
 
-    event *currentEvent = new event;
-    _ev->read(entry);
+        event *currentEvent = new event;
+        _ev->read(entry);
 
-    process(currentEvent, sysType, up);
+        process(currentEvent, sysType, up);
 
-    if (entry % 1000 == 0) {
-        std::cout << "[INFO] Processed events of " << analysisInfo << ": " << entry << std::endl;
-        currentEvent->summarize();
+        if (entry % 1000 == 0) {
+            std::cout << "[INFO] Processed events of " << analysisInfo << ": " << entry << std::endl;
+            currentEvent->summarize();
+        }
+
+        events.push_back(currentEvent);
     }
 
-    events.push_back(currentEvent);
-}
+    // Escreve o log de eficiência
+    std::ofstream& log = *event_log_file;
+    log << "==== Cutflow summary with efficiencies: ====" << std::endl;
 
-/////Log of efficiencies ////
-    // Depois de processar todos os eventos, imprime o log resumido:
-    event_log_file << "==== Cutflow summary with efficiencies: ====" << std::endl;
+    log << "  Trigger      : " << cutflow["nHLTrigger"]
+        << " | Abs eff: " << 100.0 * cutflow["nHLTrigger"] / cutflow["noCut"] << "%"
+        << " | Seq eff: N/A" << std::endl;
 
-    event_log_file << "  Trigger      : " << cutflow["nHLTrigger"]
-                   << " | Abs eff: "
-                   << 100.0 * cutflow["nHLTrigger"] / cutflow["noCut"] << "%"
-                   << " | Seq eff: N/A" << std::endl;
+    log << " Filters  : " << cutflow["nFilter"]
+        << " | Abs eff: " << 100.0 * cutflow["nFilter"] / cutflow["noCut"] << "%"
+        << " | Seq eff: " << 100.0 * cutflow["nFilter"] / cutflow["nHLTrigger"] << "%" << std::endl;
 
-    event_log_file << " Filters  : " << cutflow["nFilter"]
-                   << " | Abs eff: "
-                   << 100.0 * cutflow["nFilter"] / cutflow["noCut"] << "%"
-                   << " | Seq eff: "
-                   << 100.0 * cutflow["nFilter"] / cutflow["nHLTrigger"] << "%" << std::endl;
+    log << "  Good PV      : " << cutflow["nPV"]
+        << " | Abs eff: " << 100.0 * cutflow["nPV"] / cutflow["noCut"] << "%"
+        << " | Seq eff: " << 100.0 * cutflow["nPV"] / cutflow["nFilter"] << "%" << std::endl;
 
-    event_log_file << "  Good PV      : " << cutflow["nPV"]
-                   << " | Abs eff: "
-                   << 100.0 * cutflow["nPV"] / cutflow["noCut"] << "%"
-                   << " | Seq eff: "
-                   << 100.0 * cutflow["nPV"] / cutflow["nFilter"] << "%" << std::endl;
+    log << "  nJets > 5    : " << cutflow["njets>5"]
+        << " | Abs eff: " << 100.0 * cutflow["njets>5"] / cutflow["noCut"] << "%"
+        << " | Seq eff: " << 100.0 * cutflow["njets>5"] / cutflow["nPV"] << "%" << std::endl;
 
-    event_log_file << "  nJets > 5    : " << cutflow["njets>5"]
-                   << " | Abs eff: "
-                   << 100.0 * cutflow["njets>5"] / cutflow["noCut"] << "%"
-                   << " | Seq eff: "
-                   << 100.0 * cutflow["njets>5"] / cutflow["nPV"] << "%" << std::endl;
+    log << "  nbJets > 4   : " << cutflow["nbjets>4"]
+        << " | Abs eff: " << 100.0 * cutflow["nbjets>4"] / cutflow["noCut"] << "%"
+        << " | Seq eff: " << 100.0 * cutflow["nbjets>4"] / cutflow["njets>5"] << "%" << std::endl;
 
-    event_log_file << "  nbJets > 4   : " << cutflow["nbjets>4"]
-                   << " | Abs eff: "
-                   << 100.0 * cutflow["nbjets>4"] / cutflow["noCut"] << "%"
-                   << " | Seq eff: "
-                   << 100.0 * cutflow["nbjets>4"] / cutflow["njets>5"] << "%" << std::endl;
+    log << "  nLeptons==1  : " << cutflow["nlepton==1"]
+        << " | Abs eff: " << 100.0 * cutflow["nlepton==1"] / cutflow["noCut"] << "%"
+        << " | Seq eff: " << 100.0 * cutflow["nlepton==1"] / cutflow["nbjets>4"] << "%" << std::endl;
 
-    event_log_file << "  nLeptons==1  : " << cutflow["nlepton==1"]
-                   << " | Abs eff: "
-                   << 100.0 * cutflow["nlepton==1"] / cutflow["noCut"] << "%"
-                   << " | Seq eff: "
-                   << 100.0 * cutflow["nlepton==1"] / cutflow["nbjets>4"] << "%" << std::endl;
+    log << "  MET > 20     : " << cutflow["MET>20"]
+        << " | Abs eff: " << 100.0 * cutflow["MET>20"] / cutflow["noCut"] << "%"
+        << " | Seq eff: " << 100.0 * cutflow["MET>20"] / cutflow["nlepton==1"] << "%" << std::endl;
 
-    event_log_file << "  MET > 20     : " << cutflow["MET>20"]
-                   << " | Abs eff: "
-                   << 100.0 * cutflow["MET>20"] / cutflow["noCut"] << "%"
-                   << " | Seq eff: "
-                   << 100.0 * cutflow["MET>20"] / cutflow["nlepton==1"] << "%" << std::endl;
+    log << std::endl;
 
-    event_log_file << std::endl;
-	
-
-////////////////////////////
-	
-
-	
-    // Agora as chamadas a writeHistos e writeTree ficam dentro da função
     writeHistos();
     writeTree();
 
     for (const auto &x : cutflow) {
-        std::cout << x.first  // string (key)
-                  << ": " 
-                  << x.second // string's value 
-                  << std::endl;
+        std::cout << x.first << ": " << x.second << std::endl;
     }
 
     hCutFlow->Write();
     hCutFlow_w->Write();
-} // fim do método loop
+}//fim do méotodo loop
+
 
 
 
@@ -172,7 +170,7 @@ void ttHHanalyzer::createObjects(event * thisEvent, sysName sysType, bool up){
 ////Log of selection///
 
 event_counter++;
-event_log_file << "==== Evento " << event_counter << " ====" << std::endl;
+(*event_log_file) << "==== Evento " << event_counter << " ====" << std::endl;
 /////
 	
 cutflow["noCut"]+=1;
@@ -405,7 +403,7 @@ for(int i=0; i < boostedJet.size(); i++){
         }
     }
 }
-event_log_file << "Boosted jets selecionados: " << nBoostedJets 
+(*event_log_file) << "Boosted jets selecionados: " << nBoostedJets 
                << ", Hadronic Higgs: " << nHadronicHiggs << std::endl;
 
 // === Lepton Leading Selection ===
@@ -434,7 +432,7 @@ if(!thereIsALeadLepton){
         }
     }
 }
-event_log_file << "Lepton líder encontrado? " << (thereIsALeadLepton ? "SIM" : "NÃO") 
+(*event_log_file) << "Lepton líder encontrado? " << (thereIsALeadLepton ? "SIM" : "NÃO") 
                << " | Muons líderes: " << nLeadingMuons 
                << " | Elétrons líderes: " << nLeadingElectrons << std::endl;
 
@@ -469,7 +467,7 @@ if(thereIsALeadLepton){
         }
     }
 }
-event_log_file << "Sub-leading leptons: Muons: " << nSubMuons 
+(*event_log_file) << "Sub-leading leptons: Muons: " << nSubMuons 
                << ", Electrons: " << nSubEles << std::endl;
 
 // === Jets ===
@@ -572,7 +570,7 @@ for (int i = 0; i < jet.size(); i++) {
     }
 }
 
-event_log_file << "Jets selecionados: " << nJets 
+(*event_log_file) << "Jets selecionados: " << nJets 
                << " | Light: " << nLightJets 
                << " | Loose b-jets: " << nLooseBJets 
                << " | Medium b-jets: " << nMediumBJets << std::endl;
@@ -604,10 +602,10 @@ for (int i = 0; i < genPart.size(); i++){
         if (currentGenPart->hasTopMother) nFromTop++;
     }
 }
-event_log_file << "Gen b-quarks selecionados: " << nGenBJets 
+(*event_log_file) << "Gen b-quarks selecionados: " << nGenBJets 
                << " | Com mãe Higgs: " << nFromHiggs 
                << " | Com mãe Top: " << nFromTop << std::endl;
-event_log_file << std::endl;
+(*event_log_file) << std::endl;
 
 }
 ///////////////////
@@ -615,10 +613,10 @@ event_log_file << std::endl;
 bool ttHHanalyzer::selectObjects(event *thisEvent){
 // Trigger cut
 if (cut["trigger"] > 0 && thisEvent->getTriggerAccept() == false) {
-    event_log_file << "Esse evento foi rejeitado pelo trigger." << std::endl;
+    (*event_log_file) << "Esse evento foi rejeitado pelo trigger." << std::endl;
     return false;
 } else if (cut["trigger"] > 0 && thisEvent->getTriggerAccept() == true) {
-    event_log_file << "Esse evento passou pelo trigger." << std::endl;
+    (*event_log_file) << "Esse evento passou pelo trigger." << std::endl;
     cutflow["nHLTrigger"] += 1;
     hCutFlow->Fill("nHLTrigger", 1);
     hCutFlow_w->Fill("nHLTrigger", _weight);
@@ -626,34 +624,34 @@ if (cut["trigger"] > 0 && thisEvent->getTriggerAccept() == false) {
 
 // Filter cut
 // Log dos flags Filters
-event_log_file << "Filter flags para este evento:\n";
-event_log_file << " - Flag_goodVertices: " << _ev->Flag_goodVertices << "\n";
-event_log_file << " - Flag_globalSuperTightHalo2016Filter: " << _ev->Flag_globalSuperTightHalo2016Filter << "\n";
-event_log_file << " - Flag_EcalDeadCellTriggerPrimitiveFilter: " << _ev->Flag_EcalDeadCellTriggerPrimitiveFilter << "\n";
-event_log_file << " - Flag_BadPFMuonFilter: " << _ev->Flag_BadPFMuonFilter << "\n";
-event_log_file << " - Flag_BadPFMuonDzFilter: " << _ev->Flag_BadPFMuonDzFilter << "\n";
-event_log_file << " - Flag_hfNoisyHitsFilter: " << _ev->Flag_hfNoisyHitsFilter << "\n";
-event_log_file << " - Flag_eeBadScFilter: " << _ev->Flag_eeBadScFilter << "\n";
-event_log_file << " - Flag_ecalBadCalibFilter: " << _ev->Flag_ecalBadCalibFilter << "\n";
+(*event_log_file) << "Filter flags para este evento:\n";
+(*event_log_file) << " - Flag_goodVertices: " << _ev->Flag_goodVertices << "\n";
+(*event_log_file) << " - Flag_globalSuperTightHalo2016Filter: " << _ev->Flag_globalSuperTightHalo2016Filter << "\n";
+(*event_log_file) << " - Flag_EcalDeadCellTriggerPrimitiveFilter: " << _ev->Flag_EcalDeadCellTriggerPrimitiveFilter << "\n";
+(*event_log_file) << " - Flag_BadPFMuonFilter: " << _ev->Flag_BadPFMuonFilter << "\n";
+(*event_log_file) << " - Flag_BadPFMuonDzFilter: " << _ev->Flag_BadPFMuonDzFilter << "\n";
+(*event_log_file) << " - Flag_hfNoisyHitsFilter: " << _ev->Flag_hfNoisyHitsFilter << "\n";
+(*event_log_file) << " - Flag_eeBadScFilter: " << _ev->Flag_eeBadScFilter << "\n";
+(*event_log_file) << " - Flag_ecalBadCalibFilter: " << _ev->Flag_ecalBadCalibFilter << "\n";
 
 if (cut["filter"] > 0 && thisEvent->getMETFilter() == false) {
-    event_log_file << "Esse evento foi rejeitado pelo Filters." << std::endl;
+    (*event_log_file) << "Esse evento foi rejeitado pelo Filters." << std::endl;
     return false;
 } else if (cut["filter"] > 0 && thisEvent->getMETFilter() == true) {
-    event_log_file << "Esse evento passou pelo Filters." << std::endl;
+    (*event_log_file) << "Esse evento passou pelo Filters." << std::endl;
     cutflow["nFilter"] += 1;
     hCutFlow->Fill("nFilter", 1);
     hCutFlow_w->Fill("nFilter", _weight);
 }
 // Primary vertex cut
 // Log do número de vértices
-event_log_file << "Número de vértices primários bons (PV_npvsGood): " << _ev->PV_npvsGood << "\n";
+(*event_log_file) << "Número de vértices primários bons (PV_npvsGood): " << _ev->PV_npvsGood << "\n";
 
 if (cut["pv"] > 0 && thisEvent->getPVvalue() == false) {
-    event_log_file << "Esse evento foi rejeitado pelo corte de primary vertex." << std::endl;
+    (*event_log_file) << "Esse evento foi rejeitado pelo corte de primary vertex." << std::endl;
     return false;
 } else if (cut["pv"] > 0 && thisEvent->getPVvalue() == true) {
-    event_log_file << "Esse evento passou pelo corte de primary vertex." << std::endl;
+    (*event_log_file) << "Esse evento passou pelo corte de primary vertex." << std::endl;
     cutflow["nPV"] += 1;
     hCutFlow->Fill("nPV", 1);
     hCutFlow_w->Fill("nPV", _weight);
@@ -1115,8 +1113,8 @@ void ttHHanalyzer::analyze(event *thisEvent) {
 
         _weight *= triggerSF;
 
-        if (sf_log_file.is_open()) {
-            sf_log_file << "Entry " << _entryInLoop
+        if ((*sf_log_file).is_open()) {
+            (*sf_log_file) << "Entry " << _entryInLoop
                         << " | Electron η = " << ele->getp4()->Eta()
                         << ", pT = " << ele->getp4()->Pt()
                         << " | Electron SF = " << std::fixed << std::setprecision(10) << triggerSF
@@ -1133,8 +1131,8 @@ void ttHHanalyzer::analyze(event *thisEvent) {
 
         _weight *= triggerSF;
 
-        if (sf_log_file.is_open()) {
-            sf_log_file << "Entry " << _entryInLoop
+        if ((*sf_log_file).is_open()) {
+            (*sf_log_file) << "Entry " << _entryInLoop
                         << " | Muon η = " << mu->getp4()->Eta()
                         << ", pT = " << mu->getp4()->Pt()
                         << " | Muon SF = " << std::fixed << std::setprecision(10) << triggerSF
