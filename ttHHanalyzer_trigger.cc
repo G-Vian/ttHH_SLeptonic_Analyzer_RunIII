@@ -9,7 +9,7 @@
 #include <fstream>
 #include "TH2.h"//Trigger SF for electron  (TSFel)
 using namespace std;
-static std::ofstream (*sf_log_file)("log_trigger_sf.txt");
+//static std::ofstream (*sf_log_file)("log_trigger_sf.txt");
 #include <cstdlib>/// this is for MUON trigger SF  (TSFmu)
 #include "json.hpp"// this is for MUON trigger SF (TSFmu)
 using json = nlohmann::json;  /// this is for MUON trigger SF  (TSFmu)
@@ -17,8 +17,8 @@ json muonTrigSFJson; /// this is for MUON trigger SF  (TSFmu)
 
 
 ////Log of selection///////////
-static std::ofstream (*event_log_file)("event_selection_log.txt"); 
-static int event_counter = 0;
+//static std::ofstream (*event_log_file)("event_selection_log.txt"); 
+//static int event_counter = 0;
 ////////////////////////////////
 void ttHHanalyzer::performAnalysis(){
     loop(noSys, false);
