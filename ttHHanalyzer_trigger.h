@@ -1070,6 +1070,8 @@ class ttHHanalyzer {
     //    std::unordered_map<std::string, int> cutflow {{"noCut", 0}, {"njets>3", 0}, {"nbjets>2", 0}, {"nlepton==2", 0}, {"nOpositeChargedLep", 0}, {"nMassCut", 0}, {"nTotal", 0}};
 
  private: 
+    std::unique_ptr<std::ofstream> event_log_file; // logs
+    std::unique_ptr<std::ofstream> sf_log_file; // logs
     bool _sys;
     float _weight;
     float _initialWeight;  //Trigger SF for electron (TSFel)
