@@ -49,7 +49,7 @@ void ttHHanalyzer::performAnalysis(){
 
 void ttHHanalyzer::loop(sysName sysType, bool up) {
     // Inicializa os arquivos de log, se ainda não foram criados
-    if (!(*event_log_file) || !sf_log_file) {
+    if (!event_log_file || !sf_log_file) {
         if (_sampleName == "nothing") {
             std::cerr << "[ERROR] SampleName is not defined before log initialization!" << std::endl;
             std::exit(EXIT_FAILURE);
@@ -58,10 +58,10 @@ void ttHHanalyzer::loop(sysName sysType, bool up) {
         std::string log1_name = "event_selection_log_" + _sampleName + ".txt";
         std::string log2_name = "log_trigger_sf_" + _sampleName + ".txt";
 
-        (*event_log_file) = std::make_unique<std::ofstream>(log1_name);
+        event_log_file = std::make_unique<std::ofstream>(log1_name);
         sf_log_file    = std::make_unique<std::ofstream>(log2_name);
 
-        if (!(*event_log_file)->is_open() || !sf_log_file->is_open()) {
+        if (!event_log_file->is_open() || !sf_log_file->is_open()) {
             std::cerr << "[ERROR] Failed to open log files for writing!" << std::endl;
             std::exit(EXIT_FAILURE);
         }
