@@ -866,18 +866,18 @@ void ttHHanalyzer::initTriggerSF() {
     }
 
     // Inicializa histogramas manuais
-    h_sf_vs_pt         = new TH1F("h_sf_vs_pt",     "SF vs pT;Electron pT [GeV];SF",        20, 0, 700);
-    h_sf_vs_eta        = new TH1F("h_sf_vs_eta",    "SF vs Eta;Electron #eta;SF",           20, -5, 5);
-    h_effMC_vs_pt      = new TH1F("h_effMC_vs_pt",  "EffMC vs pT;Electron pT [GeV];Eff.",   20, 0, 700);
-    h_effMC_vs_eta     = new TH1F("h_effMC_vs_eta", "EffMC vs Eta;Electron #eta;Eff.",      20, -5, 5);
-    h_sf_vs_pt_sum     = new TH1F("h_sf_vs_pt_sum", "Sum SF vs pT",                         20, 0, 700);
-    h_sf_vs_pt_count   = new TH1F("h_sf_vs_pt_count", "Count SF vs pT",                     20, 0, 700);
-    h_sf_vs_eta_sum    = new TH1F("h_sf_vs_eta_sum", "Sum SF vs eta",                       20, -5, 5);
-    h_sf_vs_eta_count  = new TH1F("h_sf_vs_eta_count", "Count SF vs eta",                   20, -5, 5);
-    h_effMC_vs_pt_sum  = new TH1F("h_effMC_vs_pt_sum", "Sum Eff vs pT",                     20, 0, 700);
-    h_effMC_vs_pt_count = new TH1F("h_effMC_vs_pt_count", "Count Eff vs pT",                20, 0, 700);
-    h_effMC_vs_eta_sum = new TH1F("h_effMC_vs_eta_sum", "Sum Eff vs eta",                   20, -5, 5);
-    h_effMC_vs_eta_count = new TH1F("h_effMC_vs_eta_count", "Count Eff vs eta",             20, -5, 5);
+    h_sf_vs_pt         = new TH1F("h_sf_vs_pt",     "SF vs pT;Electron pT [GeV];SF",        100, 0, 700);
+    h_sf_vs_eta        = new TH1F("h_sf_vs_eta",    "SF vs Eta;Electron #eta;SF",           100, -5, 5);
+    h_effMC_vs_pt      = new TH1F("h_effMC_vs_pt",  "EffMC vs pT;Electron pT [GeV];Eff.",   100, 0, 700);
+    h_effMC_vs_eta     = new TH1F("h_effMC_vs_eta", "EffMC vs Eta;Electron #eta;Eff.",      100, -5, 5);
+    h_sf_vs_pt_sum     = new TH1F("h_sf_vs_pt_sum", "Sum SF vs pT",                         100, 0, 700);
+    h_sf_vs_pt_count   = new TH1F("h_sf_vs_pt_count", "Count SF vs pT",                     100, 0, 700);
+    h_sf_vs_eta_sum    = new TH1F("h_sf_vs_eta_sum", "Sum SF vs eta",                       100, -5, 5);
+    h_sf_vs_eta_count  = new TH1F("h_sf_vs_eta_count", "Count SF vs eta",                   100, -5, 5);
+    h_effMC_vs_pt_sum  = new TH1F("h_effMC_vs_pt_sum", "Sum Eff vs pT",                     100, 0, 700);
+    h_effMC_vs_pt_count = new TH1F("h_effMC_vs_pt_count", "Count Eff vs pT",                100, 0, 700);
+    h_effMC_vs_eta_sum = new TH1F("h_effMC_vs_eta_sum", "Sum Eff vs eta",                   100, -5, 5);
+    h_effMC_vs_eta_count = new TH1F("h_effMC_vs_eta_count", "Count Eff vs eta",             100, -5, 5);
 
     // SetDirectory(0) para evitar ownership do arquivo ROOT
     std::vector<TH1*> hists = {
