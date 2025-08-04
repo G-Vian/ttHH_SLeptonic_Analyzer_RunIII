@@ -18,7 +18,7 @@ json muonTrigSFJson; /// this is for MUON trigger SF  (TSFmu)
 
 ////Log of selection///////////
 //static std::ofstream (*event_log_file)("event_selection_log.txt"); 
-//static int event_counter = 0;
+static int event_counter = 0;
 ////////////////////////////////
 void ttHHanalyzer::performAnalysis(){
     loop(noSys, false);
