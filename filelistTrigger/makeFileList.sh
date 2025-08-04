@@ -1,4 +1,11 @@
+
 #!/bin/bash
+
+#how to use :
+#  chmod +x makeFileList.sh
+# voms-proxy-init --voms cms
+# ./makeFileList.sh
+
 
 #2022
 dasgoclient --query="file dataset=/TTHHto4B_TuneCP5_13p6TeV_madgraph-pythia8/Run3Summer22NanoAODv12-130X_mcRun3_2022_realistic_v5-v2/NANOAODSIM" | sed 's|^|root://xrootd-cms.infn.it//|' >> full_TTHH_22.txt
@@ -56,9 +63,5 @@ dasgoclient --query="file dataset=/TTZH-ZHto4B_TuneCP5_13p6TeV_madgraph-pythia8/
 #dasgoclient --query="file dataset=/TTZZ-ZZto4B_TuneCP5_13p6TeV_madgraph-pythia8/RunIII2024Summer24NanoAOD-140X_mcRun3_2024_realistic_v26-v3/NANOAODSIM" | sed 's|^|root://xrootd-cms.infn.it//|' >> full_TTZZ_24_14.txt
 dasgoclient --query="file dataset=/TTtoLNu2Q_TuneCP5_13p6TeV_powheg-pythia8/RunIII2024Summer24NanoAOD-140X_mcRun3_2024_realistic_v26-v2/NANOAODSIM" | sed 's|^|root://xrootd-cms.infn.it//|' >> full_TTSL_24_14.txt
 
-#how to use :
-#  chmod +x makeFileList.sh
-# voms-proxy-init --voms cms
-# ./makeFileList.sh
 
 
