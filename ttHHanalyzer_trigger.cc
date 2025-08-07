@@ -121,6 +121,8 @@ void ttHHanalyzer::loop(sysName sysType, bool up) {
     // Escreve o log de eficiência
     std::ofstream& log = *event_log_file;
     log << "==== Cutflow summary with efficiencies: ====" << std::endl;
+  
+    log << "  No cut : " << cutflow["noCut"] << std::endl;
 
     log << "  Trigger      : " << cutflow["nHLTrigger"]
         << " | Abs eff: " << 100.0 * cutflow["nHLTrigger"] / cutflow["noCut"] << "%"
