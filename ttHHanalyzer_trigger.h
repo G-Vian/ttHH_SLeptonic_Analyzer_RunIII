@@ -21,8 +21,10 @@
 #include "include/tthHypothesisCombinatorics.h"
 #include "include/HypothesisCombinatorics.h"
 #include "fifo_map.hpp"
-#include "json.hpp" // muon trigger SF (TSFmu)
-using json = nlohmann::json;  /// this is for MUON trigger SF (TSFmu)
+
+extern json muonTrigSFJson;
+//#include "json.hpp" // muon trigger SF (TSFmu)
+//using json = nlohmann::json;  /// this is for MUON trigger SF (TSFmu)
 
 //using namespace ROOT::Math;
 using nlohmann::fifo_map;
