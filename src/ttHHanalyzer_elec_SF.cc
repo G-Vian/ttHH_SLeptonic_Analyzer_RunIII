@@ -1,4 +1,4 @@
-#include "ttHHanalyzer.h"
+#include "ttHHanalyzer_trigger.h"
 #include "TFile.h"
 #include "TH1F.h"
 #include "TH2F.h"
