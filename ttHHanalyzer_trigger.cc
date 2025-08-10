@@ -21,6 +21,41 @@ static std::unique_ptr<std::ofstream> sf_log_file;
 static int event_counter = 0;
 long long total_electrons_processed = 0;
 long long total_muons_processed = 0;
+
+
+/////////////////////////////////
+//////////cuts//////////////////
+
+map<std::string, float> cut { 
+    {"nJets", 5} // nJets higher than 
+    , {"nLeptons", 1} // nLepton equals to (Single-Leptonic)
+    //    , {"nVetoLeptons", 0} // nVetoLepton equals to
+    , {"HT", 0}
+    , {"MET", 20} // MET higher than
+    , {"nbJets", 4} //nBjets higher than
+    , {"jetPt", 30} // jet pT higher than
+    , {"leadElePt", 30} // leadElectron pT higher than
+    , {"leadMuonPt", 29} // leadMuon pT higher than
+    , {"subLeadElePt", 15} // subLeadElectron pT higher than
+    , {"subLeadMuonPt", 15} // subLeadMuon pT higher than
+    // , {"vetoLepPt", 15} // lepton pT higher than
+    , {"boostedJetPt", 10} // boostedJet pT higher than
+    , {"hadHiggsPt", 20} // hadronic Higgs pT higher than
+    , {"jetEta", 2.6} // jet eta higher than
+    , {"eleEta", 2.5} // electron eta higher than
+    , {"muonEta", 2.4} // muon eta higher than
+    , {"boostedJetEta", 2.5} // boostedJet eta higher than
+    , {"muonIso", 0.15} // muon isolation less than
+    , {"eleIso", 0.15}  // ele isolation less than (we set = to the muon Isolation)
+    , {"jetID", 6}   // pass tight and tightLepVeto ID
+    , {"jetPUid", 4}   // pass loose cut fail tight and medium
+    , {"bTagDisc", 0.80} // this is not the same as BTagDisc, with capital B. bTagDisc in this case is just a cut for the boosted jets.
+    , {"trigger", 1} // trigger
+    , {"filter", 1} // MET filter
+    , {"pv", 1}}; // primary vertex  
+
+
+////////////////////////////////
 ////////////////////////////////
 void ttHHanalyzer::performAnalysis(){
     loop(noSys, false);
