@@ -1030,7 +1030,8 @@ class ttHHanalyzer {
 	_year= year;
 	_DataOrMC = DataOrMC;
 	_sampleName = sampleName;
-
+    long long total_electrons_processed = 0;
+    long long total_muons_processed = 0;
 	initHistograms();	
 	initTree();
 	initSys();
