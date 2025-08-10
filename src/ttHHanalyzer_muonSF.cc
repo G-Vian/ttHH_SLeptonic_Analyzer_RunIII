@@ -9,6 +9,10 @@ void ttHHanalyzer::initMuonHLTriggerSF() {
     TString repoPath = "muonefficiencies";
     TString sfFilePath;
 
+    sf_summary_log_file.open("SF_summary_log.txt");
+if (!sf_summary_log_file.is_open()) {
+    std::cerr << "Erro ao abrir arquivo SF_summary_log.txt para escrita!" << std::endl;
+}
     if (_year == "2022") {
         sfFilePath = repoPath + "/Run3/2022/2022_Z/HLT/json/ScaleFactors_Muon_Z_HLT_2022_eta_pt_schemaV2.json";
     } else if (_year == "2022EE") {
