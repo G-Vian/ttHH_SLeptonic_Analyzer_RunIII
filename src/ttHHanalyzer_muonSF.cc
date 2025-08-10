@@ -1,5 +1,5 @@
 // ttHHanalyzer_muonSF.cc
-#include "ttHHanalyzer.h"
+#include "ttHHanalyzer_trigger.h"
 #include <fstream>
 #include <iostream>
 #include <vector>
