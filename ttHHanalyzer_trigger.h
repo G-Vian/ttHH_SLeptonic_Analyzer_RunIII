@@ -10,8 +10,9 @@
 #include "TH2.h"//Trigger SF for electron (TSFel)
 #include "TFile.h"
 #include <iterator>
-#include <string>
-#include "EventShape/Class/src/EventShape.cc"
+#include <string>  
+//#include "EventShape/Class/src/EventShape.cc"
+#include "EventShape/Class/interface/EventShape.h"
 #include <TLorentzVector.h>
 #include "TRandom3.h"
 #include <unordered_map>
@@ -1018,8 +1019,7 @@ class event{
 
 class ttHHanalyzer {
  public:
-    long long total_electrons_processed = 0;
-    long long total_muons_processed = 0;
+
     enum sysName { kJES, kJER, kbTag, noSys };
     ttHHanalyzer(const std::string & cl, eventBuffer * ev, float weight = 1., bool systematics = false,
  		  std::string year= "nothing", std::string DataOrMC = "nothing", std::string sampleName = "nothing"){
