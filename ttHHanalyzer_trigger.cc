@@ -128,6 +128,13 @@ void ttHHanalyzer::loop(sysName sysType, bool up) {
         << " | Abs eff: " << 100.0 * cutflow["nHLTrigger"] / cutflow["noCut"] << "%"
         << " | Seq eff: N/A" << std::endl;
 
+    log << "  Elec_Trigger      : " << cutflow["Elec_Trigger "]
+        << " | Abs eff: " << 100.0 * cutflow["Elec_Trigger "] / cutflow["noCut"] << "%"
+        << " | Seq eff: N/A" << std::endl;
+    log << "  Muon_Trigger       : " << cutflow["Muon_Trigger  "]
+        << " | Abs eff: " << 100.0 * cutflow["Muon_Trigger  "] / cutflow["noCut"] << "%"
+        << " | Seq eff: N/A" << std::endl;
+	
     log << " Filters  : " << cutflow["nFilter"]
         << " | Abs eff: " << 100.0 * cutflow["nFilter"] / cutflow["noCut"] << "%"
         << " | Seq eff: " << 100.0 * cutflow["nFilter"] / cutflow["nHLTrigger"] << "%" << std::endl;
@@ -618,8 +625,24 @@ bool ttHHanalyzer::selectObjects(event *thisEvent){
 if (cut["trigger"] > 0 && thisEvent->getTriggerAccept() == false) {
     (*event_log_file) << "Esse evento foi rejeitado pelo trigger." << std::endl;
     return false;
-} else if (cut["trigger"] > 0 && thisEvent->getTriggerAccept() == true) {
-    (*event_log_file) << "Esse evento passou pelo trigger." << std::endl;
+} 
+else if (cut["trigger"] > 0 && thisEvent->getTriggerAccept() == true) {
+
+    // Verifica qual trigger foi aceito
+    if (_ev->HLT_Ele30_WPTight_Gsf) {
+        (*event_log_file) << "Esse evento passou pelo trigger de elétron." << std::endl;
+        cutflow["Elec_Trigger"] += 1;
+        hCutFlow->Fill("Elec_Trigger", 1);
+        hCutFlow_w->Fill("Elec_Trigger", _weight);
+    }
+    else if (_ev->HLT_IsoMu24) {
+        (*event_log_file) << "Esse evento passou pelo trigger de múon." << std::endl;
+        cutflow["Muon_Trigger"] += 1;
+        hCutFlow->Fill("Muon_Trigger", 1);
+        hCutFlow_w->Fill("Muon_Trigger", _weight);
+    }
+
+    // Contador geral para qualquer trigger
     cutflow["nHLTrigger"] += 1;
     hCutFlow->Fill("nHLTrigger", 1);
     hCutFlow_w->Fill("nHLTrigger", _weight);
@@ -794,6 +817,7 @@ else if (thisEvent->getSelElectrons()->size() == 1 && thisEvent->getSelMuons()->
     return true;
 }
 //////////////////////Electron Trigger Scale Factors////////////////////////////////////////////////  (TSFel)
+/*
 void ttHHanalyzer::initTriggerSF() {
     TString sfFilePath;
 
@@ -913,13 +937,14 @@ float ttHHanalyzer::getEleTrigSF(float eta, float pt, float& sf_unc) {
     return sf;
 }
 
+*/
 
 
 ////////////////////////////////////////////////
 
 //////////////////////Muon Trigger Scale Factors////////////////////////////////////////////////  (TSFmu)
 
-void ttHHanalyzer::initMuonHLTriggerSF() {
+/*void ttHHanalyzer::initMuonHLTriggerSF() {
     TString repoPath = "muonefficiencies";
     TString sfFilePath;
 
@@ -1066,7 +1091,7 @@ float ttHHanalyzer::getMuonTrigSF(float eta, float pt) {
 
     // Se não encontrou "nominal", retorna 1.0 como fallback
     return 1.0;
-}
+}*/
 ///////////////////
 
 
@@ -1359,7 +1384,8 @@ void ttHHanalyzer::process(event* thisEvent, sysName sysType, bool up) {
 
 
 void ttHHanalyzer::fillHistos(event * thisEvent){
-
+static long long total_electrons_processed = 0;
+static long long total_muons_processed = 0;
       
     int i = 1; 
     for (const auto& x : cutflow){
@@ -1372,6 +1398,15 @@ if (electrons && !electrons->empty()) {
     for (objectLep* ele : *electrons) {
         float pt = ele->getp4()->Pt();
         float eta = ele->getp4()->Eta();
+
+        // Incrementa o contador e registra no log para cada elétron
+        total_electrons_processed++;
+
+        if (sf_summary_log_file.is_open()) {
+            sf_summary_log_file << "[Electron] η: " << eta << ", pT: " << pt << "\n";
+            sf_summary_log_file << " → SF binX: " << h2_eleTrigSF->GetXaxis()->FindBin(eta)
+                               << ", binY: " << h2_eleTrigSF->GetYaxis()->FindBin(pt) << "\n";
+        }
 
         // ===== SF =====
         if (h2_eleTrigSF) {
@@ -1400,7 +1435,7 @@ if (electrons && !electrons->empty()) {
         }
     }
 }
-  
+
 ////////////////////////////////////////////////////////////////
 ///////////////Muon Trigger SF   (TSFmu)
 // Obtém os muons selecionados
@@ -1409,6 +1444,13 @@ if (muons && !muons->empty()) {
     for (objectLep* mu : *muons) {
         float pt = mu->getp4()->Pt();
         float eta = mu->getp4()->Eta();
+
+        // Incrementa contador e loga
+        total_muons_processed++;
+
+        if (sf_summary_log_file.is_open()) {
+            sf_summary_log_file << "[Muon] η: " << eta << ", pT: " << pt << "\n";
+        }
 
         float sf_val = getMuonTrigSF(eta, pt);
 
@@ -1420,7 +1462,6 @@ if (muons && !muons->empty()) {
         if (h_sf_muon_vs_eta_count) h_sf_muon_vs_eta_count->Fill(eta, 1);
     }
 }
-
 
 	
 
@@ -1720,6 +1761,43 @@ if (h_sf_muon_vs_eta_sum && h_sf_muon_vs_eta_count) {
     }
     h_sf_muon_vs_eta_avg->SetDirectory(0);
 }
+if (sf_summary_log_file.is_open()) {
+    sf_summary_log_file << "\n========= SUMMARY =========\n";
+    sf_summary_log_file << "Total Electrons Processed: " << total_electrons_processed << "\n";
+    sf_summary_log_file << "Total Muons Processed: " << total_muons_processed << "\n";
+
+    sf_summary_log_file << "\n[Electron SF Avg per pT Bin]\n";
+    for (int i = 1; i <= h_sf_vs_pt_avg->GetNbinsX(); ++i) {
+        sf_summary_log_file << "Bin " << i
+            << " (pT ~ " << h_sf_vs_pt_avg->GetBinCenter(i) << "): "
+            << h_sf_vs_pt_avg->GetBinContent(i)
+            << " [entries: " << h_sf_vs_pt_count->GetBinContent(i) << "]\n";
+    }
+
+    sf_summary_log_file << "\n[Electron SF Avg per η Bin]\n";
+    for (int i = 1; i <= h_sf_vs_eta_avg->GetNbinsX(); ++i) {
+        sf_summary_log_file << "Bin " << i
+            << " (η ~ " << h_sf_vs_eta_avg->GetBinCenter(i) << "): "
+            << h_sf_vs_eta_avg->GetBinContent(i)
+            << " [entries: " << h_sf_vs_eta_count->GetBinContent(i) << "]\n";
+    }
+
+    sf_summary_log_file << "\n[Muon SF Avg per pT Bin]\n";
+    for (int i = 1; i <= h_sf_muon_vs_pt_avg->GetNbinsX(); ++i) {
+        sf_summary_log_file << "Bin " << i
+            << " (pT ~ " << h_sf_muon_vs_pt_avg->GetBinCenter(i) << "): "
+            << h_sf_muon_vs_pt_avg->GetBinContent(i)
+            << " [entries: " << h_sf_muon_vs_pt_count->GetBinContent(i) << "]\n";
+    }
+
+    sf_summary_log_file << "\n[Muon SF Avg per η Bin]\n";
+    for (int i = 1; i <= h_sf_muon_vs_eta_avg->GetNbinsX(); ++i) {
+        sf_summary_log_file << "Bin " << i
+            << " (η ~ " << h_sf_muon_vs_eta_avg->GetBinCenter(i) << "): "
+            << h_sf_muon_vs_eta_avg->GetBinContent(i)
+            << " [entries: " << h_sf_muon_vs_eta_count->GetBinContent(i) << "]\n";
+    }
+}
 
 
 	
@@ -1893,6 +1971,10 @@ if (h_sf_muon_vs_eta_avg) h_sf_muon_vs_eta_avg->Write();
 //    hMuonPT2->Write();
 //    hEleEta2->Write();
 //    hElePT2->Write(); 
+if (sf_summary_log_file.is_open()) {
+    sf_summary_log_file.close();
+}
+	
 }
 void ttHHanalyzer::fillTree(event * thisEvent){
 
