@@ -1018,6 +1018,8 @@ class event{
 
 class ttHHanalyzer {
  public:
+    long long total_electrons_processed = 0;
+    long long total_muons_processed = 0;
     enum sysName { kJES, kJER, kbTag, noSys };
     ttHHanalyzer(const std::string & cl, eventBuffer * ev, float weight = 1., bool systematics = false,
  		  std::string year= "nothing", std::string DataOrMC = "nothing", std::string sampleName = "nothing"){
@@ -1030,8 +1032,7 @@ class ttHHanalyzer {
 	_year= year;
 	_DataOrMC = DataOrMC;
 	_sampleName = sampleName;
-    long long total_electrons_processed = 0;
-    long long total_muons_processed = 0;
+
 	initHistograms();	
 	initTree();
 	initSys();
