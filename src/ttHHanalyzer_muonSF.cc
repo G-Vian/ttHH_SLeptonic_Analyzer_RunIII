@@ -5,6 +5,14 @@
 #include <vector>
 #include <string>
 
+using namespace std;
+#include <cstdlib>/// this is for MUON trigger SF  (TSFmu)
+#include "json.hpp"// this is for MUON trigger SF (TSFmu)
+using json = nlohmann::json;  /// this is for MUON trigger SF  (TSFmu)
+json muonTrigSFJson; /// this is for MUON trigger SF  (TSFmu)
+
+
+
 void ttHHanalyzer::initMuonHLTriggerSF() {
     TString repoPath = "muonefficiencies";
     TString sfFilePath;
