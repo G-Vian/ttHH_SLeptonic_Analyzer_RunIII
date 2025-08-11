@@ -1536,41 +1536,67 @@ if (muons && !muons->empty()) {
 
         total_muons_processed++;
 
-        int binX = h2_muTrigSF->GetXaxis()->FindBin(eta);
-        int binY = h2_muTrigSF->GetYaxis()->FindBin(pt);
+        // Para obter os bins de eta e pt do JSON manualmente, 
+        // replicar o código de getMuonTrigSF para obter binX e binY:
+        int eta_bin = -1;
+        int pt_bin = -1;
 
-        float sf_val = 0;
-        bool out_of_range = false;
+        // obtém os edges de eta do JSON
+        if (!muonTrigSFJson.empty()) {
+            const json* correction = nullptr;
+            for (const auto& corr : muonTrigSFJson["corrections"]) {
+                if (corr.contains("name") && corr["name"] == "NUM_IsoMu24_DEN_CutBasedIdTight_and_PFIsoTight") {
+                    correction = &corr;
+                    break;
+                }
+            }
 
-        if (binX < 1 || binX > h2_muTrigSF->GetNbinsX() ||
-            binY < 1 || binY > h2_muTrigSF->GetNbinsY()) {
-            out_of_range = true;
-            sf_val = 0;
-        } else {
-            sf_val = h2_muTrigSF->GetBinContent(binX, binY);
-        }
+            if (correction) {
+                const auto& data_eta = (*correction)["data"];
+                const std::vector<float> eta_edges = data_eta["edges"].get<std::vector<float>>();
+                for (size_t i = 0; i < eta_edges.size() - 1; ++i) {
+                    if (eta >= eta_edges[i] && eta < eta_edges[i+1]) {
+                        eta_bin = i;
+                        break;
+                    }
+                }
+                if (eta_bin == -1 && eta == eta_edges.back()) eta_bin = int(eta_edges.size()) - 2;
 
-        if (sf_summary_log_file && sf_summary_log_file->is_open()) {
-            *sf_summary_log_file << "[Muon] η: " << eta << ", pT: " << pt << "\n";
-            *sf_summary_log_file << " → SF binX: " << binX << ", binY: " << binY << "\n";
-            if (out_of_range) {
-                *sf_summary_log_file << " *** WARNING: Muon outside SF histogram range! SF set to 0.\n";
-            } else {
-                *sf_summary_log_file << " → SF value applied: " << sf_val << "\n";
+                if (eta_bin != -1) {
+                    const auto& data_pt = data_eta["content"][eta_bin];
+                    const std::vector<float> pt_edges = data_pt["edges"].get<std::vector<float>>();
+                    for (size_t i = 0; i < pt_edges.size() - 1; ++i) {
+                        if (pt >= pt_edges[i] && pt < pt_edges[i+1]) {
+                            pt_bin = i;
+                            break;
+                        }
+                    }
+                    if (pt_bin == -1 && pt == pt_edges.back()) pt_bin = int(pt_edges.size()) - 2;
+                }
             }
         }
 
-        if (!out_of_range) {
-            h_sf_muon_vs_pt->Fill(pt, sf_val);
-            h_sf_muon_vs_eta->Fill(eta, sf_val);
-            h_sf_muon_vs_pt_sum->Fill(pt, sf_val);
-            h_sf_muon_vs_pt_count->Fill(pt, 1);
-            h_sf_muon_vs_eta_sum->Fill(eta, sf_val);
-            h_sf_muon_vs_eta_count->Fill(eta, 1);
+        float sf_val = getMuonTrigSF(eta, pt);
+
+        if (sf_summary_log_file && sf_summary_log_file->is_open()) {
+            *sf_summary_log_file << "[Muon] eta: " << eta << ", pt: " << pt << "\n";
+            if (eta_bin >= 0 && pt_bin >= 0) {
+                *sf_summary_log_file << " → SF JSON eta_bin: " << eta_bin << ", pt_bin: " << pt_bin
+                                    << ", SF value: " << sf_val << "\n";
+            } else {
+                *sf_summary_log_file << " → WARNING: Muon eta or pt out of JSON bin range. SF fallback to 1.0\n";
+            }
         }
+
+        // Preenche histogramas de SF muon
+        if (h_sf_muon_vs_pt)        h_sf_muon_vs_pt->Fill(pt, sf_val);
+        if (h_sf_muon_vs_eta)       h_sf_muon_vs_eta->Fill(eta, sf_val);
+        if (h_sf_muon_vs_pt_sum)    h_sf_muon_vs_pt_sum->Fill(pt, sf_val);
+        if (h_sf_muon_vs_pt_count)  h_sf_muon_vs_pt_count->Fill(pt, 1);
+        if (h_sf_muon_vs_eta_sum)   h_sf_muon_vs_eta_sum->Fill(eta, sf_val);
+        if (h_sf_muon_vs_eta_count) h_sf_muon_vs_eta_count->Fill(eta, 1);
     }
 }
-	
 
 /////////////////////////////////////////////////////////////////
 
