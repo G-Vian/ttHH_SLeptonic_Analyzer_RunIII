@@ -669,18 +669,18 @@ else if (cut["trigger"] > 0 && thisEvent->getTriggerAccept() == true) {
     hCutFlow->Fill("nHLTrigger", 1);
     hCutFlow_w->Fill("nHLTrigger", _weight);
 
-    // Verifica qual trigger foi aceito
-    if (_ev->HLT_Ele30_WPTight_Gsf) {
-        (*event_log_file) << "Esse evento passou pelo trigger de elétron." << std::endl;
-        cutflow["Elec_Trigger"] += 1;
-        hCutFlow->Fill("Elec_Trigger", 1);
-        hCutFlow_w->Fill("Elec_Trigger", _weight);
-    }
-    else if (_ev->HLT_IsoMu24) {
+    // Verifica qual trigger foi aceito (múon primeiro, depois elétron)
+    if (_ev->HLT_IsoMu24) {
         (*event_log_file) << "Esse evento passou pelo trigger de múon." << std::endl;
         cutflow["Muon_Trigger"] += 1;
         hCutFlow->Fill("Muon_Trigger", 1);
         hCutFlow_w->Fill("Muon_Trigger", _weight);
+    }
+    else if (_ev->HLT_Ele30_WPTight_Gsf) {
+        (*event_log_file) << "Esse evento passou pelo trigger de elétron." << std::endl;
+        cutflow["Elec_Trigger"] += 1;
+        hCutFlow->Fill("Elec_Trigger", 1);
+        hCutFlow_w->Fill("Elec_Trigger", _weight);
     }
 }
 
