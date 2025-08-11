@@ -18,9 +18,10 @@ using namespace std;
 ////Log of selection and SF///////////
 static std::unique_ptr<std::ofstream> event_log_file;
 static std::unique_ptr<std::ofstream> sf_log_file;
+static std::unique_ptr<std::ofstream> sf_summary_log_file;
+
 static int event_counter = 0;
-long long total_electrons_processed = 0;
-long long total_muons_processed = 0;
+
 
 
 /////////////////////////////////
