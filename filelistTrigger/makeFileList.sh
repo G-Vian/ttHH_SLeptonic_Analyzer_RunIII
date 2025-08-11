@@ -54,6 +54,9 @@ dasgoclient --query="file dataset=/TT4B_TuneCP5_13p6TeV_madgraph-pythia8/RunIII2
 dasgoclient --query="file dataset=/TTZH-ZHto4B_TuneCP5_13p6TeV_madgraph-pythia8/RunIII2024Summer24NanoAODv15-150X_mcRun3_2024_realistic_v2-v2/NANOAODSIM" | sed 's|^|root://xrootd-cms.infn.it//|' >> full_TTZH_24_15.txt
 dasgoclient --query="file dataset=/TTZZ-ZZto4B_TuneCP5_13p6TeV_madgraph-pythia8/RunIII2024Summer24NanoAODv15-150X_mcRun3_2024_realistic_v2-v3/NANOAODSIM" | sed 's|^|root://eoscms.cern.ch:1094//|' >> full_TTZZ_24_15.txt
 dasgoclient --query="file dataset=/TTtoLNu2Q_TuneCP5_13p6TeV_powheg-pythia8/RunIII2024Summer24NanoAODv15-150X_mcRun3_2024_realistic_v2-v2/NANOAODSIM" | sed 's|^|root://xrootd-cms.infn.it//|' >> full_TTSL_24_15.txt
+dasgoclient --query="file dataset=/TTBBtoLNu2Q_TuneCP5_13p6TeV_powheg-pythia8/RunIII2024Summer24NanoAODv15-150X_mcRun3_2024_realistic_v2-v2/NANOAODSIM" | sed 's|^|root://xrootd-cms.infn.it//|' >> full_TTbb_24_14.txt
+
+
 
 #2024 v14 (for 2024 samples, other redirector is necessary to TTHH and TTZZ) --> Have to figure out correct servers for TTHH and TTZZ V14 
 dasgoclient --query="file dataset=/ttHto2B_M-125_TuneCP5_13p6TeV_powheg-pythia8/Run3Winter24NanoAOD-133X_mcRun3_2024_realistic_v8-v2/NANOAODSIM" | sed 's|^|root://xrootd-cms.infn.it//|' >> full_TTH_24_14.txt
