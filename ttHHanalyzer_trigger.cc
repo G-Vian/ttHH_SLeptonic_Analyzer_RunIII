@@ -164,11 +164,11 @@ void ttHHanalyzer::loop(sysName sysType, bool up) {
         << " | Abs eff: " << 100.0 * cutflow["nHLTrigger"] / cutflow["noCut"] << "%"
         << " | Seq eff: N/A" << std::endl;
 
-    log << "  Elec_Trigger      : " << cutflow["Elec_Trigger "]
-        << " | Abs eff: " << 100.0 * cutflow["Elec_Trigger "] / cutflow["noCut"] << "%"
+    log << "  Elec_Trigger      : " << cutflow["Elec_Trigger"]
+        << " | Abs eff: " << 100.0 * cutflow["Elec_Trigger"] / cutflow["noCut"] << "%"
         << " | Seq eff: N/A" << std::endl;
-    log << "  Muon_Trigger       : " << cutflow["Muon_Trigger  "]
-        << " | Abs eff: " << 100.0 * cutflow["Muon_Trigger  "] / cutflow["noCut"] << "%"
+    log << "  Muon_Trigger       : " << cutflow["Muon_Trigger"]
+        << " | Abs eff: " << 100.0 * cutflow["Muon_Trigger"] / cutflow["noCut"] << "%"
         << " | Seq eff: N/A" << std::endl;
 	
     log << " Filters  : " << cutflow["nFilter"]
@@ -664,6 +664,11 @@ if (cut["trigger"] > 0 && thisEvent->getTriggerAccept() == false) {
 } 
 else if (cut["trigger"] > 0 && thisEvent->getTriggerAccept() == true) {
 
+    // Contador geral para qualquer trigger — preenchido primeiro
+    cutflow["nHLTrigger"] += 1;
+    hCutFlow->Fill("nHLTrigger", 1);
+    hCutFlow_w->Fill("nHLTrigger", _weight);
+
     // Verifica qual trigger foi aceito
     if (_ev->HLT_Ele30_WPTight_Gsf) {
         (*event_log_file) << "Esse evento passou pelo trigger de elétron." << std::endl;
@@ -677,12 +682,8 @@ else if (cut["trigger"] > 0 && thisEvent->getTriggerAccept() == true) {
         hCutFlow->Fill("Muon_Trigger", 1);
         hCutFlow_w->Fill("Muon_Trigger", _weight);
     }
-
-    // Contador geral para qualquer trigger
-    cutflow["nHLTrigger"] += 1;
-    hCutFlow->Fill("nHLTrigger", 1);
-    hCutFlow_w->Fill("nHLTrigger", _weight);
 }
+
 
 // Filter cut
 // Log dos flags Filters
