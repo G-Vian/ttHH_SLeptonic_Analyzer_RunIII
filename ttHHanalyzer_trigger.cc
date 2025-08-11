@@ -1512,7 +1512,7 @@ if (electrons && !electrons->empty()) {
 }
 
 ////////////////////////////////////////////////////////////////
-///////////////Muon Trigger SF   (TSFmu)
+// Muon Trigger SF (TSFmu)
 // Obtém os muons selecionados
 auto muons = thisEvent->getSelMuons();
 if (muons && !muons->empty()) {
@@ -1525,16 +1525,23 @@ if (muons && !muons->empty()) {
 
         if (sf_summary_log_file && sf_summary_log_file->is_open()) {
             *sf_summary_log_file << "[Muon] η: " << eta << ", pT: " << pt << "\n";
+            *sf_summary_log_file << " → SF binX: " << h2_muTrigSF->GetXaxis()->FindBin(eta)
+                               << ", binY: " << h2_muTrigSF->GetYaxis()->FindBin(pt) << "\n";
         }
 
-        float sf_val = getMuonTrigSF(eta, pt);
+        // ===== SF =====
+        if (h2_muTrigSF) {
+            int binX = h2_muTrigSF->GetXaxis()->FindBin(eta);
+            int binY = h2_muTrigSF->GetYaxis()->FindBin(pt);
+            float sf_val = h2_muTrigSF->GetBinContent(binX, binY);
 
-        if (h_sf_muon_vs_pt)        h_sf_muon_vs_pt->Fill(pt, sf_val);
-        if (h_sf_muon_vs_eta)       h_sf_muon_vs_eta->Fill(eta, sf_val);
-        if (h_sf_muon_vs_pt_sum)    h_sf_muon_vs_pt_sum->Fill(pt, sf_val);
-        if (h_sf_muon_vs_pt_count)  h_sf_muon_vs_pt_count->Fill(pt, 1);
-        if (h_sf_muon_vs_eta_sum)   h_sf_muon_vs_eta_sum->Fill(eta, sf_val);
-        if (h_sf_muon_vs_eta_count) h_sf_muon_vs_eta_count->Fill(eta, 1);
+            if (h_sf_muon_vs_pt)        h_sf_muon_vs_pt->Fill(pt, sf_val);
+            if (h_sf_muon_vs_eta)       h_sf_muon_vs_eta->Fill(eta, sf_val);
+            if (h_sf_muon_vs_pt_sum)    h_sf_muon_vs_pt_sum->Fill(pt, sf_val);
+            if (h_sf_muon_vs_pt_count)  h_sf_muon_vs_pt_count->Fill(pt, 1);
+            if (h_sf_muon_vs_eta_sum)   h_sf_muon_vs_eta_sum->Fill(eta, sf_val);
+            if (h_sf_muon_vs_eta_count) h_sf_muon_vs_eta_count->Fill(eta, 1);
+        }
     }
 }
 
