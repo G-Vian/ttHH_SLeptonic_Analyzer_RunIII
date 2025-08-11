@@ -1469,13 +1469,14 @@ static long long total_muons_processed = 0;
 	}
 // /////////////////////////// Electron Trigger SF ///////////////////////////  (TSFel)
 // Elétrons
+// Loop elétrons
 auto electrons = thisEvent->getSelElectrons();
 if (electrons && !electrons->empty()) {
     for (objectLep* ele : *electrons) {
         float pt = ele->getp4()->Pt();
         float eta = ele->getp4()->Eta();
 
-        total_electrons_processed++;
+        this->total_electrons_processed++;
 
         int binX = h2_eleTrigSF->GetXaxis()->FindBin(eta);
         int binY = h2_eleTrigSF->GetYaxis()->FindBin(pt);
@@ -1486,18 +1487,18 @@ if (electrons && !electrons->empty()) {
         if (binX < 1 || binX > h2_eleTrigSF->GetNbinsX() ||
             binY < 1 || binY > h2_eleTrigSF->GetNbinsY()) {
             out_of_range = true;
-            sf_val = 0; // ou 1.0, dependendo da sua escolha para fora do range
+            sf_val = 0; // ou 1.0 se preferir
         } else {
             sf_val = h2_eleTrigSF->GetBinContent(binX, binY);
         }
 
-        if (sf_summary_log_file && sf_summary_log_file->is_open()) {
-            *sf_summary_log_file << "[Electron] η: " << eta << ", pT: " << pt << "\n";
-            *sf_summary_log_file << " → SF binX: " << binX << ", binY: " << binY << "\n";
+        if (this->sf_summary_log_file && this->sf_summary_log_file->is_open()) {
+            *(this->sf_summary_log_file) << "[Electron] η: " << eta << ", pT: " << pt << "\n";
+            *(this->sf_summary_log_file) << " → SF binX: " << binX << ", binY: " << binY << "\n";
             if (out_of_range) {
-                *sf_summary_log_file << " *** WARNING: Electron outside SF histogram range! SF set to 0.\n";
+                *(this->sf_summary_log_file) << " *** WARNING: Electron outside SF histogram range! SF set to 0.\n";
             } else {
-                *sf_summary_log_file << " → SF value applied: " << sf_val << "\n";
+                *(this->sf_summary_log_file) << " → SF value applied: " << sf_val << "\n";
             }
         }
 
@@ -1508,15 +1509,12 @@ if (electrons && !electrons->empty()) {
             h_sf_vs_eta_count->Fill(eta, 1);
         }
 
-
-        // Eficiência MC (igual lógica para out_of_range se quiser)
+        // Eficiência MC para elétrons
         int binX_eff = h2_effMC->GetXaxis()->FindBin(eta);
         int binY_eff = h2_effMC->GetYaxis()->FindBin(pt);
         if (binX_eff >= 1 && binX_eff <= h2_effMC->GetNbinsX() &&
             binY_eff >= 1 && binY_eff <= h2_effMC->GetNbinsY()) {
             float eff_val = h2_effMC->GetBinContent(binX_eff, binY_eff);
-            h_effMC_vs_pt->Fill(pt, eff_val);
-            h_effMC_vs_eta->Fill(eta, eff_val);
             h_effMC_vs_pt_sum->Fill(pt, eff_val);
             h_effMC_vs_pt_count->Fill(pt, 1);
             h_effMC_vs_eta_sum->Fill(eta, eff_val);
@@ -1525,6 +1523,7 @@ if (electrons && !electrons->empty()) {
     }
 }
 
+
 // Múons
 auto muons = thisEvent->getSelMuons();
 if (muons && !muons->empty()) {
@@ -1532,7 +1531,7 @@ if (muons && !muons->empty()) {
         float pt = mu->getp4()->Pt();
         float eta = mu->getp4()->Eta();
 
-        total_muons_processed++;
+        this->total_muons_processed++;
 
         int eta_bin = -1, pt_bin = -1;
 
@@ -1571,13 +1570,13 @@ if (muons && !muons->empty()) {
 
         float sf_val = getMuonTrigSF(eta, pt);
 
-        if (sf_summary_log_file && sf_summary_log_file->is_open()) {
-            *sf_summary_log_file << "[Muon] eta: " << eta << ", pt: " << pt << "\n";
+        if (this->sf_summary_log_file && this->sf_summary_log_file->is_open()) {
+            *(this->sf_summary_log_file) << "[Muon] eta: " << eta << ", pt: " << pt << "\n";
             if (eta_bin >= 0 && pt_bin >= 0) {
-                *sf_summary_log_file << " → SF JSON eta_bin: " << eta_bin << ", pt_bin: " << pt_bin
-                                    << ", SF value: " << sf_val << "\n";
+                *(this->sf_summary_log_file) << " → SF JSON eta_bin: " << eta_bin << ", pt_bin: " << pt_bin
+                                            << ", SF value: " << sf_val << "\n";
             } else {
-                *sf_summary_log_file << " → WARNING: Muon eta or pt out of JSON bin range. SF fallback to 1.0\n";
+                *(this->sf_summary_log_file) << " → WARNING: Muon eta or pt out of JSON bin range. SF fallback to 1.0\n";
             }
         }
 
@@ -1883,52 +1882,54 @@ if (h_sf_muon_vs_eta_sum && h_sf_muon_vs_eta_count) {
     }
     h_sf_muon_vs_eta_avg->SetDirectory(0);
 }
-if (sf_summary_log_file && sf_summary_log_file->is_open()) {
-    *sf_summary_log_file << "\n========= SUMMARY =========\n";
-    *sf_summary_log_file << "Total Electrons Processed: " << total_electrons_processed << "\n";
-    *sf_summary_log_file << "Total Muons Processed: " << total_muons_processed << "\n";
 
-    *sf_summary_log_file << "\n[Electron SF Avg per pT Bin]\n";
+
+
+	if (this->sf_summary_log_file && this->sf_summary_log_file->is_open()) {
+    *(this->sf_summary_log_file) << "\n========= SUMMARY =========\n";
+    *(this->sf_summary_log_file) << "Total Electrons Processed: " << this->total_electrons_processed << "\n";
+    *(this->sf_summary_log_file) << "Total Muons Processed: " << this->total_muons_processed << "\n";
+
+    *(this->sf_summary_log_file) << "\n[Electron SF Avg per pT Bin]\n";
     for (int i = 1; i <= h_sf_vs_pt_sum->GetNbinsX(); ++i) {
         double count = h_sf_vs_pt_count->GetBinContent(i);
         if (count > 0) {
             double avg = h_sf_vs_pt_sum->GetBinContent(i) / count;
-            *sf_summary_log_file << "Bin " << i << " (pT ~ " << h_sf_vs_pt_sum->GetBinCenter(i) << "): "
-                                << avg << " [entries: " << count << "]\n";
+            *(this->sf_summary_log_file) << "Bin " << i << " (pT ~ " << h_sf_vs_pt_sum->GetBinCenter(i) << "): "
+                                        << avg << " [entries: " << count << "]\n";
         }
     }
 
-    *sf_summary_log_file << "\n[Electron SF Avg per η Bin]\n";
+    *(this->sf_summary_log_file) << "\n[Electron SF Avg per η Bin]\n";
     for (int i = 1; i <= h_sf_vs_eta_sum->GetNbinsX(); ++i) {
         double count = h_sf_vs_eta_count->GetBinContent(i);
         if (count > 0) {
             double avg = h_sf_vs_eta_sum->GetBinContent(i) / count;
-            *sf_summary_log_file << "Bin " << i << " (η ~ " << h_sf_vs_eta_sum->GetBinCenter(i) << "): "
-                                << avg << " [entries: " << count << "]\n";
+            *(this->sf_summary_log_file) << "Bin " << i << " (η ~ " << h_sf_vs_eta_sum->GetBinCenter(i) << "): "
+                                        << avg << " [entries: " << count << "]\n";
         }
     }
 
-    *sf_summary_log_file << "\n[Muon SF Avg per pT Bin]\n";
+    *(this->sf_summary_log_file) << "\n[Muon SF Avg per pT Bin]\n";
     for (int i = 1; i <= h_sf_muon_vs_pt_sum->GetNbinsX(); ++i) {
         double count = h_sf_muon_vs_pt_count->GetBinContent(i);
         if (count > 0) {
             double avg = h_sf_muon_vs_pt_sum->GetBinContent(i) / count;
-            *sf_summary_log_file << "Bin " << i << " (pT ~ " << h_sf_muon_vs_pt_sum->GetBinCenter(i) << "): "
-                                << avg << " [entries: " << count << "]\n";
+            *(this->sf_summary_log_file) << "Bin " << i << " (pT ~ " << h_sf_muon_vs_pt_sum->GetBinCenter(i) << "): "
+                                        << avg << " [entries: " << count << "]\n";
         }
     }
 
-    *sf_summary_log_file << "\n[Muon SF Avg per η Bin]\n";
+    *(this->sf_summary_log_file) << "\n[Muon SF Avg per η Bin]\n";
     for (int i = 1; i <= h_sf_muon_vs_eta_sum->GetNbinsX(); ++i) {
         double count = h_sf_muon_vs_eta_count->GetBinContent(i);
         if (count > 0) {
             double avg = h_sf_muon_vs_eta_sum->GetBinContent(i) / count;
-            *sf_summary_log_file << "Bin " << i << " (η ~ " << h_sf_muon_vs_eta_sum->GetBinCenter(i) << "): "
-                                << avg << " [entries: " << count << "]\n";
+            *(this->sf_summary_log_file) << "Bin " << i << " (η ~ " << h_sf_muon_vs_eta_sum->GetBinCenter(i) << "): "
+                                        << avg << " [entries: " << count << "]\n";
         }
     }
 }
-
 
 	
 	
