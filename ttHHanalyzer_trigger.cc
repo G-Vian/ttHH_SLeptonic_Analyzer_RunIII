@@ -1478,8 +1478,8 @@ if (electrons && !electrons->empty()) {
         total_electrons_processed++;
 
         if (sf_summary_log_file.is_open()) {
-            sf_summary_log_file << "[Electron] η: " << eta << ", pT: " << pt << "\n";
-            sf_summary_log_file << " → SF binX: " << h2_eleTrigSF->GetXaxis()->FindBin(eta)
+            *sf_summary_log_file <<  "[Electron] η: " << eta << ", pT: " << pt << "\n";
+            *sf_summary_log_file << " → SF binX: " << h2_eleTrigSF->GetXaxis()->FindBin(eta)
                                << ", binY: " << h2_eleTrigSF->GetYaxis()->FindBin(pt) << "\n";
         }
 
@@ -1524,7 +1524,7 @@ if (muons && !muons->empty()) {
         total_muons_processed++;
 
         if (sf_summary_log_file.is_open()) {
-            sf_summary_log_file << "[Muon] η: " << eta << ", pT: " << pt << "\n";
+            *sf_summary_log_file << "[Muon] η: " << eta << ", pT: " << pt << "\n";
         }
 
         float sf_val = getMuonTrigSF(eta, pt);
@@ -1837,37 +1837,37 @@ if (h_sf_muon_vs_eta_sum && h_sf_muon_vs_eta_count) {
     h_sf_muon_vs_eta_avg->SetDirectory(0);
 }
 if (sf_summary_log_file.is_open()) {
-    sf_summary_log_file << "\n========= SUMMARY =========\n";
-    sf_summary_log_file << "Total Electrons Processed: " << total_electrons_processed << "\n";
-    sf_summary_log_file << "Total Muons Processed: " << total_muons_processed << "\n";
+    *sf_summary_log_file << "\n========= SUMMARY =========\n";
+    *sf_summary_log_file << "Total Electrons Processed: " << total_electrons_processed << "\n";
+    *sf_summary_log_file << "Total Muons Processed: " << total_muons_processed << "\n";
 
-    sf_summary_log_file << "\n[Electron SF Avg per pT Bin]\n";
+    *sf_summary_log_file << "\n[Electron SF Avg per pT Bin]\n";
     for (int i = 1; i <= h_sf_vs_pt_avg->GetNbinsX(); ++i) {
-        sf_summary_log_file << "Bin " << i
+        *sf_summary_log_file << "Bin " << i
             << " (pT ~ " << h_sf_vs_pt_avg->GetBinCenter(i) << "): "
             << h_sf_vs_pt_avg->GetBinContent(i)
             << " [entries: " << h_sf_vs_pt_count->GetBinContent(i) << "]\n";
     }
 
-    sf_summary_log_file << "\n[Electron SF Avg per η Bin]\n";
+    *sf_summary_log_file << "\n[Electron SF Avg per η Bin]\n";
     for (int i = 1; i <= h_sf_vs_eta_avg->GetNbinsX(); ++i) {
-        sf_summary_log_file << "Bin " << i
+        *sf_summary_log_file << "Bin " << i
             << " (η ~ " << h_sf_vs_eta_avg->GetBinCenter(i) << "): "
             << h_sf_vs_eta_avg->GetBinContent(i)
             << " [entries: " << h_sf_vs_eta_count->GetBinContent(i) << "]\n";
     }
 
-    sf_summary_log_file << "\n[Muon SF Avg per pT Bin]\n";
+    *sf_summary_log_file << "\n[Muon SF Avg per pT Bin]\n";
     for (int i = 1; i <= h_sf_muon_vs_pt_avg->GetNbinsX(); ++i) {
-        sf_summary_log_file << "Bin " << i
+        *sf_summary_log_file << "Bin " << i
             << " (pT ~ " << h_sf_muon_vs_pt_avg->GetBinCenter(i) << "): "
             << h_sf_muon_vs_pt_avg->GetBinContent(i)
             << " [entries: " << h_sf_muon_vs_pt_count->GetBinContent(i) << "]\n";
     }
 
-    sf_summary_log_file << "\n[Muon SF Avg per η Bin]\n";
+    *sf_summary_log_file << "\n[Muon SF Avg per η Bin]\n";
     for (int i = 1; i <= h_sf_muon_vs_eta_avg->GetNbinsX(); ++i) {
-        sf_summary_log_file << "Bin " << i
+        *sf_summary_log_file << "Bin " << i
             << " (η ~ " << h_sf_muon_vs_eta_avg->GetBinCenter(i) << "): "
             << h_sf_muon_vs_eta_avg->GetBinContent(i)
             << " [entries: " << h_sf_muon_vs_eta_count->GetBinContent(i) << "]\n";
