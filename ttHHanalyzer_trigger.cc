@@ -2046,8 +2046,8 @@ if (h_sf_muon_vs_eta_avg) h_sf_muon_vs_eta_avg->Write();
 //    hMuonPT2->Write();
 //    hEleEta2->Write();
 //    hElePT2->Write(); 
-if (sf_summary_log_file.is_open()) {
-    sf_summary_log_file.close();
+if (sf_summary_log_file && sf_summary_log_file->is_open()) {
+    sf_summary_log_file->close();
 }
 	
 }
