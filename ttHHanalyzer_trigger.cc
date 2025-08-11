@@ -1483,11 +1483,10 @@ if (electrons && !electrons->empty()) {
         float sf_val = 0;
         bool out_of_range = false;
 
-        // Verifica se bin está dentro do range válido
         if (binX < 1 || binX > h2_eleTrigSF->GetNbinsX() ||
             binY < 1 || binY > h2_eleTrigSF->GetNbinsY()) {
             out_of_range = true;
-            sf_val = 0; // ou algum valor default?
+            sf_val = 0; // ou 1.0, dependendo da sua escolha para fora do range
         } else {
             sf_val = h2_eleTrigSF->GetBinContent(binX, binY);
         }
@@ -1502,15 +1501,14 @@ if (electrons && !electrons->empty()) {
             }
         }
 
-        // Preenche histogramas
         if (!out_of_range) {
-            h_sf_vs_pt->Fill(pt, sf_val);
-            h_sf_vs_eta->Fill(eta, sf_val);
             h_sf_vs_pt_sum->Fill(pt, sf_val);
             h_sf_vs_pt_count->Fill(pt, 1);
             h_sf_vs_eta_sum->Fill(eta, sf_val);
             h_sf_vs_eta_count->Fill(eta, 1);
         }
+
+
         // Eficiência MC (igual lógica para out_of_range se quiser)
         int binX_eff = h2_effMC->GetXaxis()->FindBin(eta);
         int binY_eff = h2_effMC->GetYaxis()->FindBin(pt);
@@ -1536,12 +1534,8 @@ if (muons && !muons->empty()) {
 
         total_muons_processed++;
 
-        // Para obter os bins de eta e pt do JSON manualmente, 
-        // replicar o código de getMuonTrigSF para obter binX e binY:
-        int eta_bin = -1;
-        int pt_bin = -1;
+        int eta_bin = -1, pt_bin = -1;
 
-        // obtém os edges de eta do JSON
         if (!muonTrigSFJson.empty()) {
             const json* correction = nullptr;
             for (const auto& corr : muonTrigSFJson["corrections"]) {
@@ -1550,7 +1544,6 @@ if (muons && !muons->empty()) {
                     break;
                 }
             }
-
             if (correction) {
                 const auto& data_eta = (*correction)["data"];
                 const std::vector<float> eta_edges = data_eta["edges"].get<std::vector<float>>();
@@ -1588,16 +1581,12 @@ if (muons && !muons->empty()) {
             }
         }
 
-        // Preenche histogramas de SF muon
-        if (h_sf_muon_vs_pt)        h_sf_muon_vs_pt->Fill(pt, sf_val);
-        if (h_sf_muon_vs_eta)       h_sf_muon_vs_eta->Fill(eta, sf_val);
         if (h_sf_muon_vs_pt_sum)    h_sf_muon_vs_pt_sum->Fill(pt, sf_val);
         if (h_sf_muon_vs_pt_count)  h_sf_muon_vs_pt_count->Fill(pt, 1);
         if (h_sf_muon_vs_eta_sum)   h_sf_muon_vs_eta_sum->Fill(eta, sf_val);
         if (h_sf_muon_vs_eta_count) h_sf_muon_vs_eta_count->Fill(eta, 1);
     }
 }
-
 /////////////////////////////////////////////////////////////////
 
 
@@ -1900,35 +1889,43 @@ if (sf_summary_log_file && sf_summary_log_file->is_open()) {
     *sf_summary_log_file << "Total Muons Processed: " << total_muons_processed << "\n";
 
     *sf_summary_log_file << "\n[Electron SF Avg per pT Bin]\n";
-    for (int i = 1; i <= h_sf_vs_pt_avg->GetNbinsX(); ++i) {
-        *sf_summary_log_file << "Bin " << i
-            << " (pT ~ " << h_sf_vs_pt_avg->GetBinCenter(i) << "): "
-            << h_sf_vs_pt_avg->GetBinContent(i)
-            << " [entries: " << h_sf_vs_pt_count->GetBinContent(i) << "]\n";
+    for (int i = 1; i <= h_sf_vs_pt_sum->GetNbinsX(); ++i) {
+        double count = h_sf_vs_pt_count->GetBinContent(i);
+        if (count > 0) {
+            double avg = h_sf_vs_pt_sum->GetBinContent(i) / count;
+            *sf_summary_log_file << "Bin " << i << " (pT ~ " << h_sf_vs_pt_sum->GetBinCenter(i) << "): "
+                                << avg << " [entries: " << count << "]\n";
+        }
     }
 
     *sf_summary_log_file << "\n[Electron SF Avg per η Bin]\n";
-    for (int i = 1; i <= h_sf_vs_eta_avg->GetNbinsX(); ++i) {
-        *sf_summary_log_file << "Bin " << i
-            << " (η ~ " << h_sf_vs_eta_avg->GetBinCenter(i) << "): "
-            << h_sf_vs_eta_avg->GetBinContent(i)
-            << " [entries: " << h_sf_vs_eta_count->GetBinContent(i) << "]\n";
+    for (int i = 1; i <= h_sf_vs_eta_sum->GetNbinsX(); ++i) {
+        double count = h_sf_vs_eta_count->GetBinContent(i);
+        if (count > 0) {
+            double avg = h_sf_vs_eta_sum->GetBinContent(i) / count;
+            *sf_summary_log_file << "Bin " << i << " (η ~ " << h_sf_vs_eta_sum->GetBinCenter(i) << "): "
+                                << avg << " [entries: " << count << "]\n";
+        }
     }
 
     *sf_summary_log_file << "\n[Muon SF Avg per pT Bin]\n";
-    for (int i = 1; i <= h_sf_muon_vs_pt_avg->GetNbinsX(); ++i) {
-        *sf_summary_log_file << "Bin " << i
-            << " (pT ~ " << h_sf_muon_vs_pt_avg->GetBinCenter(i) << "): "
-            << h_sf_muon_vs_pt_avg->GetBinContent(i)
-            << " [entries: " << h_sf_muon_vs_pt_count->GetBinContent(i) << "]\n";
+    for (int i = 1; i <= h_sf_muon_vs_pt_sum->GetNbinsX(); ++i) {
+        double count = h_sf_muon_vs_pt_count->GetBinContent(i);
+        if (count > 0) {
+            double avg = h_sf_muon_vs_pt_sum->GetBinContent(i) / count;
+            *sf_summary_log_file << "Bin " << i << " (pT ~ " << h_sf_muon_vs_pt_sum->GetBinCenter(i) << "): "
+                                << avg << " [entries: " << count << "]\n";
+        }
     }
 
     *sf_summary_log_file << "\n[Muon SF Avg per η Bin]\n";
-    for (int i = 1; i <= h_sf_muon_vs_eta_avg->GetNbinsX(); ++i) {
-        *sf_summary_log_file << "Bin " << i
-            << " (η ~ " << h_sf_muon_vs_eta_avg->GetBinCenter(i) << "): "
-            << h_sf_muon_vs_eta_avg->GetBinContent(i)
-            << " [entries: " << h_sf_muon_vs_eta_count->GetBinContent(i) << "]\n";
+    for (int i = 1; i <= h_sf_muon_vs_eta_sum->GetNbinsX(); ++i) {
+        double count = h_sf_muon_vs_eta_count->GetBinContent(i);
+        if (count > 0) {
+            double avg = h_sf_muon_vs_eta_sum->GetBinContent(i) / count;
+            *sf_summary_log_file << "Bin " << i << " (η ~ " << h_sf_muon_vs_eta_sum->GetBinCenter(i) << "): "
+                                << avg << " [entries: " << count << "]\n";
+        }
     }
 }
 
