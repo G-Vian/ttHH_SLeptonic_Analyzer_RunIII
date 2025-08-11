@@ -1468,26 +1468,42 @@ static long long total_muons_processed = 0;
 	    bin++;
 	}
 // /////////////////////////// Electron Trigger SF ///////////////////////////  (TSFel)
+// Elétrons
 auto electrons = thisEvent->getSelElectrons();
 if (electrons && !electrons->empty()) {
     for (objectLep* ele : *electrons) {
         float pt = ele->getp4()->Pt();
         float eta = ele->getp4()->Eta();
 
-        // Incrementa o contador e registra no log para cada elétron
         total_electrons_processed++;
 
-        if (sf_summary_log_file && sf_summary_log_file->is_open()) {
-            *sf_summary_log_file <<  "[Electron] η: " << eta << ", pT: " << pt << "\n";
-            *sf_summary_log_file << " → SF binX: " << h2_eleTrigSF->GetXaxis()->FindBin(eta)
-                               << ", binY: " << h2_eleTrigSF->GetYaxis()->FindBin(pt) << "\n";
+        int binX = h2_eleTrigSF->GetXaxis()->FindBin(eta);
+        int binY = h2_eleTrigSF->GetYaxis()->FindBin(pt);
+
+        float sf_val = 0;
+        bool out_of_range = false;
+
+        // Verifica se bin está dentro do range válido
+        if (binX < 1 || binX > h2_eleTrigSF->GetNbinsX() ||
+            binY < 1 || binY > h2_eleTrigSF->GetNbinsY()) {
+            out_of_range = true;
+            sf_val = 0; // ou algum valor default?
+        } else {
+            sf_val = h2_eleTrigSF->GetBinContent(binX, binY);
         }
 
-        // ===== SF =====
-        if (h2_eleTrigSF) {
-            int binX = h2_eleTrigSF->GetXaxis()->FindBin(eta);
-            int binY = h2_eleTrigSF->GetYaxis()->FindBin(pt);
-            float sf_val = h2_eleTrigSF->GetBinContent(binX, binY);
+        if (sf_summary_log_file && sf_summary_log_file->is_open()) {
+            *sf_summary_log_file << "[Electron] η: " << eta << ", pT: " << pt << "\n";
+            *sf_summary_log_file << " → SF binX: " << binX << ", binY: " << binY << "\n";
+            if (out_of_range) {
+                *sf_summary_log_file << " *** WARNING: Electron outside SF histogram range! SF set to 0.\n";
+            } else {
+                *sf_summary_log_file << " → SF value applied: " << sf_val << "\n";
+            }
+        }
+
+        // Preenche histogramas
+        if (!out_of_range) {
             h_sf_vs_pt->Fill(pt, sf_val);
             h_sf_vs_eta->Fill(eta, sf_val);
             h_sf_vs_pt_sum->Fill(pt, sf_val);
@@ -1495,11 +1511,11 @@ if (electrons && !electrons->empty()) {
             h_sf_vs_eta_sum->Fill(eta, sf_val);
             h_sf_vs_eta_count->Fill(eta, 1);
         }
-
-        // ===== Eficiência (MC) =====
-        if (h2_effMC) {
-            int binX_eff = h2_effMC->GetXaxis()->FindBin(eta);
-            int binY_eff = h2_effMC->GetYaxis()->FindBin(pt);
+        // Eficiência MC (igual lógica para out_of_range se quiser)
+        int binX_eff = h2_effMC->GetXaxis()->FindBin(eta);
+        int binY_eff = h2_effMC->GetYaxis()->FindBin(pt);
+        if (binX_eff >= 1 && binX_eff <= h2_effMC->GetNbinsX() &&
+            binY_eff >= 1 && binY_eff <= h2_effMC->GetNbinsY()) {
             float eff_val = h2_effMC->GetBinContent(binX_eff, binY_eff);
             h_effMC_vs_pt->Fill(pt, eff_val);
             h_effMC_vs_eta->Fill(eta, eff_val);
@@ -1511,40 +1527,49 @@ if (electrons && !electrons->empty()) {
     }
 }
 
-////////////////////////////////////////////////////////////////
-// Muon Trigger SF (TSFmu)
-// Obtém os muons selecionados
+// Múons
 auto muons = thisEvent->getSelMuons();
 if (muons && !muons->empty()) {
     for (objectLep* mu : *muons) {
         float pt = mu->getp4()->Pt();
         float eta = mu->getp4()->Eta();
 
-        // Incrementa contador e loga
         total_muons_processed++;
+
+        int binX = h2_muTrigSF->GetXaxis()->FindBin(eta);
+        int binY = h2_muTrigSF->GetYaxis()->FindBin(pt);
+
+        float sf_val = 0;
+        bool out_of_range = false;
+
+        if (binX < 1 || binX > h2_muTrigSF->GetNbinsX() ||
+            binY < 1 || binY > h2_muTrigSF->GetNbinsY()) {
+            out_of_range = true;
+            sf_val = 0;
+        } else {
+            sf_val = h2_muTrigSF->GetBinContent(binX, binY);
+        }
 
         if (sf_summary_log_file && sf_summary_log_file->is_open()) {
             *sf_summary_log_file << "[Muon] η: " << eta << ", pT: " << pt << "\n";
-            *sf_summary_log_file << " → SF binX: " << h2_muTrigSF->GetXaxis()->FindBin(eta)
-                               << ", binY: " << h2_muTrigSF->GetYaxis()->FindBin(pt) << "\n";
+            *sf_summary_log_file << " → SF binX: " << binX << ", binY: " << binY << "\n";
+            if (out_of_range) {
+                *sf_summary_log_file << " *** WARNING: Muon outside SF histogram range! SF set to 0.\n";
+            } else {
+                *sf_summary_log_file << " → SF value applied: " << sf_val << "\n";
+            }
         }
 
-        // ===== SF =====
-        if (h2_muTrigSF) {
-            int binX = h2_muTrigSF->GetXaxis()->FindBin(eta);
-            int binY = h2_muTrigSF->GetYaxis()->FindBin(pt);
-            float sf_val = h2_muTrigSF->GetBinContent(binX, binY);
-
-            if (h_sf_muon_vs_pt)        h_sf_muon_vs_pt->Fill(pt, sf_val);
-            if (h_sf_muon_vs_eta)       h_sf_muon_vs_eta->Fill(eta, sf_val);
-            if (h_sf_muon_vs_pt_sum)    h_sf_muon_vs_pt_sum->Fill(pt, sf_val);
-            if (h_sf_muon_vs_pt_count)  h_sf_muon_vs_pt_count->Fill(pt, 1);
-            if (h_sf_muon_vs_eta_sum)   h_sf_muon_vs_eta_sum->Fill(eta, sf_val);
-            if (h_sf_muon_vs_eta_count) h_sf_muon_vs_eta_count->Fill(eta, 1);
+        if (!out_of_range) {
+            h_sf_muon_vs_pt->Fill(pt, sf_val);
+            h_sf_muon_vs_eta->Fill(eta, sf_val);
+            h_sf_muon_vs_pt_sum->Fill(pt, sf_val);
+            h_sf_muon_vs_pt_count->Fill(pt, 1);
+            h_sf_muon_vs_eta_sum->Fill(eta, sf_val);
+            h_sf_muon_vs_eta_count->Fill(eta, 1);
         }
     }
 }
-
 	
 
 /////////////////////////////////////////////////////////////////
