@@ -1050,7 +1050,9 @@ class ttHHanalyzer {
     std::unique_ptr<std::ofstream> event_log_file; // logs
     std::unique_ptr<std::ofstream> sf_log_file; // logs
 	std::ofstream sf_summary_log_file;
-
+    std::ofstream sf_summary_log_file;
+    long long total_electrons_processed = 0;
+    long long total_muons_processed = 0;
     bool _sys;
     float _weight;
     float _initialWeight;  //Trigger SF for electron (TSFel)
