@@ -1,0 +1,14 @@
+Changes made compared to previous versions of the analyzer — these are important updates:
+
+// 10/8/25 //
+>Removed eventshape.cc inclusion from the header to avoid multiple definition issues.
+
+> Moved a copy of eventshape.cc into the src directory.
+
+> Updated the header to include only eventshape.h instead of the implementation file.
+
+> Split the electron and muon trigger logic into separate .cc files in src for better modularity.
+
+> Moved all cut definitions and logic into the main ttHHanalyzer.cc file for centralized handling.
+
+> Declared the cuts variable as extern in the header to prevent redefinition during linking.
