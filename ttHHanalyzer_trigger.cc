@@ -1477,7 +1477,7 @@ if (electrons && !electrons->empty()) {
         // Incrementa o contador e registra no log para cada elétron
         total_electrons_processed++;
 
-        if (sf_summary_log_file.is_open()) {
+        if (sf_summary_log_file && sf_summary_log_file->is_open()) {
             *sf_summary_log_file <<  "[Electron] η: " << eta << ", pT: " << pt << "\n";
             *sf_summary_log_file << " → SF binX: " << h2_eleTrigSF->GetXaxis()->FindBin(eta)
                                << ", binY: " << h2_eleTrigSF->GetYaxis()->FindBin(pt) << "\n";
@@ -1523,7 +1523,7 @@ if (muons && !muons->empty()) {
         // Incrementa contador e loga
         total_muons_processed++;
 
-        if (sf_summary_log_file.is_open()) {
+        if (sf_summary_log_file && sf_summary_log_file->is_open()) {
             *sf_summary_log_file << "[Muon] η: " << eta << ", pT: " << pt << "\n";
         }
 
@@ -1836,7 +1836,7 @@ if (h_sf_muon_vs_eta_sum && h_sf_muon_vs_eta_count) {
     }
     h_sf_muon_vs_eta_avg->SetDirectory(0);
 }
-if (sf_summary_log_file.is_open()) {
+if (sf_summary_log_file && sf_summary_log_file->is_open()) {
     *sf_summary_log_file << "\n========= SUMMARY =========\n";
     *sf_summary_log_file << "Total Electrons Processed: " << total_electrons_processed << "\n";
     *sf_summary_log_file << "Total Muons Processed: " << total_muons_processed << "\n";
