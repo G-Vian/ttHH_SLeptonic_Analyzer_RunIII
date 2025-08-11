@@ -105,8 +105,20 @@ void ttHHanalyzer::loop(sysName sysType, bool up) {
         }
     }
 	
-	sf_summary_log_file.open("sf_summary.log", std::ios::out | std::ios::app);
-
+	if (!sf_summary_log_file) {
+	    if (_sampleName == "nothing") {
+	        std::cerr << "[ERROR] SampleName is not defined before sf summary log initialization!" << std::endl;
+	        std::exit(EXIT_FAILURE);
+	    }
+	
+	    std::string sf_summary_log_name = "sf_summary_log_" + _sampleName + ".txt";
+	    sf_summary_log_file = std::make_unique<std::ofstream>(sf_summary_log_name);
+	
+	    if (!sf_summary_log_file->is_open()) {
+	        std::cerr << "[ERROR] Failed to open sf summary log file for writing!" << std::endl;
+	        std::exit(EXIT_FAILURE);
+	    }
+	}
     int nevents = _ev->size();
 
     std::cout << std::endl;
