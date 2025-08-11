@@ -7,6 +7,7 @@
 #include "ttHHanalyzer_trigger.h"
 #include <iostream>
 #include <fstream>
+#include <iomanip> //Para usar setw e manipuladores de fluxo --> pro txt do cutflow ficar bonito
 #include "TH2.h"//Trigger SF for electron  (TSFel)
 using namespace std;
 #include <cstdlib>/// this is for MUON trigger SF  (TSFmu)
@@ -157,46 +158,67 @@ void ttHHanalyzer::loop(sysName sysType, bool up) {
 
     // Escreve o log de eficiência
     std::ofstream& log = *event_log_file;
-    log << "==== Cutflow summary with efficiencies: ====" << std::endl;
-  
-    log << "  No cut : " << cutflow["noCut"] << std::endl;
+log << "==== Cutflow summary with efficiencies: ====" << std::endl;
 
-    log << "  Trigger      : " << cutflow["nHLTrigger"]
-        << " | Abs eff: " << 100.0 * cutflow["nHLTrigger"] / cutflow["noCut"] << "%"
-        << " | Seq eff: N/A" << std::endl;
+log << std::left << std::setw(20) << "No cut"
+    << ": " << std::right << std::setw(10) << cutflow["noCut"] << std::endl;
 
-    log << "  Elec_Trigger      : " << cutflow["Elec_Trigger"]
-        << " | Abs eff: " << 100.0 * cutflow["Elec_Trigger"] / cutflow["noCut"] << "%"
-        << " | Seq eff: N/A" << std::endl;
-    log << "  Muon_Trigger       : " << cutflow["Muon_Trigger"]
-        << " | Abs eff: " << 100.0 * cutflow["Muon_Trigger"] / cutflow["noCut"] << "%"
-        << " | Seq eff: N/A" << std::endl;
-	
-    log << " Filters  : " << cutflow["nFilter"]
-        << " | Abs eff: " << 100.0 * cutflow["nFilter"] / cutflow["noCut"] << "%"
-        << " | Seq eff: " << 100.0 * cutflow["nFilter"] / cutflow["nHLTrigger"] << "%" << std::endl;
+log << std::left << std::setw(20) << "Trigger"
+    << ": " << std::right << std::setw(10) << cutflow["nHLTrigger"]
+    << " | Abs eff: " << std::setw(6) << std::fixed << std::setprecision(2)
+    << 100.0 * cutflow["nHLTrigger"] / cutflow["noCut"] << "%"
+    << " | Seq eff: N/A" << std::endl;
 
-    log << "  Good PV      : " << cutflow["nPV"]
-        << " | Abs eff: " << 100.0 * cutflow["nPV"] / cutflow["noCut"] << "%"
-        << " | Seq eff: " << 100.0 * cutflow["nPV"] / cutflow["nFilter"] << "%" << std::endl;
+log << std::left << std::setw(20) << "Elec_Trigger"
+    << ": " << std::right << std::setw(10) << cutflow["Elec_Trigger"]
+    << " | Abs eff: " << std::setw(6) << std::fixed << std::setprecision(2)
+    << 100.0 * cutflow["Elec_Trigger"] / cutflow["noCut"] << "%"
+    << " | Seq eff: N/A" << std::endl;
 
-    log << "  nJets > 5    : " << cutflow["njets>5"]
-        << " | Abs eff: " << 100.0 * cutflow["njets>5"] / cutflow["noCut"] << "%"
-        << " | Seq eff: " << 100.0 * cutflow["njets>5"] / cutflow["nPV"] << "%" << std::endl;
+log << std::left << std::setw(20) << "Muon_Trigger"
+    << ": " << std::right << std::setw(10) << cutflow["Muon_Trigger"]
+    << " | Abs eff: " << std::setw(6) << std::fixed << std::setprecision(2)
+    << 100.0 * cutflow["Muon_Trigger"] / cutflow["noCut"] << "%"
+    << " | Seq eff: N/A" << std::endl;
 
-    log << "  nbJets > 4   : " << cutflow["nbjets>4"]
-        << " | Abs eff: " << 100.0 * cutflow["nbjets>4"] / cutflow["noCut"] << "%"
-        << " | Seq eff: " << 100.0 * cutflow["nbjets>4"] / cutflow["njets>5"] << "%" << std::endl;
+log << std::left << std::setw(20) << "Filters"
+    << ": " << std::right << std::setw(10) << cutflow["nFilter"]
+    << " | Abs eff: " << std::setw(6) << std::fixed << std::setprecision(2)
+    << 100.0 * cutflow["nFilter"] / cutflow["noCut"] << "%"
+    << " | Seq eff: " << std::setw(6) << 100.0 * cutflow["nFilter"] / cutflow["nHLTrigger"] << "%" << std::endl;
 
-    log << "  nLeptons==1  : " << cutflow["nlepton==1"]
-        << " | Abs eff: " << 100.0 * cutflow["nlepton==1"] / cutflow["noCut"] << "%"
-        << " | Seq eff: " << 100.0 * cutflow["nlepton==1"] / cutflow["nbjets>4"] << "%" << std::endl;
+log << std::left << std::setw(20) << "Good PV"
+    << ": " << std::right << std::setw(10) << cutflow["nPV"]
+    << " | Abs eff: " << std::setw(6) << std::fixed << std::setprecision(2)
+    << 100.0 * cutflow["nPV"] / cutflow["noCut"] << "%"
+    << " | Seq eff: " << std::setw(6) << 100.0 * cutflow["nPV"] / cutflow["nFilter"] << "%" << std::endl;
 
-    log << "  MET > 20     : " << cutflow["MET>20"]
-        << " | Abs eff: " << 100.0 * cutflow["MET>20"] / cutflow["noCut"] << "%"
-        << " | Seq eff: " << 100.0 * cutflow["MET>20"] / cutflow["nlepton==1"] << "%" << std::endl;
+log << std::left << std::setw(20) << "nJets > 5"
+    << ": " << std::right << std::setw(10) << cutflow["njets>5"]
+    << " | Abs eff: " << std::setw(6) << std::fixed << std::setprecision(2)
+    << 100.0 * cutflow["njets>5"] / cutflow["noCut"] << "%"
+    << " | Seq eff: " << std::setw(6) << 100.0 * cutflow["njets>5"] / cutflow["nPV"] << "%" << std::endl;
 
-    log << std::endl;
+log << std::left << std::setw(20) << "nbJets > 4"
+    << ": " << std::right << std::setw(10) << cutflow["nbjets>4"]
+    << " | Abs eff: " << std::setw(6) << std::fixed << std::setprecision(2)
+    << 100.0 * cutflow["nbjets>4"] / cutflow["noCut"] << "%"
+    << " | Seq eff: " << std::setw(6) << 100.0 * cutflow["nbjets>4"] / cutflow["njets>5"] << "%" << std::endl;
+
+log << std::left << std::setw(20) << "nLeptons==1"
+    << ": " << std::right << std::setw(10) << cutflow["nlepton==1"]
+    << " | Abs eff: " << std::setw(6) << std::fixed << std::setprecision(2)
+    << 100.0 * cutflow["nlepton==1"] / cutflow["noCut"] << "%"
+    << " | Seq eff: " << std::setw(6) << 100.0 * cutflow["nlepton==1"] / cutflow["nbjets>4"] << "%" << std::endl;
+
+log << std::left << std::setw(20) << "MET > 20"
+    << ": " << std::right << std::setw(10) << cutflow["MET>20"]
+    << " | Abs eff: " << std::setw(6) << std::fixed << std::setprecision(2)
+    << 100.0 * cutflow["MET>20"] / cutflow["noCut"] << "%"
+    << " | Seq eff: " << std::setw(6) << 100.0 * cutflow["MET>20"] / cutflow["nlepton==1"] << "%" << std::endl;
+
+log << std::endl;
+
 
     writeHistos();
     writeTree();
