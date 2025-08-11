@@ -1038,8 +1038,8 @@ class ttHHanalyzer {
 
     //fifo_map<std::string,int> cutflow{{"noCut", 0}, {"nlepton==2", 0}, {"nOpositeChargedLep", 0}, {"nMassCut", 0}, {"MET>40", 0}};
     //fifo_map<std::string,float> cutflow_w{{"noCut", 0}, {"nlepton==2", 0}, {"nOpositeChargedLep", 0}, {"nMassCut", 0}, {"MET>40", 0}};
-    fifo_map<std::string,int> cutflow{ {"noCut", 0}, {"nHLTrigger", 0}, {"Elec_Trigger", 0}, {"Muon_Trigger", 0}, {"nFilter", 0}, {"nPV", 0}, {"njets>5", 0}, {"nbjets>4", 0}, {"nlepton==1", 0}, {"MET>20", 0}};
-    fifo_map<std::string,int> cutflow_w{ {"noCut", 0}, {"nHLTrigger", 0}, {"Elec_Trigger", 0}, {"Muon_Trigger", 0}, {"nFilter", 0}, {"nPV", 0}, {"njets>5", 0}, {"nbjets>4", 0}, {"nlepton==1", 0}, {"MET>20", 0}};
+    fifo_map<std::string,int> cutflow{ {"noCut", 0}, {"nHLTrigger", 0}, {"Muon_Trigger", 0}, {"Elec_Trigger", 0}, {"nFilter", 0}, {"nPV", 0}, {"njets>5", 0}, {"nbjets>4", 0}, {"nlepton==1", 0}, {"MET>20", 0}};
+    fifo_map<std::string,int> cutflow_w{ {"noCut", 0}, {"nHLTrigger", 0}, {"Muon_Trigger", 0}, {"Elec_Trigger", 0}, {"nFilter", 0}, {"nPV", 0}, {"njets>5", 0}, {"nbjets>4", 0}, {"nlepton==1", 0}, {"MET>20", 0}};
 
 
 
