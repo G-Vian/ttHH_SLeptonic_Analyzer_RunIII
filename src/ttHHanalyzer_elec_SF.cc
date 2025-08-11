@@ -18,7 +18,11 @@ void ttHHanalyzer::initTriggerSF() {
     sf_summary_log_file.open("SF_summary_log.txt");
     if (!sf_summary_log_file.is_open()) {
         std::cerr << "Erro ao abrir arquivo SF_summary_log.txt para escrita!" << std::endl;
+    } else {
+        std::cout << "Arquivo SF_summary_log.txt aberto com sucesso!" << std::endl;
     }
+
+    
     if (_year == "2022") {
         sfFilePath = "/eos/cms/store/group/phys_egamma/ScaleFactors/Data2022/ForRe-recoBCD/tnpEleHLT/HLT_SF_Ele30_MVAiso90ID/egammaEffi.txt_EGM2D.root";
     } else if (_year == "2022EE") {
