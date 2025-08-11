@@ -104,6 +104,8 @@ void ttHHanalyzer::loop(sysName sysType, bool up) {
             std::exit(EXIT_FAILURE);
         }
     }
+	
+	sf_summary_log_file.open("sf_summary.log", std::ios::out | std::ios::app);
 
     int nevents = _ev->size();
 
