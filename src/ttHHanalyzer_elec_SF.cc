@@ -15,12 +15,7 @@ using namespace std;
 // ==========================
 void ttHHanalyzer::initTriggerSF() {
     TString sfFilePath;
-    sf_summary_log_file.open("SF_summary_log.txt");
-    if (!sf_summary_log_file.is_open()) {
-        std::cerr << "Erro ao abrir arquivo SF_summary_log.txt para escrita!" << std::endl;
-    } else {
-        std::cout << "Arquivo SF_summary_log.txt aberto com sucesso!" << std::endl;
-    }
+
 
     
     if (_year == "2022") {
