@@ -1424,11 +1424,12 @@ void ttHHanalyzer::fillHistos(event * thisEvent){
 static long long total_electrons_processed = 0;
 static long long total_muons_processed = 0;
       
-    int i = 1; 
-    for (const auto& x : cutflow){
-	hCutFlow->SetBinContent(i, x.second);
-	i++;
-    }
+	int bin = 1;
+	for (auto &x : cutflow) {
+	    hCutFlow->GetXaxis()->SetBinLabel(bin, x.first.c_str());
+	    hCutFlow_w->GetXaxis()->SetBinLabel(bin, x.first.c_str());
+	    bin++;
+	}
 // /////////////////////////// Electron Trigger SF ///////////////////////////  (TSFel)
 auto electrons = thisEvent->getSelElectrons();
 if (electrons && !electrons->empty()) {
