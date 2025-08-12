@@ -285,7 +285,7 @@ hCutFlow_w->Fill("noCut",_weight);
     
     
    // thisEvent->setPV(_ev->PV_npvsGood);
-    thisEvent->setPV(_ev->PV_npvsGood > 5);
+    thisEvent->setPV(_ev->PV_npvsGood > 20);
     std::vector<eventBuffer::GenPart_s> genPart = _ev->GenPart;      
     std::vector<eventBuffer::Jet_s> jet = _ev->Jet;
     std::vector<eventBuffer::Muon_s> muonT = _ev->Muon;
