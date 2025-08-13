@@ -615,7 +615,27 @@ for (int i = 0; i < jet.size(); i++) {
     }
 
     bool passPUJetID = true;
+   // Apply JES/JER and MET shifts
+    if (_sys && sysType == kJES) {
+        if (jet[i].btagUParTAK4B > currentJet->getValbTagMedium(_year))
+            currentJet->scale(getSysJES(_hbJES, currentJet->getp4()->Pt()), up);
+        else
+            currentJet->scale(getSysJES(_hJES, currentJet->getp4()->Pt()), up);
 
+        if (up)
+            thisEvent->getMET()->subtractp4(currentJet->getOffset());
+        else
+            thisEvent->getMET()->addp4(currentJet->getOffset());
+    } else if (_sys && sysType == kJER) {
+        if (up)
+            currentJet->scale(getSysJER(0.03));
+        else
+            currentJet->scale(getSysJER(0.001));
+        thisEvent->getMET()->subtractp4(currentJet->getOffset());
+    }
+
+
+			
     if (currentJet->getp4()->Pt() > cut["jetPt"] &&
         fabs(currentJet->getp4()->Eta()) < abs(cut["jetEta"]) &&
         passJetID && passPUJetID) {
