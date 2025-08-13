@@ -805,7 +805,7 @@ bool ttHHanalyzer::selectObjects(event *thisEvent) {
     hCutFlow->Fill("MET>20", 1);
     hCutFlow_w->Fill("MET>20", _weight);
 
-    return true;
+    return true; }
 
 
 //////////////////////Electron Trigger Scale Factors////////////////////////////////////////////////  (TSFel)
