@@ -1122,31 +1122,32 @@ void ttHHanalyzer::analyze(event *thisEvent) {
     float totalSFUnc = 0.0;
     float weight_before_trigger = _weight;
 
-    if (selectedElectrons->size() == 1) {
-        objectLep* ele = selectedElectrons->at(0);
-        float sf_unc = 0.0;
-        float sf = getEleTrigSF(ele->getp4()->Eta(), ele->getp4()->Pt(), sf_unc);
-
-        triggerSF = sf;
-        totalSFUnc = sf_unc * sf_unc;
-        triggerSFUncertainty = sqrt(totalSFUnc);
-
-        _weight *= triggerSF;
-
-	if ((*sf_log_file).is_open() && (_entryInLoop % 10000 == 0)) {
-	    (*sf_log_file) << "Entry " << _entryInLoop
-	                   << " | Electron η = " << ele->getp4()->Eta()
-	                   << ", pT = " << ele->getp4()->Pt()
-	                   << " | Electron SF = " << std::fixed << std::setprecision(10) << triggerSF
-	                   << " | Weight before = " << weight_before_trigger
-	                   << " | Weight after = " << _weight << "\n";
+	if (selectedElectrons->size() == 1) {
+	    objectLep* ele = selectedElectrons->at(0);
+	    float sf_unc = 0.0;
+	    float sf = getEleTrigSF(ele->getp4()->Eta(), ele->getp4()->Pt(), sf_unc);
+	
+	    triggerSF = sf;
+	    totalSFUnc = sf_unc * sf_unc;
+	    triggerSFUncertainty = sqrt(totalSFUnc);
+	
+	    _weight *= triggerSF;
+	
+	    if ((*sf_log_file).is_open() && (_entryInLoop % 10000 == 0)) {
+	        (*sf_log_file) << "Entry " << _entryInLoop
+	                       << " | Electron η = " << ele->getp4()->Eta()
+	                       << ", pT = " << ele->getp4()->Pt()
+	                       << " | Electron SF = " << std::fixed << std::setprecision(10) << triggerSF
+	                       << " | Weight before = " << weight_before_trigger
+	                       << " | Weight after = " << _weight << "\n";
+	    }
 	} 
 	else if (selectedElectrons->empty() && selectedMuons->size() == 1) {
 	    objectLep* mu = selectedMuons->at(0);
 	    float sf = getMuonTrigSF(mu->getp4()->Eta(), mu->getp4()->Pt());
 	
 	    triggerSF = sf;
-	    triggerSFUncertainty = 0.0; // se você quiser propagar incerteza depois, pode adaptar aqui
+	    triggerSFUncertainty = 0.0; 
 	
 	    _weight *= triggerSF;
 	
@@ -1159,7 +1160,6 @@ void ttHHanalyzer::analyze(event *thisEvent) {
 	                       << " | Weight after = " << _weight << "\n";
 	    }
 	}
-
 ///////////////////////////////////////
 
 	
