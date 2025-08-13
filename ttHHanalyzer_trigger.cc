@@ -248,7 +248,6 @@ if (event_counter % 10000 == 0) {
 
 
 
-
 void ttHHanalyzer::createObjects(event * thisEvent, sysName sysType, bool up){
 
 ////Log of selection///
@@ -683,7 +682,8 @@ if (event_counter % 10000 == 0) {
                       << " | Com mãe Top: " << nFromTop << std::endl;
     (*event_log_file) << std::endl;
 }
-
+}
+}
 ///////////////////
 bool ttHHanalyzer::selectObjects(event *thisEvent) {
     extern int event_counter; // se já está como static fora, não precisa redefinir
