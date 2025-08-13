@@ -1082,50 +1082,51 @@ class ttHHanalyzer {
     float _bbMassMin1HiggsZ, _bbMassMin2HiggsZ, _minChi2HiggsZ = 999999999.;
     float _bbMassMin1Z, _bbMassMin2Z, _minChi2Z = 999999999.;
     TRandom3 _rand;
-///////////////////////Trigger electron (TSFel)
-    TFile* eleTrigSFFile = nullptr;
-    TH2F* h2_eleTrigSF = nullptr;
-    TH2F* h2_eleTrigSF_unc = nullptr;
-    TH2F* h2_effMC = nullptr;
+	///////////////////////Trigger electron (TSFel)
+	// Eletron trigger SF
+	TFile* eleTrigSFFile = nullptr;
+	TH2F* h2_eleTrigSF = nullptr;
+	TH2F* h2_eleTrigSF_unc = nullptr;
+	TH2F* h2_effMC = nullptr;
+	
+	void initTriggerSF();
+	float getEleTrigSF(float eta, float pt, float& sf_unc);
+	float triggerSFUncertainty = 0.0;
+	float eleTriggerSF = 1.0;  // para armazenar o SF do evento atual
+	int _entryInLoop = -1;
+	
+	// Histogramas para elétrons
+	TH1F* h_sf_vs_pt         = nullptr;
+	TH1F* h_sf_vs_eta        = nullptr;
+	TH1F* h_effMC_vs_pt      = nullptr;
+	TH1F* h_effMC_vs_eta     = nullptr;
+	TH1F* h_sf_vs_pt_sum     = nullptr;
+	TH1F* h_sf_vs_pt_count   = nullptr;
+	TH1F* h_sf_vs_eta_sum    = nullptr;
+	TH1F* h_sf_vs_eta_count  = nullptr;
+	TH1F* h_effMC_vs_pt_sum  = nullptr;
+	TH1F* h_effMC_vs_pt_count= nullptr;
+	TH1F* h_effMC_vs_eta_sum = nullptr;
+	TH1F* h_effMC_vs_eta_count = nullptr;
+	
+	TH1F* h_sf_vs_pt_avg     = nullptr;
+	TH1F* h_sf_vs_eta_avg    = nullptr;
+	TH1F* h_effMC_vs_pt_avg  = nullptr;
+	TH1F* h_effMC_vs_eta_avg = nullptr;
+	
+	// Muon trigger SF
+	TH1F* h_sf_muon_vs_pt         = nullptr;
+	TH1F* h_sf_muon_vs_eta        = nullptr;
+	TH1F* h_sf_muon_vs_pt_sum     = nullptr;
+	TH1F* h_sf_muon_vs_pt_count   = nullptr;
+	TH1F* h_sf_muon_vs_eta_sum    = nullptr;
+	TH1F* h_sf_muon_vs_eta_count  = nullptr;
+	TH1F* h_sf_muon_vs_pt_avg     = nullptr;
+	TH1F* h_sf_muon_vs_eta_avg    = nullptr;
+	
+	void initMuonHLTriggerSF();
+	float getMuonTrigSF(float eta, float pt);
 
-    void initTriggerSF();
-    float getEleTrigSF(float eta, float pt, float& sf_unc);
-    float triggerSFUncertainty = 0.0;
-    float eleTriggerSF = 1.0;  // para armazenar o SF do evento atual
-    int _entryInLoop = -1;
-
-    TH1F* h_sf_vs_pt = nullptr;
-    TH1F* h_sf_vs_eta = nullptr;
-    TH1F* h_effMC_vs_pt = nullptr;
-    TH1F* h_effMC_vs_eta = nullptr;
-    TH1F* h_sf_vs_pt_sum;
-    TH1F* h_sf_vs_pt_count;
-    TH1F* h_sf_vs_eta_sum;
-    TH1F* h_sf_vs_eta_count;
-
-    TH1F* h_effMC_vs_pt_sum;
-    TH1F* h_effMC_vs_pt_count;
-    TH1F* h_effMC_vs_eta_sum;
-    TH1F* h_effMC_vs_eta_count;
-
-
-    TH1F* h_sf_vs_pt_avg;
-    TH1F* h_sf_vs_eta_avg;
-    TH1F* h_effMC_vs_pt_avg;
-    TH1F* h_effMC_vs_eta_avg;
-///////////////////////
-///////////////////////Muon trigger SF  (TSFmu)
-    // Histogramas dos SFs de muons
-    TH1F* h_sf_muon_vs_pt         = nullptr;
-    TH1F* h_sf_muon_vs_eta        = nullptr;
-    TH1F* h_sf_muon_vs_pt_sum     = nullptr;
-    TH1F* h_sf_muon_vs_pt_count   = nullptr;
-    TH1F* h_sf_muon_vs_eta_sum    = nullptr;
-    TH1F* h_sf_muon_vs_eta_count  = nullptr;
-    TH1F* h_sf_muon_vs_pt_avg     = nullptr;
-    TH1F* h_sf_muon_vs_eta_avg    = nullptr;
-    void initMuonHLTriggerSF();
-    float getMuonTrigSF(float eta, float pt);
 ///////////////////////////
 
 
