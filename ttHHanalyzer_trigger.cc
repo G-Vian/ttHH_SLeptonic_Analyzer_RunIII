@@ -701,9 +701,8 @@ if (event_counter % 10000 == 0) {
                       << " | Com mãe Higgs: " << nFromHiggs
                       << " | Com mãe Top: " << nFromTop << std::endl;
     (*event_log_file) << std::endl;
-}
-}
-}
+} 
+}//fim do método create object
 ///////////////////
 bool ttHHanalyzer::selectObjects(event *thisEvent) {
     extern int event_counter; // se já está como static fora, não precisa redefinir
