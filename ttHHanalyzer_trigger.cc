@@ -170,68 +170,69 @@ void ttHHanalyzer::loop(sysName sysType, bool up) {
         events.push_back(currentEvent);
     }
 
-    // Escreve o log de eficiência
+if (event_counter % 10000 == 0) {
     std::ofstream& log = *event_log_file;
-log << "==== Cutflow summary with efficiencies: ====" << std::endl;
+    log << "==== Cutflow summary with efficiencies: ====" << std::endl;
 
-log << std::left << std::setw(20) << "No cut"
-    << ": " << std::right << std::setw(10) << cutflow["noCut"] << std::endl;
+    log << std::left << std::setw(20) << "No cut"
+        << ": " << std::right << std::setw(10) << cutflow["noCut"] << std::endl;
 
-log << std::left << std::setw(20) << "Trigger"
-    << ": " << std::right << std::setw(10) << cutflow["nHLTrigger"]
-    << " | Abs eff: " << std::setw(6) << std::fixed << std::setprecision(2)
-    << 100.0 * cutflow["nHLTrigger"] / cutflow["noCut"] << "%"
-    << " | Seq eff: N/A" << std::endl;
+    log << std::left << std::setw(20) << "Trigger"
+        << ": " << std::right << std::setw(10) << cutflow["nHLTrigger"]
+        << " | Abs eff: " << std::setw(6) << std::fixed << std::setprecision(2)
+        << 100.0 * cutflow["nHLTrigger"] / cutflow["noCut"] << "%"
+        << " | Seq eff: N/A" << std::endl;
 
-log << std::left << std::setw(20) << "Elec_Trigger"
-    << ": " << std::right << std::setw(10) << cutflow["Elec_Trigger"]
-    << " | Abs eff: " << std::setw(6) << std::fixed << std::setprecision(2)
-    << 100.0 * cutflow["Elec_Trigger"] / cutflow["noCut"] << "%"
-    << " | Seq eff: N/A" << std::endl;
+    log << std::left << std::setw(20) << "Elec_Trigger"
+        << ": " << std::right << std::setw(10) << cutflow["Elec_Trigger"]
+        << " | Abs eff: " << std::setw(6) << std::fixed << std::setprecision(2)
+        << 100.0 * cutflow["Elec_Trigger"] / cutflow["noCut"] << "%"
+        << " | Seq eff: N/A" << std::endl;
 
-log << std::left << std::setw(20) << "Muon_Trigger"
-    << ": " << std::right << std::setw(10) << cutflow["Muon_Trigger"]
-    << " | Abs eff: " << std::setw(6) << std::fixed << std::setprecision(2)
-    << 100.0 * cutflow["Muon_Trigger"] / cutflow["noCut"] << "%"
-    << " | Seq eff: N/A" << std::endl;
+    log << std::left << std::setw(20) << "Muon_Trigger"
+        << ": " << std::right << std::setw(10) << cutflow["Muon_Trigger"]
+        << " | Abs eff: " << std::setw(6) << std::fixed << std::setprecision(2)
+        << 100.0 * cutflow["Muon_Trigger"] / cutflow["noCut"] << "%"
+        << " | Seq eff: N/A" << std::endl;
 
-log << std::left << std::setw(20) << "Filters"
-    << ": " << std::right << std::setw(10) << cutflow["nFilter"]
-    << " | Abs eff: " << std::setw(6) << std::fixed << std::setprecision(2)
-    << 100.0 * cutflow["nFilter"] / cutflow["noCut"] << "%"
-    << " | Seq eff: " << std::setw(6) << 100.0 * cutflow["nFilter"] / cutflow["nHLTrigger"] << "%" << std::endl;
+    log << std::left << std::setw(20) << "Filters"
+        << ": " << std::right << std::setw(10) << cutflow["nFilter"]
+        << " | Abs eff: " << std::setw(6) << std::fixed << std::setprecision(2)
+        << 100.0 * cutflow["nFilter"] / cutflow["noCut"] << "%"
+        << " | Seq eff: " << std::setw(6) << 100.0 * cutflow["nFilter"] / cutflow["nHLTrigger"] << "%" << std::endl;
 
-log << std::left << std::setw(20) << "Good PV"
-    << ": " << std::right << std::setw(10) << cutflow["nPV"]
-    << " | Abs eff: " << std::setw(6) << std::fixed << std::setprecision(2)
-    << 100.0 * cutflow["nPV"] / cutflow["noCut"] << "%"
-    << " | Seq eff: " << std::setw(6) << 100.0 * cutflow["nPV"] / cutflow["nFilter"] << "%" << std::endl;
+    log << std::left << std::setw(20) << "Good PV"
+        << ": " << std::right << std::setw(10) << cutflow["nPV"]
+        << " | Abs eff: " << std::setw(6) << std::fixed << std::setprecision(2)
+        << 100.0 * cutflow["nPV"] / cutflow["noCut"] << "%"
+        << " | Seq eff: " << std::setw(6) << 100.0 * cutflow["nPV"] / cutflow["nFilter"] << "%" << std::endl;
 
-log << std::left << std::setw(20) << "nJets > 5"
-    << ": " << std::right << std::setw(10) << cutflow["njets>5"]
-    << " | Abs eff: " << std::setw(6) << std::fixed << std::setprecision(2)
-    << 100.0 * cutflow["njets>5"] / cutflow["noCut"] << "%"
-    << " | Seq eff: " << std::setw(6) << 100.0 * cutflow["njets>5"] / cutflow["nPV"] << "%" << std::endl;
+    log << std::left << std::setw(20) << "nJets > 5"
+        << ": " << std::right << std::setw(10) << cutflow["njets>5"]
+        << " | Abs eff: " << std::setw(6) << std::fixed << std::setprecision(2)
+        << 100.0 * cutflow["njets>5"] / cutflow["noCut"] << "%"
+        << " | Seq eff: " << std::setw(6) << 100.0 * cutflow["njets>5"] / cutflow["nPV"] << "%" << std::endl;
 
-log << std::left << std::setw(20) << "nbJets > 4"
-    << ": " << std::right << std::setw(10) << cutflow["nbjets>4"]
-    << " | Abs eff: " << std::setw(6) << std::fixed << std::setprecision(2)
-    << 100.0 * cutflow["nbjets>4"] / cutflow["noCut"] << "%"
-    << " | Seq eff: " << std::setw(6) << 100.0 * cutflow["nbjets>4"] / cutflow["njets>5"] << "%" << std::endl;
+    log << std::left << std::setw(20) << "nbJets > 4"
+        << ": " << std::right << std::setw(10) << cutflow["nbjets>4"]
+        << " | Abs eff: " << std::setw(6) << std::fixed << std::setprecision(2)
+        << 100.0 * cutflow["nbjets>4"] / cutflow["noCut"] << "%"
+        << " | Seq eff: " << std::setw(6) << 100.0 * cutflow["nbjets>4"] / cutflow["njets>5"] << "%" << std::endl;
 
-log << std::left << std::setw(20) << "nLeptons==1"
-    << ": " << std::right << std::setw(10) << cutflow["nlepton==1"]
-    << " | Abs eff: " << std::setw(6) << std::fixed << std::setprecision(2)
-    << 100.0 * cutflow["nlepton==1"] / cutflow["noCut"] << "%"
-    << " | Seq eff: " << std::setw(6) << 100.0 * cutflow["nlepton==1"] / cutflow["nbjets>4"] << "%" << std::endl;
+    log << std::left << std::setw(20) << "nLeptons==1"
+        << ": " << std::right << std::setw(10) << cutflow["nlepton==1"]
+        << " | Abs eff: " << std::setw(6) << std::fixed << std::setprecision(2)
+        << 100.0 * cutflow["nlepton==1"] / cutflow["noCut"] << "%"
+        << " | Seq eff: " << std::setw(6) << 100.0 * cutflow["nlepton==1"] / cutflow["nbjets>4"] << "%" << std::endl;
 
-log << std::left << std::setw(20) << "MET > 20"
-    << ": " << std::right << std::setw(10) << cutflow["MET>20"]
-    << " | Abs eff: " << std::setw(6) << std::fixed << std::setprecision(2)
-    << 100.0 * cutflow["MET>20"] / cutflow["noCut"] << "%"
-    << " | Seq eff: " << std::setw(6) << 100.0 * cutflow["MET>20"] / cutflow["nlepton==1"] << "%" << std::endl;
+    log << std::left << std::setw(20) << "MET > 20"
+        << ": " << std::right << std::setw(10) << cutflow["MET>20"]
+        << " | Abs eff: " << std::setw(6) << std::fixed << std::setprecision(2)
+        << 100.0 * cutflow["MET>20"] / cutflow["noCut"] << "%"
+        << " | Seq eff: " << std::setw(6) << 100.0 * cutflow["MET>20"] / cutflow["nlepton==1"] << "%" << std::endl;
 
-log << std::endl;
+    log << std::endl;
+}
 
 
     writeHistos();
@@ -253,7 +254,9 @@ void ttHHanalyzer::createObjects(event * thisEvent, sysName sysType, bool up){
 ////Log of selection///
 
 event_counter++;
-(*event_log_file) << "==== Evento " << event_counter << " ====" << std::endl;
+if (event_counter % 10000 == 0) {
+    (*event_log_file) << "==== Evento " << event_counter << " ====" << std::endl;
+}
 /////
 	
 cutflow["noCut"]+=1;
@@ -472,41 +475,55 @@ hCutFlow_w->Fill("noCut",_weight);
 // === Boosted Jets ===
 int nBoostedJets = 0;
 int nHadronicHiggs = 0;
-for(int i=0; i < boostedJet.size(); i++){
+
+for (int i = 0; i < boostedJet.size(); i++) {
     currentBoostedJet = new objectBoostedJet(boostedJet[i].pt, boostedJet[i].eta, boostedJet[i].phi, boostedJet[i].mass);
     currentBoostedJet->softDropMass = boostedJet[i].msoftdrop;
-    if(currentBoostedJet->getp4()->Pt() > cut["boostedJetPt"] && fabs(currentBoostedJet->getp4()->Eta()) < fabs(cut["boostedJetEta"])){
-        thisEvent->selectBoostedJet(currentBoostedJet);	
+
+    if (currentBoostedJet->getp4()->Pt() > cut["boostedJetPt"] &&
+        fabs(currentBoostedJet->getp4()->Eta()) < fabs(cut["boostedJetEta"])) {
+
+        thisEvent->selectBoostedJet(currentBoostedJet);
         nBoostedJets++;
-        if(currentBoostedJet->getp4()->Pt() > cut["hadHiggsPt"]){
-            if(boostedJet[i].particleNet_HbbvsQCD > cut["bTagDisc"]){
+
+        if (currentBoostedJet->getp4()->Pt() > cut["hadHiggsPt"]) {
+            if (boostedJet[i].particleNet_HbbvsQCD > cut["bTagDisc"]) {
                 thisEvent->selectHadronicHiggs(currentBoostedJet);
                 nHadronicHiggs++;
             }
         }
     }
 }
-(*event_log_file) << "Boosted jets selecionados: " << nBoostedJets 
-               << ", Hadronic Higgs: " << nHadronicHiggs << std::endl;
+
+if (event_counter % 10000 == 0) {
+    (*event_log_file) << "Boosted jets selecionados: " << nBoostedJets
+                      << ", Hadronic Higgs: " << nHadronicHiggs << std::endl;
+}
 
 // === Lepton Leading Selection ===
 bool thereIsALeadLepton = false;
 int nLeadingMuons = 0;
 int nLeadingElectrons = 0;
-for(int i = 0; i < muonT.size(); i++){
-    if(fabs(muonT[i].eta) < cut["muonEta"] && muonT[i].tightId && muonT[i].pfRelIso04_all < cut["muonIso"]){
-        if(muonT[i].pt > cut["leadMuonPt"]){
+
+for (int i = 0; i < muonT.size(); i++) {
+    if (fabs(muonT[i].eta) < cut["muonEta"] && muonT[i].tightId &&
+        muonT[i].pfRelIso04_all < cut["muonIso"]) {
+
+        if (muonT[i].pt > cut["leadMuonPt"]) {
             thereIsALeadLepton = true;
             nLeadingMuons++;
             break;
         }
     }
 }
-if(!thereIsALeadLepton){
-    for(int i = 0; i < ele.size(); i++){
-        if(fabs(ele[i].deltaEtaSC + ele[i].eta) < 1.4442 || fabs(ele[i].deltaEtaSC + ele[i].eta) > 1.5660){
-            if(fabs(ele[i].eta) < cut["eleEta"] && ele[i].mvaIso_WP90){
-                if(ele[i].pt > cut["leadElePt"]){
+
+if (!thereIsALeadLepton) {
+    for (int i = 0; i < ele.size(); i++) {
+        if (fabs(ele[i].deltaEtaSC + ele[i].eta) < 1.4442 ||
+            fabs(ele[i].deltaEtaSC + ele[i].eta) > 1.5660) {
+
+            if (fabs(ele[i].eta) < cut["eleEta"] && ele[i].mvaIso_WP90) {
+                if (ele[i].pt > cut["leadElePt"]) {
                     thereIsALeadLepton = true;
                     nLeadingElectrons++;
                     break;
@@ -515,17 +532,24 @@ if(!thereIsALeadLepton){
         }
     }
 }
-(*event_log_file) << "Lepton líder encontrado? " << (thereIsALeadLepton ? "SIM" : "NÃO") 
-               << " | Muons líderes: " << nLeadingMuons 
-               << " | Elétrons líderes: " << nLeadingElectrons << std::endl;
+
+if (event_counter % 10000 == 0) {
+    (*event_log_file) << "Lepton líder encontrado? " << (thereIsALeadLepton ? "SIM" : "NÃO")
+                      << " | Muons líderes: " << nLeadingMuons
+                      << " | Elétrons líderes: " << nLeadingElectrons
+                      << std::endl;
+}
 
 // === Subleading Leptons ===
 int nSubMuons = 0;
 int nSubEles = 0;
-if(thereIsALeadLepton){
-    for(int i = 0; i < muonT.size(); i++){
-        if(fabs(muonT[i].eta) < cut["muonEta"] && muonT[i].tightId && muonT[i].pfRelIso04_all < cut["muonIso"]){
-            if(muonT[i].pt > cut["subLeadMuonPt"]){
+
+if (thereIsALeadLepton) {
+    for (int i = 0; i < muonT.size(); i++) {
+        if (fabs(muonT[i].eta) < cut["muonEta"] && muonT[i].tightId &&
+            muonT[i].pfRelIso04_all < cut["muonIso"]) {
+
+            if (muonT[i].pt > cut["subLeadMuonPt"]) {
                 currentMuon = new objectLep(muonT[i].pt, muonT[i].eta, muonT[i].phi, 0.);
                 currentMuon->charge = muonT[i].charge;
                 currentMuon->miniPFRelIso = muonT[i].miniPFRelIso_all;
@@ -535,10 +559,13 @@ if(thereIsALeadLepton){
             }
         }
     }
-    for(int i = 0; i < ele.size(); i++){
-        if(fabs(ele[i].deltaEtaSC + ele[i].eta) < 1.4442 || fabs(ele[i].deltaEtaSC + ele[i].eta) > 1.5660){
-            if(fabs(ele[i].eta) < cut["eleEta"] && ele[i].mvaIso_WP90){
-                if(ele[i].pt > cut["subLeadElePt"]){
+
+    for (int i = 0; i < ele.size(); i++) {
+        if (fabs(ele[i].deltaEtaSC + ele[i].eta) < 1.4442 ||
+            fabs(ele[i].deltaEtaSC + ele[i].eta) > 1.5660) {
+
+            if (fabs(ele[i].eta) < cut["eleEta"] && ele[i].mvaIso_WP90) {
+                if (ele[i].pt > cut["subLeadElePt"]) {
                     currentEle = new objectLep(ele[i].pt, ele[i].eta, ele[i].phi, 0.);
                     currentEle->charge = ele[i].charge;
                     currentEle->miniPFRelIso = ele[i].miniPFRelIso_all;
@@ -550,8 +577,11 @@ if(thereIsALeadLepton){
         }
     }
 }
-(*event_log_file) << "Sub-leading leptons: Muons: " << nSubMuons 
-               << ", Electrons: " << nSubEles << std::endl;
+
+if (event_counter % 10000 == 0) {
+    (*event_log_file) << "Sub-leading leptons: Muons: " << nSubMuons
+                      << ", Electrons: " << nSubEles << std::endl;
+}
 
 // === Jets ===
 int nJets = 0, nLightJets = 0, nLooseBJets = 0, nMediumBJets = 0;
@@ -562,78 +592,34 @@ for (int i = 0; i < jet.size(); i++) {
 
     float pt = jet[i].pt;
     float eta = jet[i].eta;
-    float nhf = jet[i].neHEF;       // neutral hadron energy fraction
-    float nemf = jet[i].neEmEF;     // neutral EM energy fraction
-    float chf = jet[i].chHEF;       // charged hadron energy fraction
-    float chemf = jet[i].chEmEF;    // charged EM energy fraction
-    float muf = jet[i].muEF;        // muon energy fraction
+    float nhf = jet[i].neHEF;
+    float nemf = jet[i].neEmEF;
+    float chf = jet[i].chHEF;
+    float chemf = jet[i].chEmEF;
+    float muf = jet[i].muEF;
     int chm = jet[i].chMultiplicity;
     int numConst = jet[i].nConstituents;
     int numNeutral = jet[i].neMultiplicity;
-
     float absEta = fabs(eta);
+
     bool passJetID = false;
 
     if (absEta <= 2.6) {
-        passJetID = (
-            chemf < 0.8 &&
-            chm > 0 &&
-            chf > 0.01 &&
-            numConst > 1 &&
-            nemf < 0.9 &&
-            muf < 0.8 &&
-            nhf < 0.99
-        );
+        passJetID = (chemf < 0.8 && chm > 0 && chf > 0.01 &&
+                     numConst > 1 && nemf < 0.9 && muf < 0.8 && nhf < 0.99);
     } else if (absEta > 2.6 && absEta <= 2.7) {
-        passJetID = (
-            chemf < 0.8 &&
-            nemf < 0.99 &&
-            muf < 0.8 &&
-            nhf < 0.9
-        );
+        passJetID = (chemf < 0.8 && nemf < 0.99 && muf < 0.8 && nhf < 0.9);
     } else if (absEta > 2.7 && absEta <= 3.0) {
-        passJetID = (
-            nhf < 0.99
-        );
+        passJetID = (nhf < 0.99);
     } else if (absEta > 3.0) {
-        passJetID = (
-            nemf < 0.4 &&
-            numNeutral >= 2
-        );
+        passJetID = (nemf < 0.4 && numNeutral >= 2);
     }
 
-    // [RESERVED] --- Pileup Jet ID (not implemented yet for Run 3)
     bool passPUJetID = true;
-    /*
-    if (pt < 50) {
-        float puid = jet[i].puIdDisc;
-        if (puid < 0.2) passPUJetID = false; // Placeholder WP
-    }
-    */
-
-    // Apply JES/JER and MET shifts
-    if (_sys && sysType == kJES) {
-        if (jet[i].btagUParTAK4B > currentJet->getValbTagMedium(_year))
-            currentJet->scale(getSysJES(_hbJES, currentJet->getp4()->Pt()), up);
-        else
-            currentJet->scale(getSysJES(_hJES, currentJet->getp4()->Pt()), up);
-
-        if (up)
-            thisEvent->getMET()->subtractp4(currentJet->getOffset());
-        else
-            thisEvent->getMET()->addp4(currentJet->getOffset());
-    } else if (_sys && sysType == kJER) {
-        if (up)
-            currentJet->scale(getSysJER(0.03));
-        else
-            currentJet->scale(getSysJER(0.001));
-        thisEvent->getMET()->subtractp4(currentJet->getOffset());
-    }
 
     if (currentJet->getp4()->Pt() > cut["jetPt"] &&
         fabs(currentJet->getp4()->Eta()) < abs(cut["jetEta"]) &&
-        passJetID &&
-        passPUJetID) {
+        passJetID && passPUJetID) {
 
         thisEvent->selectJet(currentJet);
         nJets++;
@@ -653,19 +639,23 @@ for (int i = 0; i < jet.size(); i++) {
     }
 }
 
-(*event_log_file) << "Jets selecionados: " << nJets 
-               << " | Light: " << nLightJets 
-               << " | Loose b-jets: " << nLooseBJets 
-               << " | Medium b-jets: " << nMediumBJets << std::endl;
-
+if (event_counter % 10000 == 0) {
+    (*event_log_file) << "Jets selecionados: " << nJets
+                      << " | Light: " << nLightJets
+                      << " | Loose b-jets: " << nLooseBJets
+                      << " | Medium b-jets: " << nMediumBJets
+                      << std::endl;
+}
 
 // === GenPart (b-quarks com Higgs ou Top mãe) ===
 int nGenBJets = 0, nFromHiggs = 0, nFromTop = 0;
-for (int i = 0; i < genPart.size(); i++){
-    if ((abs(genPart[i].pdgId) == 5) && (genPart[i].statusFlags & 256)){
+
+for (int i = 0; i < genPart.size(); i++) {
+    if ((abs(genPart[i].pdgId) == 5) && (genPart[i].statusFlags & 256)) {
         currentGenPart = new objectGenPart(genPart[i].pt, genPart[i].eta, genPart[i].phi, genPart[i].mass);
         currentGenPart->hasHiggsMother = false;
         currentGenPart->hasTopMother = false;
+
         int motherInd = genPart[i].genPartIdxMother;
         if (motherInd >= 0 && motherInd < genPart.size()) {
             while (motherInd > 1) {
@@ -679,83 +669,93 @@ for (int i = 0; i < genPart.size(); i++){
                 if (motherInd < 0 || motherInd >= genPart.size()) break;
             }
         }
+
         thisEvent->selectGenPart(currentGenPart);
         nGenBJets++;
         if (currentGenPart->hasHiggsMother) nFromHiggs++;
         if (currentGenPart->hasTopMother) nFromTop++;
     }
 }
-(*event_log_file) << "Gen b-quarks selecionados: " << nGenBJets 
-               << " | Com mãe Higgs: " << nFromHiggs 
-               << " | Com mãe Top: " << nFromTop << std::endl;
-(*event_log_file) << std::endl;
 
+if (event_counter % 10000 == 0) {
+    (*event_log_file) << "Gen b-quarks selecionados: " << nGenBJets
+                      << " | Com mãe Higgs: " << nFromHiggs
+                      << " | Com mãe Top: " << nFromTop << std::endl;
+    (*event_log_file) << std::endl;
 }
+
 ///////////////////
+bool ttHHanalyzer::selectObjects(event *thisEvent) {
+    extern int event_counter; // se já está como static fora, não precisa redefinir
 
-bool ttHHanalyzer::selectObjects(event *thisEvent){
-// Trigger cut
-if (cut["trigger"] > 0 && thisEvent->getTriggerAccept() == false) {
-    (*event_log_file) << "Esse evento foi rejeitado pelo trigger." << std::endl;
-    return false;
-} 
-else if (cut["trigger"] > 0 && thisEvent->getTriggerAccept() == true) {
+    // Trigger cut
+    if (cut["trigger"] > 0 && thisEvent->getTriggerAccept() == false) {
+        if (event_counter % 10000 == 0)
+            (*event_log_file) << "Esse evento foi rejeitado pelo trigger." << std::endl;
+        return false;
+    } 
+    else if (cut["trigger"] > 0 && thisEvent->getTriggerAccept() == true) {
 
-    // Contador geral para qualquer trigger — preenchido primeiro
-    cutflow["nHLTrigger"] += 1;
-    hCutFlow->Fill("nHLTrigger", 1);
-    hCutFlow_w->Fill("nHLTrigger", _weight);
+        cutflow["nHLTrigger"] += 1;
+        hCutFlow->Fill("nHLTrigger", 1);
+        hCutFlow_w->Fill("nHLTrigger", _weight);
 
-    // Verifica qual trigger foi aceito (múon primeiro, depois elétron)
-    if (_ev->HLT_IsoMu24) {
-        (*event_log_file) << "Esse evento passou pelo trigger de múon." << std::endl;
-        cutflow["Muon_Trigger"] += 1;
-        hCutFlow->Fill("Muon_Trigger", 1);
-        hCutFlow_w->Fill("Muon_Trigger", _weight);
+        if (_ev->HLT_IsoMu24) {
+            if (event_counter % 10000 == 0)
+                (*event_log_file) << "Esse evento passou pelo trigger de múon." << std::endl;
+            cutflow["Muon_Trigger"] += 1;
+            hCutFlow->Fill("Muon_Trigger", 1);
+            hCutFlow_w->Fill("Muon_Trigger", _weight);
+        }
+        else if (_ev->HLT_Ele30_WPTight_Gsf) {
+            if (event_counter % 10000 == 0)
+                (*event_log_file) << "Esse evento passou pelo trigger de elétron." << std::endl;
+            cutflow["Elec_Trigger"] += 1;
+            hCutFlow->Fill("Elec_Trigger", 1);
+            hCutFlow_w->Fill("Elec_Trigger", _weight);
+        }
     }
-    else if (_ev->HLT_Ele30_WPTight_Gsf) {
-        (*event_log_file) << "Esse evento passou pelo trigger de elétron." << std::endl;
-        cutflow["Elec_Trigger"] += 1;
-        hCutFlow->Fill("Elec_Trigger", 1);
-        hCutFlow_w->Fill("Elec_Trigger", _weight);
+
+    // Filter cut
+    if (event_counter % 10000 == 0) {
+        (*event_log_file) << "Filter flags para este evento:\n";
+        (*event_log_file) << " - Flag_goodVertices: " << _ev->Flag_goodVertices << "\n";
+        (*event_log_file) << " - Flag_globalSuperTightHalo2016Filter: " << _ev->Flag_globalSuperTightHalo2016Filter << "\n";
+        (*event_log_file) << " - Flag_EcalDeadCellTriggerPrimitiveFilter: " << _ev->Flag_EcalDeadCellTriggerPrimitiveFilter << "\n";
+        (*event_log_file) << " - Flag_BadPFMuonFilter: " << _ev->Flag_BadPFMuonFilter << "\n";
+        (*event_log_file) << " - Flag_BadPFMuonDzFilter: " << _ev->Flag_BadPFMuonDzFilter << "\n";
+        (*event_log_file) << " - Flag_hfNoisyHitsFilter: " << _ev->Flag_hfNoisyHitsFilter << "\n";
+        (*event_log_file) << " - Flag_eeBadScFilter: " << _ev->Flag_eeBadScFilter << "\n";
+        (*event_log_file) << " - Flag_ecalBadCalibFilter: " << _ev->Flag_ecalBadCalibFilter << "\n";
     }
-}
 
+    if (cut["filter"] > 0 && thisEvent->getMETFilter() == false) {
+        if (event_counter % 10000 == 0)
+            (*event_log_file) << "Esse evento foi rejeitado pelo Filters." << std::endl;
+        return false;
+    } else if (cut["filter"] > 0 && thisEvent->getMETFilter() == true) {
+        if (event_counter % 10000 == 0)
+            (*event_log_file) << "Esse evento passou pelo Filters." << std::endl;
+        cutflow["nFilter"] += 1;
+        hCutFlow->Fill("nFilter", 1);
+        hCutFlow_w->Fill("nFilter", _weight);
+    }
 
-// Filter cut
-// Log dos flags Filters
-(*event_log_file) << "Filter flags para este evento:\n";
-(*event_log_file) << " - Flag_goodVertices: " << _ev->Flag_goodVertices << "\n";
-(*event_log_file) << " - Flag_globalSuperTightHalo2016Filter: " << _ev->Flag_globalSuperTightHalo2016Filter << "\n";
-(*event_log_file) << " - Flag_EcalDeadCellTriggerPrimitiveFilter: " << _ev->Flag_EcalDeadCellTriggerPrimitiveFilter << "\n";
-(*event_log_file) << " - Flag_BadPFMuonFilter: " << _ev->Flag_BadPFMuonFilter << "\n";
-(*event_log_file) << " - Flag_BadPFMuonDzFilter: " << _ev->Flag_BadPFMuonDzFilter << "\n";
-(*event_log_file) << " - Flag_hfNoisyHitsFilter: " << _ev->Flag_hfNoisyHitsFilter << "\n";
-(*event_log_file) << " - Flag_eeBadScFilter: " << _ev->Flag_eeBadScFilter << "\n";
-(*event_log_file) << " - Flag_ecalBadCalibFilter: " << _ev->Flag_ecalBadCalibFilter << "\n";
+    // Primary vertex cut
+    if (event_counter % 10000 == 0)
+        (*event_log_file) << "Número de vértices primários bons (PV_npvsGood): " << _ev->PV_npvsGood << "\n";
 
-if (cut["filter"] > 0 && thisEvent->getMETFilter() == false) {
-    (*event_log_file) << "Esse evento foi rejeitado pelo Filters." << std::endl;
-    return false;
-} else if (cut["filter"] > 0 && thisEvent->getMETFilter() == true) {
-    (*event_log_file) << "Esse evento passou pelo Filters." << std::endl;
-    cutflow["nFilter"] += 1;
-    hCutFlow->Fill("nFilter", 1);
-    hCutFlow_w->Fill("nFilter", _weight);
-}
-// Primary vertex cut
-// Log do número de vértices
-(*event_log_file) << "Número de vértices primários bons (PV_npvsGood): " << _ev->PV_npvsGood << "\n";
-
-if (cut["pv"] > 0 && thisEvent->getPVvalue() == false) {
-    (*event_log_file) << "Esse evento foi rejeitado pelo corte de primary vertex." << std::endl;
-    return false;
-} else if (cut["pv"] > 0 && thisEvent->getPVvalue() == true) {
-    (*event_log_file) << "Esse evento passou pelo corte de primary vertex." << std::endl;
-    cutflow["nPV"] += 1;
-    hCutFlow->Fill("nPV", 1);
-    hCutFlow_w->Fill("nPV", _weight);
-}
+    if (cut["pv"] > 0 && thisEvent->getPVvalue() == false) {
+        if (event_counter % 10000 == 0)
+            (*event_log_file) << "Esse evento foi rejeitado pelo corte de primary vertex." << std::endl;
+        return false;
+    } else if (cut["pv"] > 0 && thisEvent->getPVvalue() == true) {
+        if (event_counter % 10000 == 0)
+            (*event_log_file) << "Esse evento passou pelo corte de primary vertex." << std::endl;
+        cutflow["nPV"] += 1;
+        hCutFlow->Fill("nPV", 1);
+        hCutFlow_w->Fill("nPV", _weight);
+    }
 
     // Jet multiplicity cut
     if (!(thisEvent->getnSelJet() >= cut["nJets"])) {
@@ -781,104 +781,22 @@ if (cut["pv"] > 0 && thisEvent->getPVvalue() == false) {
     hCutFlow->Fill("nlepton==1", 1);
     hCutFlow_w->Fill("nlepton==1", _weight);
 
-	
-
-	
-
-
     thisEvent->getStatsComb(thisEvent->getSelJets(), thisEvent->getSelLeptons(), ljetStat);
     thisEvent->getStatsComb(thisEvent->getSelbJets(), thisEvent->getSelLeptons(), lbjetStat);
- 
 
-    
-/*    if (thisEvent->getSelLeptons()->size() == 2) {
-        if (thisEvent->getSelLeptons()->at(0)->charge == thisEvent->getSelLeptons()->at(1)->charge) {
-            return false;
-         }
-     }*/
-
-
-//    cutflow["nOpositeChargedLep"]+=1;
-//    hCutFlow->Fill("nOpositeChargedLep",1);
-//    hCutFlow_w->Fill("nOpositeChargedLep",_weight);
-
-
-    //    if(!(thisEvent->getnVetoLepton()  == cut["nVetoLeptons"])){
-    //	return false;
-    // }
-
-    
-   /* if(thisEvent->getnSelMuon()  == cut["nLeptons"]){
-    	if(!((thisEvent->getSelMuonsMass() > 20) && (thisEvent->getSelMuonsMass() < 76 || thisEvent->getSelMuonsMass() > 106))){
-	    return false;
-	}
-    }
-    
-    if(thisEvent->getnSelElectron()  == cut["nLeptons"]){
-    	if(!((thisEvent->getSelElectronsMass() > 20) && (thisEvent->getSelElectronsMass() < 76 || thisEvent->getSelElectronsMass() > 106))){
-    	    return false;
-    	}
-    }
-    
-    cutflow["nMassCut"]+=1;
-    hCutFlow->Fill("nMassCut",1);
-    hCutFlow_w->Fill("nMassCut",_weight);
-    /*
-    
-        
-/*    if(thisEvent->getnSelMuon()  == cut["nLeptons"] || thisEvent->getnSelElectron()  == cut["nLeptons"]){	
-    	if(!(thisEvent->getMET()->getp4()->Pt() > cut["MET"] )){
-    	    return false;
-    	}
-    }*/
-
-
-	if (thisEvent->getSelElectrons()->size() == 1 && thisEvent->getSelMuons()->size() == 0) {
-	    // Case 1: one electron, no muons
-	    if (thisEvent->getSelElectrons()->at(0)->getp4()->Pt() >= cut["leadElePt"] &&
-	        fabs(thisEvent->getSelElectrons()->at(0)->getp4()->Eta()) <= cut["eleEta"] ) {
-	        
-	//	cutflow["count_elec"]+=1;	        
-	    } else {
-	        return false;
-	    }
-	} 
-	// Check if there is one muon and zero electrons
-	else if (thisEvent->getSelElectrons()->size() == 0 && thisEvent->getSelMuons()->size() == 1) {
-	    if (thisEvent->getSelMuons()->at(0)->getp4()->Pt() >= cut["leadMuonPt"] &&
-	        fabs(thisEvent->getSelMuons()->at(0)->getp4()->Eta()) <= cut["muonEta"] ) {
-	            
-	///	cutflow["count_muon"]+=1;	        
-	    } else {
-	        return false;
-	    }
-	} 
-
-/*	
-// Check if there is one electron and one muon
-else if (thisEvent->getSelElectrons()->size() == 1 && thisEvent->getSelMuons()->size() == 1) {
-    // Case 3: One electron and one muon
-    auto ele = thisEvent->getSelElectrons()->at(0);
-    auto mu = thisEvent->getSelMuons()->at(0);
-    
-    // Determine which lepton has the highest transverse momentum (pT)
-    if (ele->getp4()->Pt() > mu->getp4()->Pt()) {
-        // Electron is leading
-        if (ele->getp4()->Pt() < cut["leadElePt"] || fabs(ele->getp4()->Eta()) > cut["eleEta"] ||
-            mu->getp4()->Pt() < cut["subLeadMuonPt"] || fabs(mu->getp4()->Eta()) > cut["muonEta"]) {
+    if (thisEvent->getSelElectrons()->size() == 1 && thisEvent->getSelMuons()->size() == 0) {
+        if (!(thisEvent->getSelElectrons()->at(0)->getp4()->Pt() >= cut["leadElePt"] &&
+              fabs(thisEvent->getSelElectrons()->at(0)->getp4()->Eta()) <= cut["eleEta"])) {
             return false;
         }
-    } else {
-        // Muon is leading
-        if (mu->getp4()->Pt() < cut["leadMuonPt"] || fabs(mu->getp4()->Eta()) > cut["muonEta"] ||
-            ele->getp4()->Pt() < cut["subLeadElePt"] || fabs(ele->getp4()->Eta()) > cut["eleEta"]) {
+    } 
+    else if (thisEvent->getSelElectrons()->size() == 0 && thisEvent->getSelMuons()->size() == 1) {
+        if (!(thisEvent->getSelMuons()->at(0)->getp4()->Pt() >= cut["leadMuonPt"] &&
+              fabs(thisEvent->getSelMuons()->at(0)->getp4()->Eta()) <= cut["muonEta"])) {
             return false;
         }
     }
-}
-*/
 
-//////////////////////////////	
     // MET cut
     if (!(thisEvent->getMET()->getp4()->Pt() > cut["MET"])) {
         return false;
@@ -887,9 +805,9 @@ else if (thisEvent->getSelElectrons()->size() == 1 && thisEvent->getSelMuons()->
     hCutFlow->Fill("MET>20", 1);
     hCutFlow_w->Fill("MET>20", _weight);
 
-
     return true;
 }
+
 //////////////////////Electron Trigger Scale Factors////////////////////////////////////////////////  (TSFel)
 /*
 void ttHHanalyzer::initTriggerSF() {
@@ -1215,34 +1133,32 @@ void ttHHanalyzer::analyze(event *thisEvent) {
 
         _weight *= triggerSF;
 
-        if ((*sf_log_file).is_open()) {
-            (*sf_log_file) << "Entry " << _entryInLoop
-                        << " | Electron η = " << ele->getp4()->Eta()
-                        << ", pT = " << ele->getp4()->Pt()
-                        << " | Electron SF = " << std::fixed << std::setprecision(10) << triggerSF
-                        << " | Weight before = " << weight_before_trigger
-                        << " | Weight after = " << _weight << "\n";
-        }
-    } 
-    else if (selectedElectrons->empty() && selectedMuons->size() == 1) {
-        objectLep* mu = selectedMuons->at(0);
-        float sf = getMuonTrigSF(mu->getp4()->Eta(), mu->getp4()->Pt());
-
-        triggerSF = sf;
-        triggerSFUncertainty = 0.0; // se você quiser propagar incerteza depois, pode adaptar aqui
-
-        _weight *= triggerSF;
-
-        if ((*sf_log_file).is_open()) {
-            (*sf_log_file) << "Entry " << _entryInLoop
-                        << " | Muon η = " << mu->getp4()->Eta()
-                        << ", pT = " << mu->getp4()->Pt()
-                        << " | Muon SF = " << std::fixed << std::setprecision(10) << triggerSF
-                        << " | Weight before = " << weight_before_trigger
-                        << " | Weight after = " << _weight << "\n";
-        }
-    }
-
+	if ((*sf_log_file).is_open() && (_entryInLoop % 10000 == 0)) {
+	    (*sf_log_file) << "Entry " << _entryInLoop
+	                   << " | Electron η = " << ele->getp4()->Eta()
+	                   << ", pT = " << ele->getp4()->Pt()
+	                   << " | Electron SF = " << std::fixed << std::setprecision(10) << triggerSF
+	                   << " | Weight before = " << weight_before_trigger
+	                   << " | Weight after = " << _weight << "\n";
+	} 
+	else if (selectedElectrons->empty() && selectedMuons->size() == 1) {
+	    objectLep* mu = selectedMuons->at(0);
+	    float sf = getMuonTrigSF(mu->getp4()->Eta(), mu->getp4()->Pt());
+	
+	    triggerSF = sf;
+	    triggerSFUncertainty = 0.0; // se você quiser propagar incerteza depois, pode adaptar aqui
+	
+	    _weight *= triggerSF;
+	
+	    if ((*sf_log_file).is_open() && (_entryInLoop % 10000 == 0)) {
+	        (*sf_log_file) << "Entry " << _entryInLoop
+	                       << " | Muon η = " << mu->getp4()->Eta()
+	                       << ", pT = " << mu->getp4()->Pt()
+	                       << " | Muon SF = " << std::fixed << std::setprecision(10) << triggerSF
+	                       << " | Weight before = " << weight_before_trigger
+	                       << " | Weight after = " << _weight << "\n";
+	    }
+	}
 
 ///////////////////////////////////////
 
@@ -1470,17 +1386,34 @@ static long long total_muons_processed = 0;
 // /////////////////////////// Electron Trigger SF ///////////////////////////  (TSFel)
 // Elétrons
 // Loop elétrons
+// Elétrons
+// ==========================================
+// Sumw2() ligado antes do fill (garante erros corretos)
+if (h_sf_vs_pt_sum) h_sf_vs_pt_sum->Sumw2();
+if (h_sf_vs_pt_count) h_sf_vs_pt_count->Sumw2();
+if (h_sf_vs_eta_sum) h_sf_vs_eta_sum->Sumw2();
+if (h_sf_vs_eta_count) h_sf_vs_eta_count->Sumw2();
+if (h_effMC_vs_pt_sum) h_effMC_vs_pt_sum->Sumw2();
+if (h_effMC_vs_pt_count) h_effMC_vs_pt_count->Sumw2();
+if (h_effMC_vs_eta_sum) h_effMC_vs_eta_sum->Sumw2();
+if (h_effMC_vs_eta_count) h_effMC_vs_eta_count->Sumw2();
+if (h_sf_muon_vs_pt_sum) h_sf_muon_vs_pt_sum->Sumw2();
+if (h_sf_muon_vs_pt_count) h_sf_muon_vs_pt_count->Sumw2();
+if (h_sf_muon_vs_eta_sum) h_sf_muon_vs_eta_sum->Sumw2();
+if (h_sf_muon_vs_eta_count) h_sf_muon_vs_eta_count->Sumw2();
+
+// ==========================================
+// Elétrons
 auto electrons = thisEvent->getSelElectrons();
 if (electrons && !electrons->empty()) {
     for (objectLep* ele : *electrons) {
         float pt = ele->getp4()->Pt();
         float eta = ele->getp4()->Eta();
-
         this->total_electrons_processed++;
 
+        // SF
         int binX = h2_eleTrigSF->GetXaxis()->FindBin(eta);
         int binY = h2_eleTrigSF->GetYaxis()->FindBin(pt);
-
         float sf_val = 0;
         bool out_of_range = false;
 
@@ -1492,14 +1425,12 @@ if (electrons && !electrons->empty()) {
             sf_val = h2_eleTrigSF->GetBinContent(binX, binY);
         }
 
-        if (this->sf_summary_log_file && this->sf_summary_log_file->is_open()) {
+        // Log a cada 10000 eventos
+        if (this->sf_summary_log_file && this->sf_summary_log_file->is_open() && (_entryInLoop % 10000 == 0)) {
             *(this->sf_summary_log_file) << "[Electron] η: " << eta << ", pT: " << pt << "\n";
-            *(this->sf_summary_log_file) << " → SF binX: " << binX << ", binY: " << binY << "\n";
-            if (out_of_range) {
-                *(this->sf_summary_log_file) << " *** WARNING: Electron outside SF histogram range! SF set to 0.\n";
-            } else {
-                *(this->sf_summary_log_file) << " → SF value applied: " << sf_val << "\n";
-            }
+            *(this->sf_summary_log_file) << " → SF binX: " << binX << ", binY: " << binY
+                                         << ", SF value: " << sf_val 
+                                         << (out_of_range ? " *** OUT OF RANGE ***" : "") << "\n";
         }
 
         if (!out_of_range) {
@@ -1509,7 +1440,7 @@ if (electrons && !electrons->empty()) {
             h_sf_vs_eta_count->Fill(eta, 1);
         }
 
-        // Eficiência MC para elétrons
+        // Eficiência MC
         int binX_eff = h2_effMC->GetXaxis()->FindBin(eta);
         int binY_eff = h2_effMC->GetYaxis()->FindBin(pt);
         if (binX_eff >= 1 && binX_eff <= h2_effMC->GetNbinsX() &&
@@ -1519,22 +1450,25 @@ if (electrons && !electrons->empty()) {
             h_effMC_vs_pt_count->Fill(pt, 1);
             h_effMC_vs_eta_sum->Fill(eta, eff_val);
             h_effMC_vs_eta_count->Fill(eta, 1);
+
+            if (this->sf_summary_log_file && this->sf_summary_log_file->is_open() && (_entryInLoop % 10000 == 0)) {
+                *(this->sf_summary_log_file) << " → EffMC binX: " << binX_eff << ", binY: " << binY_eff
+                                             << ", Eff value: " << eff_val << "\n";
+            }
         }
     }
 }
 
-
+// ==========================================
 // Múons
 auto muons = thisEvent->getSelMuons();
 if (muons && !muons->empty()) {
     for (objectLep* mu : *muons) {
         float pt = mu->getp4()->Pt();
         float eta = mu->getp4()->Eta();
-
         this->total_muons_processed++;
 
         int eta_bin = -1, pt_bin = -1;
-
         if (!muonTrigSFJson.empty()) {
             const json* correction = nullptr;
             for (const auto& corr : muonTrigSFJson["corrections"]) {
@@ -1570,7 +1504,7 @@ if (muons && !muons->empty()) {
 
         float sf_val = getMuonTrigSF(eta, pt);
 
-        if (this->sf_summary_log_file && this->sf_summary_log_file->is_open()) {
+        if (this->sf_summary_log_file && this->sf_summary_log_file->is_open() && (_entryInLoop % 10000 == 0)) {
             *(this->sf_summary_log_file) << "[Muon] eta: " << eta << ", pt: " << pt << "\n";
             if (eta_bin >= 0 && pt_bin >= 0) {
                 *(this->sf_summary_log_file) << " → SF JSON eta_bin: " << eta_bin << ", pt_bin: " << pt_bin
@@ -1797,139 +1731,81 @@ if (muons && !muons->empty()) {
 
 
 void ttHHanalyzer::writeHistos() {
-// ========= Cálculo das médias de SF e Eficiência com proteção contra divisão por zero =========
+// ========= Sumw2() para todos os histogramas =========
+if (h_sf_vs_pt_sum)    h_sf_vs_pt_sum->Sumw2();
+if (h_sf_vs_pt_count)  h_sf_vs_pt_count->Sumw2();
+if (h_sf_vs_eta_sum)   h_sf_vs_eta_sum->Sumw2();
+if (h_sf_vs_eta_count) h_sf_vs_eta_count->Sumw2();
+if (h_effMC_vs_pt_sum)    h_effMC_vs_pt_sum->Sumw2();
+if (h_effMC_vs_pt_count)  h_effMC_vs_pt_count->Sumw2();
+if (h_effMC_vs_eta_sum)   h_effMC_vs_eta_sum->Sumw2();
+if (h_effMC_vs_eta_count) h_effMC_vs_eta_count->Sumw2();
+if (h_sf_muon_vs_pt_sum)    h_sf_muon_vs_pt_sum->Sumw2();
+if (h_sf_muon_vs_pt_count)  h_sf_muon_vs_pt_count->Sumw2();
+if (h_sf_muon_vs_eta_sum)   h_sf_muon_vs_eta_sum->Sumw2();
+if (h_sf_muon_vs_eta_count) h_sf_muon_vs_eta_count->Sumw2();
 
-// h_sf_vs_pt_avg
-if (h_sf_vs_pt_sum && h_sf_vs_pt_count) {
-    if (h_sf_vs_pt_avg) delete h_sf_vs_pt_avg;
-    h_sf_vs_pt_avg = (TH1F*) h_sf_vs_pt_sum->Clone("h_sf_vs_pt_avg");
-    h_sf_vs_pt_avg->Reset();
-    for (int i = 1; i <= h_sf_vs_pt_avg->GetNbinsX(); ++i) {
-        float sum = h_sf_vs_pt_sum->GetBinContent(i);
-        float count = h_sf_vs_pt_count->GetBinContent(i);
-        h_sf_vs_pt_avg->SetBinContent(i, (count > 0) ? sum / count : 0);
-        h_sf_vs_pt_avg->SetBinError(i, (count > 0) ? std::sqrt(sum) / count : 0);  // erro simplificado
+// ========= Cálculo das médias com erro correto =========
+auto calcAverage = [](TH1F* sumH, TH1F* countH, TH1F*& avgH, const char* name) {
+    if (!sumH || !countH) return;
+    if (avgH) delete avgH;
+    avgH = (TH1F*) sumH->Clone(name);
+    avgH->Reset();
+    for (int i = 1; i <= sumH->GetNbinsX(); ++i) {
+        double sum = sumH->GetBinContent(i);
+        double sum2 = sumH->GetBinError(i) * sumH->GetBinError(i); // Sumw2
+        double count = countH->GetBinContent(i);
+        if (count > 0) {
+            avgH->SetBinContent(i, sum / count);
+            avgH->SetBinError(i, std::sqrt(sum2) / count);
+        } else {
+            avgH->SetBinContent(i, 0);
+            avgH->SetBinError(i, 0);
+        }
     }
-    h_sf_vs_pt_avg->SetDirectory(0);
-}
+    avgH->SetDirectory(0);
+};
 
-// h_sf_vs_eta_avg
-if (h_sf_vs_eta_sum && h_sf_vs_eta_count) {
-    if (h_sf_vs_eta_avg) delete h_sf_vs_eta_avg;
-    h_sf_vs_eta_avg = (TH1F*) h_sf_vs_eta_sum->Clone("h_sf_vs_eta_avg");
-    h_sf_vs_eta_avg->Reset();
-    for (int i = 1; i <= h_sf_vs_eta_avg->GetNbinsX(); ++i) {
-        float sum = h_sf_vs_eta_sum->GetBinContent(i);
-        float count = h_sf_vs_eta_count->GetBinContent(i);
-        h_sf_vs_eta_avg->SetBinContent(i, (count > 0) ? sum / count : 0);
-        h_sf_vs_eta_avg->SetBinError(i, (count > 0) ? std::sqrt(sum) / count : 0);
-    }
-    h_sf_vs_eta_avg->SetDirectory(0);
-}
+// Elétrons
+calcAverage(h_sf_vs_pt_sum, h_sf_vs_pt_count, h_sf_vs_pt_avg, "h_sf_vs_pt_avg");
+calcAverage(h_sf_vs_eta_sum, h_sf_vs_eta_count, h_sf_vs_eta_avg, "h_sf_vs_eta_avg");
+calcAverage(h_effMC_vs_pt_sum, h_effMC_vs_pt_count, h_effMC_vs_pt_avg, "h_effMC_vs_pt_avg");
+calcAverage(h_effMC_vs_eta_sum, h_effMC_vs_eta_count, h_effMC_vs_eta_avg, "h_effMC_vs_eta_avg");
 
-// h_effMC_vs_pt_avg
-if (h_effMC_vs_pt_sum && h_effMC_vs_pt_count) {
-    if (h_effMC_vs_pt_avg) delete h_effMC_vs_pt_avg;
-    h_effMC_vs_pt_avg = (TH1F*) h_effMC_vs_pt_sum->Clone("h_effMC_vs_pt_avg");
-    h_effMC_vs_pt_avg->Reset();
-    for (int i = 1; i <= h_effMC_vs_pt_avg->GetNbinsX(); ++i) {
-        float sum = h_effMC_vs_pt_sum->GetBinContent(i);
-        float count = h_effMC_vs_pt_count->GetBinContent(i);
-        h_effMC_vs_pt_avg->SetBinContent(i, (count > 0) ? sum / count : 0);
-        h_effMC_vs_pt_avg->SetBinError(i, (count > 0) ? std::sqrt(sum) / count : 0);
-    }
-    h_effMC_vs_pt_avg->SetDirectory(0);
-}
+// Múons
+calcAverage(h_sf_muon_vs_pt_sum, h_sf_muon_vs_pt_count, h_sf_muon_vs_pt_avg, "h_sf_muon_vs_pt_avg");
+calcAverage(h_sf_muon_vs_eta_sum, h_sf_muon_vs_eta_count, h_sf_muon_vs_eta_avg, "h_sf_muon_vs_eta_avg");
 
-// h_effMC_vs_eta_avg
-if (h_effMC_vs_eta_sum && h_effMC_vs_eta_count) {
-    if (h_effMC_vs_eta_avg) delete h_effMC_vs_eta_avg;
-    h_effMC_vs_eta_avg = (TH1F*) h_effMC_vs_eta_sum->Clone("h_effMC_vs_eta_avg");
-    h_effMC_vs_eta_avg->Reset();
-    for (int i = 1; i <= h_effMC_vs_eta_avg->GetNbinsX(); ++i) {
-        float sum = h_effMC_vs_eta_sum->GetBinContent(i);
-        float count = h_effMC_vs_eta_count->GetBinContent(i);
-        h_effMC_vs_eta_avg->SetBinContent(i, (count > 0) ? sum / count : 0);
-        h_effMC_vs_eta_avg->SetBinError(i, (count > 0) ? std::sqrt(sum) / count : 0);
-    }
-    h_effMC_vs_eta_avg->SetDirectory(0);
-}
-
-// h_sf_muon_vs_pt_avg
-if (h_sf_muon_vs_pt_sum && h_sf_muon_vs_pt_count) {
-    if (h_sf_muon_vs_pt_avg) delete h_sf_muon_vs_pt_avg;
-    h_sf_muon_vs_pt_avg = (TH1F*) h_sf_muon_vs_pt_sum->Clone("h_sf_muon_vs_pt_avg");
-    h_sf_muon_vs_pt_avg->Reset();
-    for (int i = 1; i <= h_sf_muon_vs_pt_avg->GetNbinsX(); ++i) {
-        float sum = h_sf_muon_vs_pt_sum->GetBinContent(i);
-        float count = h_sf_muon_vs_pt_count->GetBinContent(i);
-        h_sf_muon_vs_pt_avg->SetBinContent(i, (count > 0) ? sum / count : 0);
-        h_sf_muon_vs_pt_avg->SetBinError(i, (count > 0) ? std::sqrt(sum) / count : 0);
-    }
-    h_sf_muon_vs_pt_avg->SetDirectory(0);
-}
-
-// h_sf_muon_vs_eta_avg
-if (h_sf_muon_vs_eta_sum && h_sf_muon_vs_eta_count) {
-    if (h_sf_muon_vs_eta_avg) delete h_sf_muon_vs_eta_avg;
-    h_sf_muon_vs_eta_avg = (TH1F*) h_sf_muon_vs_eta_sum->Clone("h_sf_muon_vs_eta_avg");
-    h_sf_muon_vs_eta_avg->Reset();
-    for (int i = 1; i <= h_sf_muon_vs_eta_avg->GetNbinsX(); ++i) {
-        float sum = h_sf_muon_vs_eta_sum->GetBinContent(i);
-        float count = h_sf_muon_vs_eta_count->GetBinContent(i);
-        h_sf_muon_vs_eta_avg->SetBinContent(i, (count > 0) ? sum / count : 0);
-        h_sf_muon_vs_eta_avg->SetBinError(i, (count > 0) ? std::sqrt(sum) / count : 0);
-    }
-    h_sf_muon_vs_eta_avg->SetDirectory(0);
-}
-
-
-
-	if (this->sf_summary_log_file && this->sf_summary_log_file->is_open()) {
+// ========= Logs de resumo a cada 10000 eventos =========
+if (this->sf_summary_log_file && this->sf_summary_log_file->is_open() && (_entryInLoop % 10000 == 0)) {
     *(this->sf_summary_log_file) << "\n========= SUMMARY =========\n";
     *(this->sf_summary_log_file) << "Total Electrons Processed: " << this->total_electrons_processed << "\n";
     *(this->sf_summary_log_file) << "Total Muons Processed: " << this->total_muons_processed << "\n";
 
-    *(this->sf_summary_log_file) << "\n[Electron SF Avg per pT Bin]\n";
-    for (int i = 1; i <= h_sf_vs_pt_sum->GetNbinsX(); ++i) {
-        double count = h_sf_vs_pt_count->GetBinContent(i);
-        if (count > 0) {
-            double avg = h_sf_vs_pt_sum->GetBinContent(i) / count;
-            *(this->sf_summary_log_file) << "Bin " << i << " (pT ~ " << h_sf_vs_pt_sum->GetBinCenter(i) << "): "
-                                        << avg << " [entries: " << count << "]\n";
+    auto logAverage = [&](TH1F* avgH, TH1F* countH, const char* type, const char* var) {
+        *(this->sf_summary_log_file) << "\n[" << type << " Avg per " << var << " Bin]\n";
+        for (int i = 1; i <= avgH->GetNbinsX(); ++i) {
+            double count = countH->GetBinContent(i);
+            if (count > 0) {
+                double avg = avgH->GetBinContent(i);
+                *(this->sf_summary_log_file) << "Bin " << i << " (" << var << " ~ " << avgH->GetBinCenter(i) << "): "
+                                             << avg << " [entries: " << count << "]\n";
+            }
         }
-    }
+    };
 
-    *(this->sf_summary_log_file) << "\n[Electron SF Avg per η Bin]\n";
-    for (int i = 1; i <= h_sf_vs_eta_sum->GetNbinsX(); ++i) {
-        double count = h_sf_vs_eta_count->GetBinContent(i);
-        if (count > 0) {
-            double avg = h_sf_vs_eta_sum->GetBinContent(i) / count;
-            *(this->sf_summary_log_file) << "Bin " << i << " (η ~ " << h_sf_vs_eta_sum->GetBinCenter(i) << "): "
-                                        << avg << " [entries: " << count << "]\n";
-        }
-    }
+    // Elétrons
+    logAverage(h_sf_vs_pt_avg, h_sf_vs_pt_count, "Electron SF", "pT");
+    logAverage(h_sf_vs_eta_avg, h_sf_vs_eta_count, "Electron SF", "η");
+    logAverage(h_effMC_vs_pt_avg, h_effMC_vs_pt_count, "Electron EffMC", "pT");
+    logAverage(h_effMC_vs_eta_avg, h_effMC_vs_eta_count, "Electron EffMC", "η");
 
-    *(this->sf_summary_log_file) << "\n[Muon SF Avg per pT Bin]\n";
-    for (int i = 1; i <= h_sf_muon_vs_pt_sum->GetNbinsX(); ++i) {
-        double count = h_sf_muon_vs_pt_count->GetBinContent(i);
-        if (count > 0) {
-            double avg = h_sf_muon_vs_pt_sum->GetBinContent(i) / count;
-            *(this->sf_summary_log_file) << "Bin " << i << " (pT ~ " << h_sf_muon_vs_pt_sum->GetBinCenter(i) << "): "
-                                        << avg << " [entries: " << count << "]\n";
-        }
-    }
-
-    *(this->sf_summary_log_file) << "\n[Muon SF Avg per η Bin]\n";
-    for (int i = 1; i <= h_sf_muon_vs_eta_sum->GetNbinsX(); ++i) {
-        double count = h_sf_muon_vs_eta_count->GetBinContent(i);
-        if (count > 0) {
-            double avg = h_sf_muon_vs_eta_sum->GetBinContent(i) / count;
-            *(this->sf_summary_log_file) << "Bin " << i << " (η ~ " << h_sf_muon_vs_eta_sum->GetBinCenter(i) << "): "
-                                        << avg << " [entries: " << count << "]\n";
-        }
-    }
+    // Múons
+    logAverage(h_sf_muon_vs_pt_avg, h_sf_muon_vs_pt_count, "Muon SF", "pT");
+    logAverage(h_sf_muon_vs_eta_avg, h_sf_muon_vs_eta_count, "Muon SF", "η");
 }
+
+
 
 	
 	
