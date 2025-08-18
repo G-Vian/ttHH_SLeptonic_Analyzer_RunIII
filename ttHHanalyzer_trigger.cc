@@ -1404,24 +1404,7 @@ static long long total_muons_processed = 0;
 	}
 // /////////////////////////// Electron Trigger SF ///////////////////////////  (TSFel)
 // Elétrons
-// Loop elétrons
-// Elétrons
-// ==========================================
-// Sumw2() ligado antes do fill (garante erros corretos)
-if (h_sf_vs_pt_sum) h_sf_vs_pt_sum->Sumw2();
-if (h_sf_vs_pt_count) h_sf_vs_pt_count->Sumw2();
-if (h_sf_vs_eta_sum) h_sf_vs_eta_sum->Sumw2();
-if (h_sf_vs_eta_count) h_sf_vs_eta_count->Sumw2();
-if (h_effMC_vs_pt_sum) h_effMC_vs_pt_sum->Sumw2();
-if (h_effMC_vs_pt_count) h_effMC_vs_pt_count->Sumw2();
-if (h_effMC_vs_eta_sum) h_effMC_vs_eta_sum->Sumw2();
-if (h_effMC_vs_eta_count) h_effMC_vs_eta_count->Sumw2();
-if (h_sf_muon_vs_pt_sum) h_sf_muon_vs_pt_sum->Sumw2();
-if (h_sf_muon_vs_pt_count) h_sf_muon_vs_pt_count->Sumw2();
-if (h_sf_muon_vs_eta_sum) h_sf_muon_vs_eta_sum->Sumw2();
-if (h_sf_muon_vs_eta_count) h_sf_muon_vs_eta_count->Sumw2();
 
-// ==========================================
 // Elétrons
 auto electrons = thisEvent->getSelElectrons();
 if (electrons && !electrons->empty()) {
