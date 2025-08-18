@@ -17,7 +17,7 @@ void ttHHanalyzer::initMuonHLTriggerSF() {
     TString repoPath = "muonefficiencies";
     TString sfFilePath;
 
-
+    // Escolha do JSON correto de acordo com o ano
     if (_year == "2022") {
         sfFilePath = repoPath + "/Run3/2022/2022_Z/HLT/json/ScaleFactors_Muon_Z_HLT_2022_eta_pt_schemaV2.json";
     } else if (_year == "2022EE") {
@@ -27,21 +27,23 @@ void ttHHanalyzer::initMuonHLTriggerSF() {
     } else if (_year == "2023B") {
         sfFilePath = repoPath + "/Run3/2023_BPix/2023_Z/HLT/json/ScaleFactors_Muon_Z_HLT_2023_BPix_eta_pt_schemaV2.json";
     } else if (_year == "2024") {
-        sfFilePath = repoPath + "/Run3/2023_BPix/2023_Z/HLT/json/ScaleFactors_Muon_Z_HLT_2023_BPix_eta_pt_schemaV2.json";
+        sfFilePath = repoPath + "/Run3/2024/2024_Z/HLT/json/ScaleFactors_Muon_Z_HLT_2024_eta_pt_schemaV2.json";
     } else {
-        std::cerr << "Ano não suportado para SF de muons: " << _year << std::endl;
+        std::cerr << "[initMuonHLTriggerSF] Ano não suportado para SF de muons: " << _year << std::endl;
         return;
     }
 
+    // Abre JSON
     std::ifstream input(sfFilePath.Data());
     if (!input.is_open()) {
-        std::cerr << "Erro ao abrir arquivo de SF: " << sfFilePath << std::endl;
+        std::cerr << "[initMuonHLTriggerSF] Erro ao abrir arquivo de SF: " << sfFilePath << std::endl;
         return;
     }
 
     std::string json_str((std::istreambuf_iterator<char>(input)), std::istreambuf_iterator<char>());
     input.close();
 
+    // Substitui "Infinity" por algo legível
     size_t pos = 0;
     while ((pos = json_str.find("Infinity", pos)) != std::string::npos) {
         json_str.replace(pos, 8, "1e10");
@@ -51,19 +53,23 @@ void ttHHanalyzer::initMuonHLTriggerSF() {
     try {
         muonTrigSFJson = json::parse(json_str);
     } catch (const std::exception& e) {
-        std::cerr << "Erro ao ler JSON: " << e.what() << std::endl;
+        std::cerr << "[initMuonHLTriggerSF] Erro ao ler JSON: " << e.what() << std::endl;
         return;
     }
 
-    if (h_sf_muon_vs_pt) { delete h_sf_muon_vs_pt; h_sf_muon_vs_pt = nullptr; }
-    if (h_sf_muon_vs_eta) { delete h_sf_muon_vs_eta; h_sf_muon_vs_eta = nullptr; }
-    if (h_sf_muon_vs_pt_sum) { delete h_sf_muon_vs_pt_sum; h_sf_muon_vs_pt_sum = nullptr; }
-    if (h_sf_muon_vs_pt_count) { delete h_sf_muon_vs_pt_count; h_sf_muon_vs_pt_count = nullptr; }
-    if (h_sf_muon_vs_eta_sum) { delete h_sf_muon_vs_eta_sum; h_sf_muon_vs_eta_sum = nullptr; }
+    // ==========================================
+    // Limpa histos antigos
+    if (h_sf_muon_vs_pt)        { delete h_sf_muon_vs_pt;        h_sf_muon_vs_pt = nullptr; }
+    if (h_sf_muon_vs_eta)       { delete h_sf_muon_vs_eta;       h_sf_muon_vs_eta = nullptr; }
+    if (h_sf_muon_vs_pt_sum)    { delete h_sf_muon_vs_pt_sum;    h_sf_muon_vs_pt_sum = nullptr; }
+    if (h_sf_muon_vs_pt_count)  { delete h_sf_muon_vs_pt_count;  h_sf_muon_vs_pt_count = nullptr; }
+    if (h_sf_muon_vs_eta_sum)   { delete h_sf_muon_vs_eta_sum;   h_sf_muon_vs_eta_sum = nullptr; }
     if (h_sf_muon_vs_eta_count) { delete h_sf_muon_vs_eta_count; h_sf_muon_vs_eta_count = nullptr; }
-    if (h_sf_muon_vs_pt_avg) { delete h_sf_muon_vs_pt_avg; h_sf_muon_vs_pt_avg = nullptr; }
-    if (h_sf_muon_vs_eta_avg) { delete h_sf_muon_vs_eta_avg; h_sf_muon_vs_eta_avg = nullptr; }
+    if (h_sf_muon_vs_pt_avg)    { delete h_sf_muon_vs_pt_avg;    h_sf_muon_vs_pt_avg = nullptr; }
+    if (h_sf_muon_vs_eta_avg)   { delete h_sf_muon_vs_eta_avg;   h_sf_muon_vs_eta_avg = nullptr; }
 
+    // ==========================================
+    // Cria histos novos
     h_sf_muon_vs_pt        = new TH1F("h_sf_muon_vs_pt", "Muon SF vs pT;Muon pT [GeV];SF", 100, 0, 700);
     h_sf_muon_vs_eta       = new TH1F("h_sf_muon_vs_eta", "Muon SF vs Eta;Muon #eta;SF", 100, -5, 5);
     h_sf_muon_vs_pt_sum    = new TH1F("h_sf_muon_vs_pt_sum", "Sum SF vs pT", 100, 0, 700);
@@ -73,6 +79,15 @@ void ttHHanalyzer::initMuonHLTriggerSF() {
     h_sf_muon_vs_pt_avg    = new TH1F("h_sf_muon_vs_pt_avg", "Avg SF vs pT", 100, 0, 700);
     h_sf_muon_vs_eta_avg   = new TH1F("h_sf_muon_vs_eta_avg", "Avg SF vs eta", 100, -5, 5);
 
+    // ==========================================
+    // Sumw2 para incertezas
+    if (h_sf_muon_vs_pt_sum)    h_sf_muon_vs_pt_sum->Sumw2();
+    if (h_sf_muon_vs_pt_count)  h_sf_muon_vs_pt_count->Sumw2();
+    if (h_sf_muon_vs_eta_sum)   h_sf_muon_vs_eta_sum->Sumw2();
+    if (h_sf_muon_vs_eta_count) h_sf_muon_vs_eta_count->Sumw2();
+
+    // ==========================================
+    // Protege histos contra "auto-delete" do ROOT
     std::vector<TH1*> hists = {
         h_sf_muon_vs_pt, h_sf_muon_vs_eta,
         h_sf_muon_vs_pt_sum, h_sf_muon_vs_pt_count,
@@ -83,7 +98,7 @@ void ttHHanalyzer::initMuonHLTriggerSF() {
         if (h) h->SetDirectory(0);
     }
 
-    std::cout << "SF de muons carregado com sucesso!" << std::endl;
+    std::cout << "[initMuonHLTriggerSF] SF de muons carregado com sucesso de " << sfFilePath << std::endl;
 }
 
 float ttHHanalyzer::getMuonTrigSF(float eta, float pt) {
