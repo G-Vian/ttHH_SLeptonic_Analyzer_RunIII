@@ -1082,6 +1082,16 @@ class ttHHanalyzer {
     float _bbMassMin1HiggsZ, _bbMassMin2HiggsZ, _minChi2HiggsZ = 999999999.;
     float _bbMassMin1Z, _bbMassMin2Z, _minChi2Z = 999999999.;
     TRandom3 _rand;
+	///////////////////////Reco electron (RSFel)
+    float getEleRecoSF(float eta, float pt, float &unc);
+    void initRecoSF();
+
+    TH2F *h2_eleRecoSF_low  = nullptr;
+    TH2F *h2_eleRecoSF_mid  = nullptr;
+    TH2F *h2_eleRecoSF_high = nullptr;
+
+    float recoSFUncertainty = 0.0;
+
 	///////////////////////Trigger electron (TSFel)
 	// Eletron trigger SF
 	TFile* eleTrigSFFile = nullptr;
