@@ -562,39 +562,58 @@ void ttHHanalyzer::diMotherReco(const TLorentzVector & dPar1p4,const TLorentzVec
     }
 } 
 
-///////////////electron trigger scale factor --> apply SF only to events with one electron!  (TSFel)
+///////////////electron trigger scale factor --> apply SF only to events with one electron!  (TSFel) (RSFel)
 void ttHHanalyzer::analyze(event *thisEvent) {
     std::vector<objectLep*>* selectedElectrons = thisEvent->getSelElectrons();
     std::vector<objectLep*>* selectedMuons = thisEvent->getSelMuons();
 
     float triggerSF = 1.0;
+    float recoSF    = 1.0;
     float totalSFUnc = 0.0;
-    float weight_before_trigger = _weight;
-// Elétrons
-if (!selectedElectrons->empty()) {
-    for (size_t i = 0; i < selectedElectrons->size(); ++i) {
-        objectLep* ele = selectedElectrons->at(i);
-        float sf_unc = 0.0;
-        float sf = getEleTrigSF(ele->getp4()->Eta(), ele->getp4()->Pt(), sf_unc);
+    float weight_before_SFs = _weight;
 
-        triggerSF = sf;
-        totalSFUnc = sf_unc * sf_unc;
-        triggerSFUncertainty = sqrt(totalSFUnc);
+    // ========================
+    //   Elétrons
+    // ========================
+    if (!selectedElectrons->empty()) {
+        for (size_t i = 0; i < selectedElectrons->size(); ++i) {
+            objectLep* ele = selectedElectrons->at(i);
 
-        _weight *= triggerSF;
+            // Trigger SF
+            float trigSF_unc = 0.0;
+            float trigSF_val = getEleTrigSF(ele->getp4()->Eta(), ele->getp4()->Pt(), trigSF_unc);
 
-        // Log a cada 10000 eventos
-        if ((*sf_log_file).is_open() && (_entryInLoop % 10000 == 0)) {
-            (*sf_log_file) << "Entry " << _entryInLoop
-                           << " | Electron #" << i
-                           << " η = " << ele->getp4()->Eta()
-                           << ", pT = " << ele->getp4()->Pt()
-                           << " | Electron SF = " << std::fixed << std::setprecision(10) << triggerSF
-                           << " | Weight before = " << weight_before_trigger
-                           << " | Weight after = " << _weight << "\n";
+            // Reco SF
+            float recoSF_unc = 0.0;
+            float recoSF_val = getEleRecoSF(ele->getp4()->Eta(), ele->getp4()->Pt(), recoSF_unc);
+
+            // Atualiza SFs totais
+            triggerSF = trigSF_val;
+            recoSF    = recoSF_val;
+
+            // Combina incertezas em quadratura
+            totalSFUnc = trigSF_unc * trigSF_unc + recoSF_unc * recoSF_unc;
+            totalSFUnc = sqrt(totalSFUnc);
+
+            // Aplica peso
+            _weight *= (triggerSF * recoSF);
+
+            // Log a cada 10000 eventos
+            if (sf_log_file && sf_log_file->is_open() && (_entryInLoop % 10000 == 0)) {
+                (*sf_log_file) << "Entry " << _entryInLoop
+                               << " | Electron #" << i
+                               << " η = " << ele->getp4()->Eta()
+                               << ", pT = " << ele->getp4()->Pt()
+                               << " | Trigger SF = " << std::fixed << std::setprecision(10) << triggerSF
+                               << " | Reco SF = " << std::fixed << std::setprecision(10) << recoSF
+                               << " | Combined Weight before = " << weight_before_SFs
+                               << " | Combined Weight after = " << _weight
+                               << " | Total SF Uncertainty = " << totalSFUnc
+                               << "\n";
+            }
         }
     }
-}
+
 
 // Múons
 if (!selectedMuons->empty()) {
@@ -817,6 +836,7 @@ void ttHHanalyzer::process(event* thisEvent, sysName sysType, bool up) {
     static bool eleSFInitialized = false;
     if (!eleSFInitialized) {
         initTriggerSF();
+        initRecoSF();  // <-- inicializa o SF de Reco também
         eleSFInitialized = true;
     }
 
@@ -827,11 +847,10 @@ void ttHHanalyzer::process(event* thisEvent, sysName sysType, bool up) {
         muonSFInitialized = true;
     }
 
-    analyze(thisEvent);
+    analyze(thisEvent); // analyze agora já aplica triggerSF * recoSF e loga ambos
     fillHistos(thisEvent);
     fillTree(thisEvent);
 }
-
 
 void ttHHanalyzer::fillHistos(event * thisEvent){
 static long long total_electrons_processed = 0;
