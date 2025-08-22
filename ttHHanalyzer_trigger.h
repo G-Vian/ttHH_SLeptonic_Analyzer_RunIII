@@ -1082,6 +1082,17 @@ class ttHHanalyzer {
     float _bbMassMin1HiggsZ, _bbMassMin2HiggsZ, _minChi2HiggsZ = 999999999.;
     float _bbMassMin1Z, _bbMassMin2Z, _minChi2Z = 999999999.;
     TRandom3 _rand;
+
+	///////////////////////Electron ID (MVA ISO WP90) (IDSFel)
+	void initEleIDSF();
+	float getEleIDSF(float eta, float phi, float pt, float &unc);
+	
+	TH2F *h2_eleIDSF_others = nullptr;
+	TH2F *h2_eleIDSF_2023B_Hole = nullptr;
+	TH2F *h2_eleIDSF_2023B_NoHole = nullptr;
+	
+	float eleIDSFUncertainty = 0.0;
+
 	///////////////////////Reco electron (RSFel)
     float getEleRecoSF(float eta, float pt, float &unc);
     void initRecoSF();
