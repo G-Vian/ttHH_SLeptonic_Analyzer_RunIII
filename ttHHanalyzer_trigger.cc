@@ -562,7 +562,7 @@ void ttHHanalyzer::diMotherReco(const TLorentzVector & dPar1p4,const TLorentzVec
     }
 } 
 
-///////////////electron trigger scale factor --> apply SF only to events with one electron!  (TSFel) (RSFel)
+///////////////electron trigger scale factor --> apply SF only to events with one electron!  (TSFel) (RSFel) (IDSFel)
 void ttHHanalyzer::analyze(event *thisEvent) {
     std::vector<objectLep*>* selectedElectrons = thisEvent->getSelElectrons();
     std::vector<objectLep*>* selectedMuons = thisEvent->getSelMuons();
@@ -575,45 +575,50 @@ void ttHHanalyzer::analyze(event *thisEvent) {
     // ========================
     //   Elétrons
     // ========================
-    if (!selectedElectrons->empty()) {
-        for (size_t i = 0; i < selectedElectrons->size(); ++i) {
-            objectLep* ele = selectedElectrons->at(i);
+if (!selectedElectrons->empty()) {
+    for (size_t i = 0; i < selectedElectrons->size(); ++i) {
+        objectLep* ele = selectedElectrons->at(i);
 
-            // Trigger SF
-            float trigSF_unc = 0.0;
-            float trigSF_val = getEleTrigSF(ele->getp4()->Eta(), ele->getp4()->Pt(), trigSF_unc);
+        // Trigger SF
+        float trigSF_unc = 0.0;
+        float trigSF_val = getEleTrigSF(ele->getp4()->Eta(), ele->getp4()->Pt(), trigSF_unc);
 
-            // Reco SF
-            float recoSF_unc = 0.0;
-            float recoSF_val = getEleRecoSF(ele->getp4()->Eta(), ele->getp4()->Pt(), recoSF_unc);
+        // Reco SF
+        float recoSF_unc = 0.0;
+        float recoSF_val = getEleRecoSF(ele->getp4()->Eta(), ele->getp4()->Pt(), recoSF_unc);
 
-            // Atualiza SFs totais
-            triggerSF = trigSF_val;
-            recoSF    = recoSF_val;
+        // ID SF (MVA ISO WP90)
+        float idSF_unc = 0.0;
+        float idSF_val = getEleIDSF(ele->getp4()->Eta(), ele->getp4()->Phi(), ele->getp4()->Pt(), idSF_unc);
 
-            // Combina incertezas em quadratura
-            totalSFUnc = trigSF_unc * trigSF_unc + recoSF_unc * recoSF_unc;
-            totalSFUnc = sqrt(totalSFUnc);
+        // Atualiza SFs totais
+        triggerSF = trigSF_val;
+        recoSF    = recoSF_val;
 
-            // Aplica peso
-            _weight *= (triggerSF * recoSF);
+        // Combina incertezas em quadratura
+        totalSFUnc = trigSF_unc*trigSF_unc + recoSF_unc*recoSF_unc + idSF_unc*idSF_unc;
+        totalSFUnc = sqrt(totalSFUnc);
 
-            // Log a cada 10000 eventos
-            if (sf_log_file && sf_log_file->is_open() && (_entryInLoop % 10000 == 0)) {
-                (*sf_log_file) << "Entry " << _entryInLoop
-                               << " | Electron #" << i
-                               << " η = " << ele->getp4()->Eta()
-                               << ", pT = " << ele->getp4()->Pt()
-                               << " | Trigger SF = " << std::fixed << std::setprecision(10) << triggerSF
-                               << " | Reco SF = " << std::fixed << std::setprecision(10) << recoSF
-                               << " | Combined Weight before = " << weight_before_SFs
-                               << " | Combined Weight after = " << _weight
-                               << " | Total SF Uncertainty = " << totalSFUnc
-                               << "\n";
-            }
+        // Aplica peso multiplicando todos os SFs
+        _weight *= (triggerSF * recoSF * idSF_val);
+
+        // Log a cada 10000 eventos
+        if (sf_log_file && sf_log_file->is_open() && (_entryInLoop % 10000 == 0)) {
+            (*sf_log_file) << "Entry " << _entryInLoop
+                           << " | Electron #" << i
+                           << " η = " << ele->getp4()->Eta()
+                           << ", φ = " << ele->getp4()->Phi()
+                           << ", pT = " << ele->getp4()->Pt()
+                           << " | Trigger SF = " << std::fixed << std::setprecision(10) << triggerSF
+                           << " | Reco SF = " << std::fixed << std::setprecision(10) << recoSF
+                           << " | ID SF = " << std::fixed << std::setprecision(10) << idSF_val
+                           << " | Combined Weight before = " << weight_before_SFs
+                           << " | Combined Weight after = " << _weight
+                           << " | Total SF Uncertainty = " << totalSFUnc
+                           << "\n";
         }
     }
-
+}
 
 // Múons
 if (!selectedMuons->empty()) {
@@ -826,31 +831,39 @@ if (!selectedMuons->empty()) {
     thisEvent->eventShapeBjet  = new EventShape(vectorsBjet);
 }
 
-
+///(TSFel) (IDSFel) (TSFel)
 void ttHHanalyzer::process(event* thisEvent, sysName sysType, bool up) {
+    // Reset do peso antes de aplicar SFs
     _weight = _initialWeight;
+
+    // Criação de objetos para o evento
     createObjects(thisEvent, sysType, up);
     if (!selectObjects(thisEvent)) return;
 
-    // Inicializar SF de trigger - elétrons  (TSFel)
+    // Inicializar SFs de elétrons (Trigger, Reco, ID)
     static bool eleSFInitialized = false;
     if (!eleSFInitialized) {
-        initTriggerSF();
-        initRecoSF();  // <-- inicializa o SF de Reco também
+        initTriggerSF();  // Trigger SF
+        initRecoSF();     // Reco SF
+        initIDSF();       // <-- ID SF (MVA ISO WP90)
         eleSFInitialized = true;
     }
 
-    // Inicializar SF de trigger - múons  (TSFmu)
+    // Inicializar SF de trigger - múons (TSFmu)
     static bool muonSFInitialized = false;
     if (!muonSFInitialized) {
         initMuonHLTriggerSF();
         muonSFInitialized = true;
     }
 
-    analyze(thisEvent); // analyze agora já aplica triggerSF * recoSF e loga ambos
+    // Análise do evento: agora já aplica todos os SFs (Trigger * Reco * ID) e loga os valores
+    analyze(thisEvent);
+
+    // Preenchimento de histogramas e árvore
     fillHistos(thisEvent);
     fillTree(thisEvent);
 }
+
 
 void ttHHanalyzer::fillHistos(event * thisEvent){
 static long long total_electrons_processed = 0;
