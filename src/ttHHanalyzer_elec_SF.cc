@@ -263,3 +263,110 @@ float ttHHanalyzer::getEleRecoSF(float eta, float pt, float& sf_unc) {
 
     return sf;
 }
+
+
+// ==========================
+// Electron ID SF (MVA ISO WP90)
+// ==========================
+void ttHHanalyzer::initEleIDSF() {
+    auto safeDelete = [](auto*& ptr){ if(ptr){ delete ptr; ptr=nullptr; } };
+    safeDelete(h2_eleIDSF_2023B_Hole);
+    safeDelete(h2_eleIDSF_2023B_NoHole);
+    safeDelete(h2_eleIDSF_others);
+
+    auto loadSF = [&](const TString& path, const TString& tag) -> TH2F* {
+        TFile* f = TFile::Open(path, "READ");
+        if(!f || f->IsZombie()){
+            std::cerr << "[initEleIDSF] Erro ao abrir arquivo: " << path << std::endl;
+            if(f) delete f;
+            return nullptr;
+        }
+        TH2F* h = nullptr;
+        if(auto* temp = dynamic_cast<TH2F*>(f->Get("EGamma_SF2D"))){
+            h = (TH2F*)temp->Clone("h2_" + tag);
+            h->SetDirectory(0);
+        } else {
+            std::cerr << "[initEleIDSF] EGamma_SF2D não encontrado em " << path << std::endl;
+        }
+        f->Close();
+        delete f;
+        gROOT->cd();
+        return h;
+    };
+
+    if(_year == "2024"){
+        h2_eleIDSF_others = loadSF(
+            "/eos/cms/store/group/phys_egamma/ScaleFactors/Data2024/EleID/passingMVA122Xwp90isoV1/merged_EGamma_SF2D_wp90iso.root",
+            "eleIDSF_2024"
+        );
+    }
+    else if(_year == "2023"){
+        h2_eleIDSF_others = loadSF(
+            "/eos/cms/store/group/phys_egamma/ScaleFactors/Data2023/ForPrompt23C/tnpEleID/passingMVA122Xwp90isoV1/egammaEffi.txt_EGM2D.root",
+            "eleIDSF_2023"
+        );
+    }
+    else if(_year == "2023B"){
+        h2_eleIDSF_2023B_NoHole = loadSF(
+            "/eos/cms/store/group/phys_egamma/ScaleFactors/Data2023/ForPrompt23D/tnpEleID/passingMVA122Xwp90isoV1/NoHole_egammaEffi.txt_EGM2D.root",
+            "eleIDSF_2023B_NoHole"
+        );
+        h2_eleIDSF_2023B_Hole = loadSF(
+            "/eos/cms/store/group/phys_egamma/ScaleFactors/Data2023/ForPrompt23D/tnpEleID/passingMVA122Xwp90isoV1/Hole_egammaEffi.txt_EGM2D.root",
+            "eleIDSF_2023B_Hole"
+        );
+    }
+    else if(_year == "2022"){
+        h2_eleIDSF_others = loadSF(
+            "/eos/cms/store/group/phys_egamma/ScaleFactors/Data2022/ForRe-recoBCD/tnpEleID/passingMVA122Xwp90isoV1/egammaEffi.txt_EGM2D.root",
+            "eleIDSF_2022"
+        );
+    }
+    else if(_year == "2022EE"){
+        h2_eleIDSF_others = loadSF(
+            "/eos/cms/store/group/phys_egamma/ScaleFactors/Data2022/ForRe-recoE+PromptFG/tnpEleID/passingMVA122Xwp90isoV1/egammaEffi.txt_EGM2D.root",
+            "eleIDSF_2022EE"
+        );
+    }
+    else{
+        std::cerr << "[initEleIDSF] Ano não suportado: " << _year << std::endl;
+    }
+
+    std::cout << "[initEleIDSF] SF de Electron ID (MVA ISO WP90) carregado para ano " << _year << std::endl;
+}
+
+float ttHHanalyzer::getEleIDSF(float eta, float phi, float pt, float& sf_unc){
+    TH2F* h = nullptr;
+
+    if(_year == "2023B"){
+        // Caso especial: -1.5 < eta < 0 e -1.2 < phi < -0.8 usa Hole
+        if(eta > -1.5 && eta < 0 && phi > -1.2 && phi < -0.8){
+            h = h2_eleIDSF_2023B_Hole;
+        } else {
+            h = h2_eleIDSF_2023B_NoHole;
+        }
+    } else {
+        h = h2_eleIDSF_others;
+    }
+
+    if(!h){
+        std::cerr << "[getEleIDSF] Nenhum histograma disponível para SF, retornando 1." << std::endl;
+        sf_unc = 0.f;
+        return 1.f;
+    }
+
+    int binX = h->GetXaxis()->FindBin(eta);
+    int binY = h->GetYaxis()->FindBin(pt);
+
+    float sf = h->GetBinContent(binX, binY);
+    sf_unc = h->GetBinError(binX, binY);
+
+    if(sf <= 0.f){
+        sf = 1.f;
+        sf_unc = 0.f;
+    }
+
+    return sf;
+}
+
+
