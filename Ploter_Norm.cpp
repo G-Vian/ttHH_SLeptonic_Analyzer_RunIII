@@ -276,7 +276,7 @@ void DrawStackedHistograms(const vector<pair<TH1*, ProcessInfo>>& histograms, co
     stack->GetXaxis()->SetTitle(setting.xAxisTitle.c_str());
     stack->GetYaxis()->SetTitle("#bf{Normalized Events / bin}");
     stack->SetMaximum(maxY * 10.0);
-    stack->SetMinimum(1e-3);
+    stack->SetMinimum(1e-4);
     stack->GetXaxis()->SetLabelSize(0);
 
     // Use the user-defined x-range if specified, otherwise use the histogram's range
@@ -437,14 +437,15 @@ void Iteration_Directories_And_Histograms(const unordered_map<string, ProcessInf
 
 int Ploter_Norm() {
     unordered_map<string, ProcessInfo> processes = {
-{"TTSL", {"TTSL.root", false, kOrange+1, "TTSL"}},
-//{"TTZ", {"TTZ.root", false, kAzure+1, "TTZ"}},
-{"TTH", {"TTH.root", false, kPink+1, "TTH"}},
-{"TT4b", {"TT4b.root", false, kSpring+3, "TT4b"}},
-{"TTbb", {"TTbb.root", false, kViolet+1, "TTbb"}},
-{"TTZH", {"TTZH.root", false, kTeal+1, "TTZH"}},
-{"TTZZ", {"TTZZ.root", false, kRed+1, "TTZZ"}},
-{"TTHH", {"TTHH.root", true, kBlack, "TTHH"}},
+        {"TTSL", {"/eos/user/g/gvian/root_files/TTSL.root", false, kOrange+1, "TTSL"}},
+        {"TT4b", {"/eos/user/g/gvian/root_files/TT4b.root", false, kSpring+3, "TT4b"}},
+        {"TTbb", {"/eos/user/g/gvian/root_files/TTbb.root", false, kViolet+1, "TTbb"}},
+         {"TTH", {"/eos/user/g/gvian/root_files/TTH.root", false, kPink+1, "TTH"}},
+        {"TTZZ", {"/eos/user/g/gvian/root_files/TTZZ.root", false, kRed+1, "TTZZ"}},
+        {"TTZH", {"/eos/user/g/gvian/root_files/TTZH.root", false, kTeal+1, "TTZH"}},
+        {"TTHH", {"/eos/user/g/gvian/root_files/TTHH.root", true, kBlack, "TTHH"}}
+
+
         // Add other processes as needed
     };
 
@@ -469,10 +470,11 @@ int Ploter_Norm() {
                 {"elePT2", "Electron PT 2", "pT [GeV]", "elePT2", {0, 300}, {true, 10, 1}},
                 {"muonPT1", "Muon PT 1", "pT [GeV]", "muonPT1", {0, 800}, {true, 10, 1}},
                 {"muonPT2", "Muon PT 2", "pT [GeV]", "muonPT2", {0, 300}, {true, 10, 1}},
-                {"leptonHT", "Lepton HT", "HT [GeV]", "leptonHT", {0, 3500}, {false, 10, 1}}
+                {"leptonHT", "Lepton HT", "HT [GeV]", "leptonHT", {0, 3500}, {false, 10, 1}},
+		{"leptonPT1", "Lepton PT 1", "pT [GeV]", "leptonPT1", {0, 800}, {false, 10, 1}}
             }
         },
-              {"jet", 
+               {"jet", 
             {
                 {"jetPT1", "Jet PT 1", "pT [GeV]", "jetPT1", {0, 1500}, {true, 10, 1}},
                 {"jetPT2", "Jet PT 2", "pT [GeV]", "jetPT2", {0, 1500}, {true, 10, 1}},
@@ -480,21 +482,31 @@ int Ploter_Norm() {
                 {"jetPT4", "Jet PT 4", "pT [GeV]", "jetPT4", {0, 500}, {true, 10, 1}},
                 {"jetPT5", "Jet PT 5", "pT [GeV]", "jetPT5", {0, 500}, {true, 10, 1}},
                 {"jetPT6", "Jet PT 6", "pT [GeV]", "jetPT6", {0, 400}, {true, 10, 1}},
-                {"bjetPT1", "B-Jet PT 1", "pT [GeV]", "bjetPT1", {0, 1500}, {false, 10, 1}},
-                {"bjetPT2", "B-Jet PT 2", "pT [GeV]", "bjetPT2", {0, 1500}, {false, 10, 1}},
-                {"bjetPT3", "B-Jet PT 3", "pT [GeV]", "bjetPT3", {0, 1000}, {false, 10, 1}},
-                {"bjetPT4", "B-Jet PT 4", "pT [GeV]", "bjetPT4", {0, 400}, {false, 10, 1}},
-                {"bjetPT5", "B-Jet PT 5", "pT [GeV]", "bjetPT5", {0, 300}, {false, 10, 1}},
-                {"bjetPT6", "B-Jet PT 6", "pT [GeV]", "bjetPT6", {0, 200}, {false, 10, 1}},
-                {"jetHT", "Jet HT", "HT [GeV]", "jetHT", {0, 2000}, {false, 10, 1}},
-                {"jetBHT", "B-Jet HT", "HT [GeV]", "jetBHT", {0, 2000}, {false, 10, 1}},
-                {"met", "Missing ET", "ET [GeV]", "met", {0, 1000}, {false, 10, 1}},
+                {"lightJetPT1", "Light Jet PT 1", "pT [GeV]", "LjetPT1", {0, 400}, {true, 10, 1}},
+                {"lightJetPT2", "Light Jet PT 2", "pT [GeV]", "LjetPT2", {0, 400}, {true, 10, 1}},
+                {"lightJetPT3", "Light Jet PT 3", "pT [GeV]", "LjetPT3", {0, 400}, {true, 10, 1}},
+                {"lightJetPT4", "Light Jet PT 4", "pT [GeV]", "LjetPT4", {0, 400}, {true, 10, 1}},
+                {"lightJetPT5", "Light Jet PT 5", "pT [GeV]", "LjetPT5", {0, 400}, {true, 10, 1}},
+                {"lightJetPT6", "Light  Jet PT 6", "pT [GeV]", "LjetPT6", {0, 400}, {true, 10, 1}},
+                
+                {"bjetPT1", "B-Jet PT 1", "pT [GeV]", "bjetPT1", {0, 1500}, {true, 10, 1}},
+                {"bjetPT2", "B-Jet PT 2", "pT [GeV]", "bjetPT2", {0, 1500}, {true, 10, 1}},
+                {"bjetPT3", "B-Jet PT 3", "pT [GeV]", "bjetPT3", {0, 1000}, {true, 10, 1}},
+                {"bjetPT4", "B-Jet PT 4", "pT [GeV]", "bjetPT4", {0, 400}, {true, 10, 1}},
+                {"bjetPT5", "B-Jet PT 5", "pT [GeV]", "bjetPT5", {0, 300}, {true, 10, 1}},
+                {"bjetPT6", "B-Jet PT 6", "pT [GeV]", "bjetPT6", {0, 200}, {true, 10, 1}},
+                {"jetHT", "Jet HT", "HT [GeV]", "jetHT", {0, 3000}, {false, 10, 1}},
+                {"jetBHT", "B-Jet HT", "HT [GeV]", "jetBHT", {0, 3000}, {false, 10, 1}},
+                {"jetBHT", "B-Jet HT", "HT [GeV]", "jetBHT", {0, 3000}, {false, 10, 1}},
+                {"jetLightHT", "Light Jet HT", "HT [GeV]", "jetLHT", {0, 1200}, {false, 10, 1}},
                 {"jetNumber", "Jet Number", "Number of Jets", "jetNumber", {0, 0}, {false, 10, 1}},
                 {"jetBNumber", "B-Jet Number", "Number of B-Jets", "jetBNumber", {0, 0}, {false, 10, 1}},
                 {"invMass_HH1Matched", "Invariant Mass HH1 Matched", "Mass [GeV]", "invMass_HH1Matched", {0, 500}, {true, 10, 1}},
                 {"invMass_HH2Matched", "Invariant Mass HH2 Matched", "Mass [GeV]", "invMass_HH2Matched", {0, 500}, {true, 10, 1}},
                 {"invMass_HH1NotMatched", "Invariant Mass HH1 Not Matched", "Mass [GeV]", "invMass_HH1NotMatched", {0, 500}, {true, 10, 1}},
-                {"invMass_HH2NotMatched", "Invariant Mass HH2 Not Matched", "Mass [GeV]", "invMass_HH2NotMatched", {0, 500}, {true, 10, 1}}
+                {"invMass_HH2NotMatched", "Invariant Mass HH2 Not Matched", "Mass [GeV]", "invMass_HH2NotMatched", {0, 500}, {true, 10, 1}},
+                 {"invMass_Higgs1_mChi", "Invariant Mass H1", "Mass [GeV]", "invMass_Higgs1_mChi", {0, 500}, {true, 10, 1}},
+                {"invMass_Higgs2_mChi", "Invariant Mass H2", "Mass [GeV]", "invMass_Higgs2_mChi", {0, 500}, {true, 10, 1}}
             }
         }
     };
