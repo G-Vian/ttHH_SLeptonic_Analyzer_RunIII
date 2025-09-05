@@ -4,6 +4,7 @@
 #include <vector>
 #include <map>
 //#include <filesystem> // Para criar diretórios
+#include <TSystem.h> // ROOT utilitário para mkdir
 #include "TVector3.h"
 #include "ttHHanalyzer_trigger.h"
 #include <iostream>
@@ -60,14 +61,7 @@ map<std::string, float> cut {
 
 ////////////////////////////////
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void ttHHanalyzer::performAnalysis(){
-    loop(noSys, false);
-
-}
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void ttHHanalyzer::loop(sysName sysType, bool up) {
-    namespace fs = std::filesystem; // alias para facilitar
 
     // Cria pasta com o nome do processo, se não existir
     if (_sampleName == "nothing") {
@@ -75,9 +69,9 @@ void ttHHanalyzer::loop(sysName sysType, bool up) {
         std::exit(EXIT_FAILURE);
     }
 
-    fs::path logDir = _sampleName;
-    if (!fs::exists(logDir)) {
-        if (!fs::create_directory(logDir)) {
+    TString logDir = _sampleName;
+    if (gSystem->AccessPathName(logDir)) {   // Se não existe
+        if (gSystem->mkdir(logDir, kTRUE) != 0) { // kTRUE permite criar recursivamente
             std::cerr << "[ERROR] Failed to create directory: " << logDir << std::endl;
             std::exit(EXIT_FAILURE);
         }
@@ -85,8 +79,8 @@ void ttHHanalyzer::loop(sysName sysType, bool up) {
 
     // Inicializa os arquivos de log, se ainda não foram criados
     if (!event_log_file || !sf_log_file) {
-        std::string log1_name = (logDir / ("event_selection_log_" + _sampleName + ".txt")).string();
-        std::string log2_name = (logDir / ("log_trigger_sf_" + _sampleName + ".txt")).string();
+        std::string log1_name = logDir + "/event_selection_log_" + _sampleName + ".txt";
+        std::string log2_name = logDir + "/log_trigger_sf_" + _sampleName + ".txt";
 
         event_log_file = std::make_unique<std::ofstream>(log1_name);
         sf_log_file    = std::make_unique<std::ofstream>(log2_name);
@@ -98,7 +92,7 @@ void ttHHanalyzer::loop(sysName sysType, bool up) {
     }
 
     if (!sf_summary_log_file) {
-        std::string sf_summary_log_name = (logDir / ("sf_summary_log_" + _sampleName + ".txt")).string();
+        std::string sf_summary_log_name = logDir + "/sf_summary_log_" + _sampleName + ".txt";
         sf_summary_log_file = std::make_unique<std::ofstream>(sf_summary_log_name);
 
         if (!sf_summary_log_file->is_open()) {
