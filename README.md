@@ -30,7 +30,6 @@ cmssw-el7
 cd <Path to Analyzer>/ttHH_SLeptonic_Analyzer_RunIII
 cmsenv
 wget https://raw.githubusercontent.com/nlohmann/json/develop/single_include/nlohmann/json.hpp
-git clone https://gitlab.cern.ch/cms-muonPOG/muonefficiencies.git
 source setup.sh  # required for setup
 make -j4
 
@@ -40,7 +39,7 @@ make -j4
 ## All in one line (faster):
 ```bash
 cmssw-el7
-git clone https://github.com/G-Vian/ttHH_SLeptonic_Analyzer_RunIII.git && cp /afs/cern.ch/user/g/gvian/public/TTH.tar.gz . && tar -zxvf TTH.tar.gz && rm -rf TTH.tar.gz && mv TTH ttHH_SLeptonic_Analyzer_RunIII/. && cd ttHH_SLeptonic_Analyzer_RunIII && wget https://raw.githubusercontent.com/nlohmann/json/develop/single_include/nlohmann/json.hpp && git clone https://gitlab.cern.ch/cms-muonPOG/muonefficiencies.git && cmsenv && source setup.sh && make -j4
+git clone https://github.com/G-Vian/ttHH_SLeptonic_Analyzer_RunIII.git && cp /afs/cern.ch/user/g/gvian/public/TTH.tar.gz . && tar -zxvf TTH.tar.gz && rm -rf TTH.tar.gz && mv TTH ttHH_SLeptonic_Analyzer_RunIII/. && cd ttHH_SLeptonic_Analyzer_RunIII && wget https://raw.githubusercontent.com/nlohmann/json/develop/single_include/nlohmann/json.hpp && cmsenv && source setup.sh && make -j4
  
 ```
 
