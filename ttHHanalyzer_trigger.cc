@@ -845,7 +845,7 @@ void ttHHanalyzer::process(event* thisEvent, sysName sysType, bool up) {
     if (!eleSFInitialized) {
         initTriggerSF();  // Trigger SF
         initRecoSF();     // Reco SF
-        initIDSF();       // <-- ID SF (MVA ISO WP90)
+        initEleIDSF();       // <-- ID SF (MVA ISO WP90)
         eleSFInitialized = true;
     }
 
