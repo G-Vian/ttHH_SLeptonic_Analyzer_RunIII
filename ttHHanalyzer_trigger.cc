@@ -234,13 +234,41 @@ void ttHHanalyzer::loop(sysName sysType, bool up) {
             currentEvent->summarize();
         }
 
-        // imprime cutflow a cada 10k entries processados
- //       if ((entry + 1) % 10000 == 0) {
-   ///         printCutflowSummary("periodic");
-   //     }
-	if (_entryInLoop % LOG_INTERVAL == 0) {
+	auto logSFSummary = [&](std::ofstream* logFile) {
+	    if (!logFile || !logFile->is_open()) return;
+	
+	    *logFile << "\n========= SF SUMMARY =========\n";
+	    *logFile << "Total Electrons Processed: " << this->total_electrons_processed << "\n";
+	    *logFile << "Total Muons Processed: " << this->total_muons_processed << "\n";
+	
+	    auto logAverage = [&](TH1F* avgH, TH1F* countH, const char* type, const char* var) {
+	        if (!avgH || !countH) return;
+	        *logFile << "\n[" << type << " Avg per " << var << " Bin]\n";
+	        for (int i = 1; i <= avgH->GetNbinsX(); ++i) {
+	            double count = countH->GetBinContent(i);
+	            if (count > 0) {
+	                double avg = avgH->GetBinContent(i);
+	                *logFile << "Bin " << i << " (~" << avgH->GetBinCenter(i) << "): "
+	                         << avg << " [entries: " << count << "]\n";
+	            }
+	        }
+	    };
+	
+	    logAverage(h_sf_vs_pt_sum, h_sf_vs_pt_count, "Electron SF", "pt");
+	    logAverage(h_sf_vs_eta_sum, h_sf_vs_eta_count, "Electron SF", "eta");    
+	    logAverage(h_effMC_vs_pt_avg, h_effMC_vs_pt_count, "Electron EffMC", "pT");
+	    logAverage(h_effMC_vs_eta_avg, h_effMC_vs_eta_count, "Electron EffMC", "η");
+	    logAverage(h_sf_muon_vs_pt_sum, h_sf_muon_vs_pt_count, "Muon SF", "pt");
+	    logAverage(h_sf_muon_vs_eta_sum, h_sf_muon_vs_eta_count, "Muon SF", "eta");
+	};
+	
+	// agora chama ele periodicamente
+	if (_entryInLoop % INTERVAL_LOG == 0) {
 	    logSFSummary(this->sf_summary_log_file.get());
 	}
+
+
+		
 
         events.push_back(currentEvent);
     }
@@ -1275,7 +1303,7 @@ calcAverage(h_sf_muon_vs_pt_sum, h_sf_muon_vs_pt_count, h_sf_muon_vs_pt_avg, "h_
 calcAverage(h_sf_muon_vs_eta_sum, h_sf_muon_vs_eta_count, h_sf_muon_vs_eta_avg, "h_sf_muon_vs_eta_avg");
 
 // ========= Função de log de resumo =========
-	
+	/*
 auto logSFSummary = [&](std::ofstream* logFile) {
     if (!logFile || !logFile->is_open()) return;
 
@@ -1307,7 +1335,7 @@ auto logSFSummary = [&](std::ofstream* logFile) {
 };
 
 
-	
+	*/
 
 	
 	
