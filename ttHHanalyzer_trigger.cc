@@ -85,7 +85,7 @@ void ttHHanalyzer::loop(sysName sysType, bool up) {
       //  std::string log1_name = logDir + "/event_selection_log_" + _sampleName + ".txt";
       //  std::string log2_name = logDir + "/log_trigger_sf_" + _sampleName + ".txt";
 		TString log1_name = logDir + "/event_selection_log_" + _sampleName + ".txt";
-		TString log2_name = logDir + "/log_trigger_sf_" + _sampleName + ".txt";
+		TString log2_name = logDir + "/log_applied_sf_" + _sampleName + ".txt";
 
  //       event_log_file = std::make_unique<std::ofstream>(log1_name);
   //      sf_log_file    = std::make_unique<std::ofstream>(log2_name);
@@ -221,15 +221,23 @@ void ttHHanalyzer::loop(sysName sysType, bool up) {
 
         process(currentEvent, sysType, up);
 
+    // Log periódico do evento, independente de objetos
+    if (sf_log_file && sf_log_file->is_open() && (_entryInLoop % 10000 == 0)) {
+        (*sf_log_file) << "=== Entry " << _entryInLoop << " ===\n";
+        (*sf_log_file) << "Number of selected electrons: " << currentEvent->getSelElectrons()->size() << "\n";
+        (*sf_log_file) << "Number of selected muons: " << currentEvent->getSelMuons()->size() << "\n";
+    }
+
+		
         if (entry % 1000 == 0) {
             std::cout << "[INFO] Processed events of " << analysisInfo << ": " << entry << std::endl;
             currentEvent->summarize();
         }
 
         // imprime cutflow a cada 10k entries processados
-        if ((entry + 1) % 10000 == 0) {
-            printCutflowSummary("periodic");
-        }
+ //       if ((entry + 1) % 10000 == 0) {
+   ///         printCutflowSummary("periodic");
+   //     }
 
         events.push_back(currentEvent);
     }
@@ -256,7 +264,7 @@ void ttHHanalyzer::createObjects(event * thisEvent, sysName sysType, bool up){
     bool doLog = (event_counter % 10000 == 0);
     if (doLog) (*event_log_file) << "==== Evento " << event_counter << " ====" << std::endl;
 
-    ///// cutflow["noCut"]+=1;
+    cutflow["noCut"]+=1;
     hCutFlow->Fill("noCut",1);
     hCutFlow_w->Fill("noCut",_weight);
 
@@ -893,8 +901,10 @@ auto logEvent = [&](const char* type, float eta, float pt, int binX, int binY, f
 };
 
 // ======================== Elétrons ========================
+// ======================== Elétrons ========================
 auto electrons = thisEvent->getSelElectrons();
 if (electrons && !electrons->empty()) {
+    std::vector<std::tuple<float,float,int,int,float,bool>> ele_log; // guardar info de log
     for (objectLep* ele : *electrons) {
         float pt = ele->getp4()->Pt();
         float eta = ele->getp4()->Eta();
@@ -914,10 +924,8 @@ if (electrons && !electrons->empty()) {
             sf_val = h2_eleTrigSF->GetBinContent(binX, binY);
         }
 
-        // Log por intervalo
-        if (_entryInLoop % LOG_INTERVAL == 0) {
-            logEvent("Electron", eta, pt, binX, binY, sf_val, out_of_range);
-        }
+        // Guardar info para log
+        ele_log.push_back({eta, pt, binX, binY, sf_val, out_of_range});
 
         // Preencher histogramas
         if (!out_of_range) {
@@ -937,10 +945,17 @@ if (electrons && !electrons->empty()) {
             h_effMC_vs_pt_count->Fill(pt, 1);
             h_effMC_vs_eta_sum->Fill(eta, eff_val);
             h_effMC_vs_eta_count->Fill(eta, 1);
+        }
+    }
 
-            if (_entryInLoop % LOG_INTERVAL == 0) {
-                logEvent("Electron EffMC", eta, pt, binX_eff, binY_eff, eff_val);
-            }
+    // Logar apenas eventos 10000, 20000, 30000...
+    if (_entryInLoop % LOG_INTERVAL == 0) {
+        for (auto& t : ele_log) {
+            float eta, pt, val;
+            int binX, binY;
+            bool out_of_range;
+            std::tie(eta, pt, binX, binY, val, out_of_range) = t;
+            logEvent("Electron", eta, pt, binX, binY, val, out_of_range);
         }
     }
 }
@@ -948,6 +963,7 @@ if (electrons && !electrons->empty()) {
 // ======================== Múons ========================
 auto muons = thisEvent->getSelMuons();
 if (muons && !muons->empty()) {
+    std::vector<std::tuple<float,float,int,int,float,bool>> mu_log; // guardar info de log
     for (objectLep* mu : *muons) {
         float pt = mu->getp4()->Pt();
         float eta = mu->getp4()->Eta();
@@ -983,24 +999,36 @@ if (muons && !muons->empty()) {
             }
         }
 
-        if (_entryInLoop % LOG_INTERVAL == 0) {
-            if (eta_bin >= 0 && pt_bin >= 0) {
-                *(this->sf_summary_log_file) << "[Muon] eta: " << eta << ", pt: " << pt
-                                             << " → SF JSON eta_bin: " << eta_bin
-                                             << ", pt_bin: " << pt_bin
-                                             << ", SF value: " << sf_val << "\n";
-            } else {
-                *(this->sf_summary_log_file) << "[Muon] eta: " << eta << ", pt: " << pt
-                                             << " → WARNING: Muon out of JSON bin range, SF fallback 1.0\n";
-            }
-        }
+        bool out_of_range = (eta_bin < 0 || pt_bin < 0);
+        mu_log.push_back({eta, pt, eta_bin, pt_bin, sf_val, out_of_range});
 
         if (h_sf_muon_vs_pt_sum)    h_sf_muon_vs_pt_sum->Fill(pt, sf_val);
         if (h_sf_muon_vs_pt_count)  h_sf_muon_vs_pt_count->Fill(pt, 1);
         if (h_sf_muon_vs_eta_sum)   h_sf_muon_vs_eta_sum->Fill(eta, sf_val);
         if (h_sf_muon_vs_eta_count) h_sf_muon_vs_eta_count->Fill(eta, 1);
     }
+
+    // Logar apenas eventos 10000, 20000, 30000...
+    if (_entryInLoop % LOG_INTERVAL == 0) {
+        for (auto& t : mu_log) {
+            float eta, pt, val;
+            int binX, binY;
+            bool out_of_range;
+            std::tie(eta, pt, binX, binY, val, out_of_range) = t;
+
+            if (!out_of_range) {
+                *(this->sf_summary_log_file) << "[Muon] eta: " << eta << ", pt: " << pt
+                                             << " → SF JSON eta_bin: " << binX
+                                             << ", pt_bin: " << binY
+                                             << ", SF value: " << val << "\n";
+            } else {
+                *(this->sf_summary_log_file) << "[Muon] eta: " << eta << ", pt: " << pt
+                                             << " → WARNING: Muon out of JSON bin range, SF fallback 1.0\n";
+            }
+        }
+    }
 }
+
 
 	
 
@@ -1453,6 +1481,8 @@ if (sf_summary_log_file && sf_summary_log_file->is_open()) {
 }
 	
 }
+////end of writeHistos
+
 void ttHHanalyzer::fillTree(event * thisEvent){
 
    
