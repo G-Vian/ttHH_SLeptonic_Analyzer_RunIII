@@ -263,7 +263,7 @@ void ttHHanalyzer::loop(sysName sysType, bool up) {
 	};
 	
 	// agora chama ele periodicamente
-	if (_entryInLoop % INTERVAL_LOG == 0) {
+	if (_entryInLoop % LOG_INTERVAL == 0) {
 	    logSFSummary(this->sf_summary_log_file.get());
 	}
 
