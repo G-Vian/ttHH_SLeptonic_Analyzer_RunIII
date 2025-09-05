@@ -238,7 +238,9 @@ void ttHHanalyzer::loop(sysName sysType, bool up) {
  //       if ((entry + 1) % 10000 == 0) {
    ///         printCutflowSummary("periodic");
    //     }
-
+	if (_entryInLoop % 10000 == 0) {
+	    logSFSummary(this->sf_summary_log_file);
+	}
         events.push_back(currentEvent);
     }
 
@@ -1272,6 +1274,8 @@ calcAverage(h_sf_muon_vs_pt_sum, h_sf_muon_vs_pt_count, h_sf_muon_vs_pt_avg, "h_
 calcAverage(h_sf_muon_vs_eta_sum, h_sf_muon_vs_eta_count, h_sf_muon_vs_eta_avg, "h_sf_muon_vs_eta_avg");
 
 // ========= Função de log de resumo =========
+	
+
 auto logSFSummary = [&](std::ofstream* logFile) {
     if (!logFile || !logFile->is_open()) return;
 
@@ -1292,16 +1296,15 @@ auto logSFSummary = [&](std::ofstream* logFile) {
         }
     };
 
-    // Elétrons
-    logAverage(h_sf_vs_pt_avg, h_sf_vs_pt_count, "Electron SF", "pT");
-    logAverage(h_sf_vs_eta_avg, h_sf_vs_eta_count, "Electron SF", "η");
-    logAverage(h_effMC_vs_pt_avg, h_effMC_vs_pt_count, "Electron EffMC", "pT");
+    // Exemplo de uso do helper logAverage
+    logAverage(h_sf_vs_pt_sum, h_sf_vs_pt_count, "Electron SF", "pt");
+    logAverage(h_sf_vs_eta_sum, h_sf_vs_eta_count, "Electron SF", "eta");    
+	logAverage(h_effMC_vs_pt_avg, h_effMC_vs_pt_count, "Electron EffMC", "pT");
     logAverage(h_effMC_vs_eta_avg, h_effMC_vs_eta_count, "Electron EffMC", "η");
-
-    // Múons
-    logAverage(h_sf_muon_vs_pt_avg, h_sf_muon_vs_pt_count, "Muon SF", "pT");
-    logAverage(h_sf_muon_vs_eta_avg, h_sf_muon_vs_eta_count, "Muon SF", "η");
+    logAverage(h_sf_muon_vs_pt_sum, h_sf_muon_vs_pt_count, "Muon SF", "pt");
+    logAverage(h_sf_muon_vs_eta_sum, h_sf_muon_vs_eta_count, "Muon SF", "eta");
 };
+
 
 	
 
