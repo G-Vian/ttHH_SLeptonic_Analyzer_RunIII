@@ -632,7 +632,7 @@ if (!selectedMuons->empty()) {
                            << " η = " << mu->getp4()->Eta()
                            << ", pT = " << mu->getp4()->Pt()
                            << " | Muon SF = " << std::fixed << std::setprecision(10) << triggerSF
-                           << " | Weight before = " << weight_before_trigger
+                           << " | Weight before = " << weight_before_SFs
                            << " | Weight after = " << _weight << "\n";
         }
     }
