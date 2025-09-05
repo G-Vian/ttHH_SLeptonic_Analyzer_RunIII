@@ -58,7 +58,10 @@ map<std::string, float> cut {
     , {"filter", 1} // MET filter
     , {"pv", 1}}; // primary vertex  
 
-
+/////////////////////////////////
+//////////_DO NOT ERASE THIS_////
+void ttHHanalyzer::performAnalysis(){
+    loop(noSys, false);}
 ////////////////////////////////
 
 void ttHHanalyzer::loop(sysName sysType, bool up) {
