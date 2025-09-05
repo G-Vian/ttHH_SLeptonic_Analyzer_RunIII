@@ -222,7 +222,7 @@ void ttHHanalyzer::loop(sysName sysType, bool up) {
         process(currentEvent, sysType, up);
 
     // Log periódico do evento, independente de objetos
-    if (sf_log_file && sf_log_file->is_open() && (_entryInLoop % 10000 == 0)) {
+    if (sf_log_file && sf_log_file->is_open() && (_entryInLoop % LOG_INTERVAL == 0)) {
         (*sf_log_file) << "=== Entry " << _entryInLoop << " ===\n";
         (*sf_log_file) << "Number of selected electrons: " << currentEvent->getSelElectrons()->size() << "\n";
         (*sf_log_file) << "Number of selected muons: " << currentEvent->getSelMuons()->size() << "\n";
@@ -238,7 +238,7 @@ void ttHHanalyzer::loop(sysName sysType, bool up) {
  //       if ((entry + 1) % 10000 == 0) {
    ///         printCutflowSummary("periodic");
    //     }
-	if (_entryInLoop % 10000 == 0) {
+	if (_entryInLoop % LOG_INTERVAL == 0) {
 	    logSFSummary(this->sf_summary_log_file);
 	}
         events.push_back(currentEvent);
@@ -618,7 +618,7 @@ if (!selectedElectrons->empty()) {
         _weight *= (triggerSF * recoSF * idSF_val);
 
         // Log a cada 10000 eventos
-        if (sf_log_file && sf_log_file->is_open() && (_entryInLoop % 10000 == 0)) {
+        if (sf_log_file && sf_log_file->is_open() && (_entryInLoop % LOG_INTERVAL == 0)) {
             (*sf_log_file) << "Entry " << _entryInLoop
                            << " | Electron #" << i
                            << " η = " << ele->getp4()->Eta()
@@ -647,7 +647,7 @@ if (!selectedMuons->empty()) {
         _weight *= triggerSF;
 
         // Log a cada 10000 eventos
-        if ((*sf_log_file).is_open() && (_entryInLoop % 10000 == 0)) {
+        if ((*sf_log_file).is_open() && (_entryInLoop % LOG_INTERVAL == 0)) {
             (*sf_log_file) << "Entry " << _entryInLoop
                            << " | Muon #" << i
                            << " η = " << mu->getp4()->Eta()
@@ -892,7 +892,7 @@ static long long total_muons_processed = 0;
 	}
 // /////////////////////////// Electron Trigger SF ///////////////////////////  (TSFel)
 // ======================== Configurações de log ========================
-const int LOG_INTERVAL = 10000; // log a cada N eventos, para debug
+
 auto logEvent = [&](const char* type, float eta, float pt, int binX, int binY, float val, bool out_of_range = false) {
     if (this->sf_summary_log_file && this->sf_summary_log_file->is_open()) {
         *(this->sf_summary_log_file) << "[" << type << "] eta: " << eta << ", pt: " << pt << "\n";
