@@ -1006,7 +1006,7 @@ class ttHHanalyzer {
 	_year= year;
 	_DataOrMC = DataOrMC;
 	_sampleName = sampleName;
-    static const int LOG_INTERVAL = 10000;
+    static const int LOG_INTERVAL = 1000;
 
 	initHistograms();	
 	initTree();
