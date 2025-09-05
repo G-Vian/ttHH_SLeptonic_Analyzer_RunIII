@@ -239,8 +239,9 @@ void ttHHanalyzer::loop(sysName sysType, bool up) {
    ///         printCutflowSummary("periodic");
    //     }
 	if (_entryInLoop % LOG_INTERVAL == 0) {
-	    logSFSummary(this->sf_summary_log_file);
+	    logSFSummary(this->sf_summary_log_file.get());
 	}
+
         events.push_back(currentEvent);
     }
 
@@ -1275,7 +1276,6 @@ calcAverage(h_sf_muon_vs_eta_sum, h_sf_muon_vs_eta_count, h_sf_muon_vs_eta_avg, 
 
 // ========= Função de log de resumo =========
 	
-
 auto logSFSummary = [&](std::ofstream* logFile) {
     if (!logFile || !logFile->is_open()) return;
 
@@ -1295,6 +1295,7 @@ auto logSFSummary = [&](std::ofstream* logFile) {
             }
         }
     };
+
 
     // Exemplo de uso do helper logAverage
     logAverage(h_sf_vs_pt_sum, h_sf_vs_pt_count, "Electron SF", "pt");
