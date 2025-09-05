@@ -994,6 +994,7 @@ class event{
 
 class ttHHanalyzer {
  public:
+    static const int LOG_INTERVAL = 1000;
     enum sysName { kJES, kJER, kbTag, noSys };
     ttHHanalyzer(const std::string & cl, eventBuffer * ev, float weight = 1., bool systematics = false,
  		  std::string year= "nothing", std::string DataOrMC = "nothing", std::string sampleName = "nothing"){
@@ -1006,7 +1007,6 @@ class ttHHanalyzer {
 	_year= year;
 	_DataOrMC = DataOrMC;
 	_sampleName = sampleName;
-    static const int LOG_INTERVAL = 1000;
 
 	initHistograms();	
 	initTree();
