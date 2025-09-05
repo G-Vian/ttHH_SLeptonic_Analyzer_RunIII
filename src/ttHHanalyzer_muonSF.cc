@@ -14,24 +14,25 @@ json muonTrigSFJson; /// this is for MUON trigger SF  (TSFmu)
 
 
 void ttHHanalyzer::initMuonHLTriggerSF() {
-    TString repoPath = "muonefficiencies";
     TString sfFilePath;
+    TString localDir = "/afs/cern.ch/user/g/gvian/muon_SF/muon_trigger_SF/";
 
-    // Escolha do JSON correto de acordo com o ano
     if (_year == "2022") {
-        sfFilePath = repoPath + "/Run3/2022/2022_Z/HLT/json/ScaleFactors_Muon_Z_HLT_2022_eta_pt_schemaV2.json";
+        sfFilePath = localDir + "ScaleFactors_Muon_Z_HLT_2022_eta_pt_schemaV2.json";
     } else if (_year == "2022EE") {
-        sfFilePath = repoPath + "/Run3/2022_EE/2022_Z/HLT/json/ScaleFactors_Muon_Z_HLT_2022_EE_eta_pt_schemaV2.json";
+        sfFilePath = localDir + "ScaleFactors_Muon_Z_HLT_2022_EE_eta_pt_schemaV2.json";
     } else if (_year == "2023") {
-        sfFilePath = repoPath + "/Run3/2023/2023_Z/HLT/json/ScaleFactors_Muon_Z_HLT_2023_eta_pt_schemaV2.json";
+        sfFilePath = localDir + "ScaleFactors_Muon_Z_HLT_2023_eta_pt_schemaV2.json";
     } else if (_year == "2023B") {
-        sfFilePath = repoPath + "/Run3/2023_BPix/2023_Z/HLT/json/ScaleFactors_Muon_Z_HLT_2023_BPix_eta_pt_schemaV2.json";
+        sfFilePath = localDir + "ScaleFactors_Muon_Z_HLT_2023_BPix_eta_pt_schemaV2.json";
     } else if (_year == "2024") {
-        sfFilePath = repoPath + "/Run3/2024/2024_Z/HLT/json/ScaleFactors_Muon_Z_HLT_2024_eta_pt_schemaV2.json";
+        sfFilePath = localDir + "ScaleFactors_Muon_Z_HLT_2024_eta_pt_schemaV2.json";
     } else {
         std::cerr << "[initMuonHLTriggerSF] Ano não suportado para SF de muons: " << _year << std::endl;
         return;
     }
+
+    std::cout << "[INFO] Using Muon HL Trigger SF file: " << sfFilePath << std::endl;
 
     // Abre JSON
     std::ifstream input(sfFilePath.Data());
