@@ -606,29 +606,35 @@ void ttHHanalyzer::diMotherReco(const TLorentzVector & dPar1p4,const TLorentzVec
     }
 } 
 
-///////////////electron trigger scale factor --> apply SF only to events with one electron!  (TSFel) (RSFel) (IDSFel)
 void ttHHanalyzer::analyze(event *thisEvent) {
+    // Vetores de leptons selecionados
     std::vector<objectLep*>* selectedElectrons = thisEvent->getSelElectrons();
-    std::vector<objectLep*>* selectedMuons = thisEvent->getSelMuons();
+    std::vector<objectLep*>* selectedMuons     = thisEvent->getSelMuons();
 
+    // Peso original antes de aplicar SFs
     float weight_before_SFs = _weight;
-    float triggerSF = 1.0, recoSF = 1.0, totalSFUnc = 0.0, idSF = 1.0;
+
+    // SFs e incerteza
+    float triggerSF = 1.0;
+    float recoSF    = 1.0;
+    float idSF      = 1.0;
+    float totalSFUnc = 0.0;
+
+    float trigSF_unc = 0.0, recoSF_unc = 0.0, idSF_unc = 0.0;
 
     // ========================
-    // Processa o lepton (ele ou mu)
+    // Processa lead lepton
     // ========================
-    if (!selectedElectrons->empty()) {
+    if (selectedElectrons && !selectedElectrons->empty()) {
         objectLep* ele = selectedElectrons->at(0);
-
-        float trigSF_unc=0.0, recoSF_unc=0.0, idSF_unc=0.0;
         triggerSF = getEleTrigSF(ele->getp4()->Eta(), ele->getp4()->Pt(), trigSF_unc);
         recoSF    = getEleRecoSF(ele->getp4()->Eta(), ele->getp4()->Pt(), recoSF_unc);
-        float idSF = getEleIDSF(ele->getp4()->Eta(), ele->getp4()->Phi(), ele->getp4()->Pt(), idSF_unc);
-        totalSFUnc = sqrt(trigSF_unc*trigSF_unc + recoSF_unc*recoSF_unc + idSF_unc*idSF_unc);
+        idSF      = getEleIDSF(ele->getp4()->Eta(), ele->getp4()->Phi(), ele->getp4()->Pt(), idSF_unc);
 
+        totalSFUnc = sqrt(trigSF_unc*trigSF_unc + recoSF_unc*recoSF_unc + idSF_unc*idSF_unc);
         _weight *= (triggerSF * recoSF * idSF);
     }
-    else if (!selectedMuons->empty()) {
+    else if (selectedMuons && !selectedMuons->empty()) {
         objectLep* mu = selectedMuons->at(0);
         triggerSF = getMuonTrigSF(mu->getp4()->Eta(), mu->getp4()->Pt());
         totalSFUnc = 0.0;
@@ -636,14 +642,19 @@ void ttHHanalyzer::analyze(event *thisEvent) {
     }
 
     // ========================
-    // Log detalhado a cada LOG_INTERVAL
+    // Log detalhado
     // ========================
-    if (sf_log_file && sf_log_file->is_open() && (_entryInLoop % LOG_INTERVAL == 0)) {
-        (*sf_log_file) << "=== Entry " << _entryInLoop << " ===\n";
-        (*sf_log_file) << "Number of selected electrons: " << selectedElectrons->size() << "\n";
-        (*sf_log_file) << "Number of selected muons: " << selectedMuons->size() << "\n";
+    bool hasLeadLepton = (selectedElectrons && !selectedElectrons->empty()) || 
+                         (selectedMuons && !selectedMuons->empty());
 
-        if (!selectedElectrons->empty()) {
+    if (sf_log_file && sf_log_file->is_open() && 
+        (_entryInLoop % LOG_INTERVAL == 0 || hasLeadLepton)) {
+
+        (*sf_log_file) << "=== Entry " << _entryInLoop << " ===\n";
+        (*sf_log_file) << "Number of selected electrons: " << (selectedElectrons ? selectedElectrons->size() : 0) << "\n";
+        (*sf_log_file) << "Number of selected muons: "     << (selectedMuons ? selectedMuons->size() : 0) << "\n";
+
+        if (selectedElectrons && !selectedElectrons->empty()) {
             objectLep* ele = selectedElectrons->at(0);
             (*sf_log_file) << "Electron | η = " << ele->getp4()->Eta()
                            << ", φ = " << ele->getp4()->Phi()
@@ -656,7 +667,7 @@ void ttHHanalyzer::analyze(event *thisEvent) {
                            << " | Total SF Uncertainty = " << totalSFUnc
                            << "\n";
         }
-        else if (!selectedMuons->empty()) {
+        else if (selectedMuons && !selectedMuons->empty()) {
             objectLep* mu = selectedMuons->at(0);
             (*sf_log_file) << "Muon | η = " << mu->getp4()->Eta()
                            << ", pT = " << mu->getp4()->Pt()
@@ -667,7 +678,8 @@ void ttHHanalyzer::analyze(event *thisEvent) {
         }
     }
 
-
+    // Incrementa contador de evento no loop
+    _entryInLoop++;
 
 
 ///////////////////////////////////////
