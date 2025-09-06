@@ -26,7 +26,7 @@ void ttHHanalyzer::initMuonHLTriggerSF() {
     } else if (_year == "2023B") {
         sfFilePath = localDir + "2023_BPix/2023_Z/HLT/json/ScaleFactors_Muon_Z_HLT_2023_BPix_eta_pt_schemaV2.json";
     } else if (_year == "2024") {
-        sfFilePath = localDir + "2023_BPix/2023_Z/HLT/json/ScaleFactors_Muon_Z_HLT_2023_BPix_eta_pt_schemaV2.json"
+        sfFilePath = localDir + "2023_BPix/2023_Z/HLT/json/ScaleFactors_Muon_Z_HLT_2023_BPix_eta_pt_schemaV2.json";
     } else {
         std::cerr << "[initMuonHLTriggerSF] Ano não suportado para SF de muons: " << _year << std::endl;
         return;
