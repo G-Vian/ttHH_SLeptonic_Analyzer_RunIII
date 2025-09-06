@@ -612,7 +612,7 @@ void ttHHanalyzer::analyze(event *thisEvent) {
     std::vector<objectLep*>* selectedMuons = thisEvent->getSelMuons();
 
     float weight_before_SFs = _weight;
-    float triggerSF = 1.0, recoSF = 1.0, totalSFUnc = 0.0;
+    float triggerSF = 1.0, recoSF = 1.0, totalSFUnc = 0.0, idSF = 1.0;
 
     // ========================
     // Processa o lepton (ele ou mu)
@@ -624,7 +624,6 @@ void ttHHanalyzer::analyze(event *thisEvent) {
         triggerSF = getEleTrigSF(ele->getp4()->Eta(), ele->getp4()->Pt(), trigSF_unc);
         recoSF    = getEleRecoSF(ele->getp4()->Eta(), ele->getp4()->Pt(), recoSF_unc);
         float idSF = getEleIDSF(ele->getp4()->Eta(), ele->getp4()->Phi(), ele->getp4()->Pt(), idSF_unc);
-		float idSF_unc = 0.0 ;
         totalSFUnc = sqrt(trigSF_unc*trigSF_unc + recoSF_unc*recoSF_unc + idSF_unc*idSF_unc);
 
         _weight *= (triggerSF * recoSF * idSF);
