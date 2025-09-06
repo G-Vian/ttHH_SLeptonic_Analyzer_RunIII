@@ -624,7 +624,7 @@ void ttHHanalyzer::analyze(event *thisEvent) {
         triggerSF = getEleTrigSF(ele->getp4()->Eta(), ele->getp4()->Pt(), trigSF_unc);
         recoSF    = getEleRecoSF(ele->getp4()->Eta(), ele->getp4()->Pt(), recoSF_unc);
         float idSF = getEleIDSF(ele->getp4()->Eta(), ele->getp4()->Phi(), ele->getp4()->Pt(), idSF_unc);
-
+		float idSF_unc = 0.0 ;
         totalSFUnc = sqrt(trigSF_unc*trigSF_unc + recoSF_unc*recoSF_unc + idSF_unc*idSF_unc);
 
         _weight *= (triggerSF * recoSF * idSF);
@@ -651,7 +651,7 @@ void ttHHanalyzer::analyze(event *thisEvent) {
                            << ", pT = " << ele->getp4()->Pt()
                            << " | Trigger SF = " << triggerSF
                            << " | Reco SF = " << recoSF
-                           << " | ID SF = " << getEleIDSF(ele->getp4()->Eta(), ele->getp4()->Phi(), ele->getp4()->Pt())
+                           << " | ID SF = " << idSF
                            << " | Weight before = " << weight_before_SFs
                            << " | Weight after = " << _weight
                            << " | Total SF Uncertainty = " << totalSFUnc
