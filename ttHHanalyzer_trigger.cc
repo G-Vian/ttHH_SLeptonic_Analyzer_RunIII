@@ -609,82 +609,65 @@ void ttHHanalyzer::diMotherReco(const TLorentzVector & dPar1p4,const TLorentzVec
 ///////////////electron trigger scale factor --> apply SF only to events with one electron!  (TSFel) (RSFel) (IDSFel)
 void ttHHanalyzer::analyze(event *thisEvent) {
     std::vector<objectLep*>* selectedElectrons = thisEvent->getSelElectrons();
-    std::vector<objectLep*>* selectedMuons     = thisEvent->getSelMuons();
+    std::vector<objectLep*>* selectedMuons = thisEvent->getSelMuons();
 
-    float triggerSF = 1.0;
-    float recoSF    = 1.0;
-    float totalSFUnc = 0.0;
     float weight_before_SFs = _weight;
+    float triggerSF = 1.0, recoSF = 1.0, totalSFUnc = 0.0;
 
-    // ===================================================
-    //   Só loga se for múltiplo do intervalo
-    // ===================================================
-    if (_entryInLoop % LOG_INTERVAL == 0) {
-        if (sf_log_file && sf_log_file->is_open()) {
-            (*sf_log_file) << "=== Entry " << _entryInLoop << " ===\n";
-            (*sf_log_file) << "Number of selected electrons: " << selectedElectrons->size() << "\n";
-            (*sf_log_file) << "Number of selected muons: "     << selectedMuons->size()     << "\n";
+    // ========================
+    // Processa o lepton (ele ou mu)
+    // ========================
+    if (!selectedElectrons->empty()) {
+        objectLep* ele = selectedElectrons->at(0);
 
-            // ========================
-            //   Elétrons
-            // ========================
-            for (size_t i = 0; i < selectedElectrons->size(); ++i) {
-                objectLep* ele = selectedElectrons->at(i);
+        float trigSF_unc=0.0, recoSF_unc=0.0, idSF_unc=0.0;
+        triggerSF = getEleTrigSF(ele->getp4()->Eta(), ele->getp4()->Pt(), trigSF_unc);
+        recoSF    = getEleRecoSF(ele->getp4()->Eta(), ele->getp4()->Pt(), recoSF_unc);
+        float idSF = getEleIDSF(ele->getp4()->Eta(), ele->getp4()->Phi(), ele->getp4()->Pt(), idSF_unc);
 
-                // Trigger SF
-                float trigSF_unc = 0.0;
-                float trigSF_val = getEleTrigSF(ele->getp4()->Eta(), ele->getp4()->Pt(), trigSF_unc);
+        totalSFUnc = sqrt(trigSF_unc*trigSF_unc + recoSF_unc*recoSF_unc + idSF_unc*idSF_unc);
 
-                // Reco SF
-                float recoSF_unc = 0.0;
-                float recoSF_val = getEleRecoSF(ele->getp4()->Eta(), ele->getp4()->Pt(), recoSF_unc);
-
-                // ID SF (MVA ISO WP90)
-                float idSF_unc = 0.0;
-                float idSF_val = getEleIDSF(ele->getp4()->Eta(), ele->getp4()->Phi(), ele->getp4()->Pt(), idSF_unc);
-
-                // Combina incertezas em quadratura
-                totalSFUnc = trigSF_unc*trigSF_unc + recoSF_unc*recoSF_unc + idSF_unc*idSF_unc;
-                totalSFUnc = sqrt(totalSFUnc);
-
-                // Aplica peso multiplicando todos os SFs
-                _weight *= (trigSF_val * recoSF_val * idSF_val);
-
-                (*sf_log_file) << "  Electron #" << i
-                               << " η = " << ele->getp4()->Eta()
-                               << ", φ = " << ele->getp4()->Phi()
-                               << ", pT = " << ele->getp4()->Pt()
-                               << " | Trigger SF = " << std::fixed << std::setprecision(10) << trigSF_val
-                               << " | Reco SF = "    << recoSF_val
-                               << " | ID SF = "      << idSF_val
-                               << " | Combined Weight before = " << weight_before_SFs
-                               << " | Combined Weight after = "  << _weight
-                               << " | Total SF Uncertainty = "   << totalSFUnc
-                               << "\n";
-            }
-
-            // ========================
-            //   Múons
-            // ========================
-            for (size_t i = 0; i < selectedMuons->size(); ++i) {
-                objectLep* mu = selectedMuons->at(i);
-
-                float muSF = getMuonTrigSF(mu->getp4()->Eta(), mu->getp4()->Pt());
-                _weight *= muSF;
-
-                (*sf_log_file) << "  Muon #" << i
-                               << " η = " << mu->getp4()->Eta()
-                               << ", pT = " << mu->getp4()->Pt()
-                               << " | Muon SF = " << std::fixed << std::setprecision(10) << muSF
-                               << " | Weight before = " << weight_before_SFs
-                               << " | Weight after = "  << _weight
-                               << "\n";
-            }
-        }
+        _weight *= (triggerSF * recoSF * idSF);
+    }
+    else if (!selectedMuons->empty()) {
+        objectLep* mu = selectedMuons->at(0);
+        triggerSF = getMuonTrigSF(mu->getp4()->Eta(), mu->getp4()->Pt());
+        totalSFUnc = 0.0;
+        _weight *= triggerSF;
     }
 
+    // ========================
+    // Log detalhado a cada LOG_INTERVAL
+    // ========================
+    if (sf_log_file && sf_log_file->is_open() && (_entryInLoop % LOG_INTERVAL == 0)) {
+        (*sf_log_file) << "=== Entry " << _entryInLoop << " ===\n";
+        (*sf_log_file) << "Number of selected electrons: " << selectedElectrons->size() << "\n";
+        (*sf_log_file) << "Number of selected muons: " << selectedMuons->size() << "\n";
 
-
+        if (!selectedElectrons->empty()) {
+            objectLep* ele = selectedElectrons->at(0);
+            (*sf_log_file) << "Electron | η = " << ele->getp4()->Eta()
+                           << ", φ = " << ele->getp4()->Phi()
+                           << ", pT = " << ele->getp4()->Pt()
+                           << " | Trigger SF = " << triggerSF
+                           << " | Reco SF = " << recoSF
+                           << " | ID SF = " << getEleIDSF(ele->getp4()->Eta(), ele->getp4()->Phi(), ele->getp4()->Pt())
+                           << " | Weight before = " << weight_before_SFs
+                           << " | Weight after = " << _weight
+                           << " | Total SF Uncertainty = " << totalSFUnc
+                           << "\n";
+        }
+        else if (!selectedMuons->empty()) {
+            objectLep* mu = selectedMuons->at(0);
+            (*sf_log_file) << "Muon | η = " << mu->getp4()->Eta()
+                           << ", pT = " << mu->getp4()->Pt()
+                           << " | Muon SF = " << triggerSF
+                           << " | Weight before = " << weight_before_SFs
+                           << " | Weight after = " << _weight
+                           << "\n";
+        }
+    }
+}
 
 
 
