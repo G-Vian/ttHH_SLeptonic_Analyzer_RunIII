@@ -648,7 +648,7 @@ void ttHHanalyzer::analyze(event *thisEvent) {
                          (selectedMuons && !selectedMuons->empty());
 
     if (sf_log_file && sf_log_file->is_open() && 
-        (_entryInLoop % LOG_INTERVAL == 0 || hasLeadLepton)) {
+        (_entryInLoop % LOG_INTERVAL == 0 && hasLeadLepton)) {
 
         (*sf_log_file) << "=== Entry " << _entryInLoop << " ===\n";
         (*sf_log_file) << "Number of selected electrons: " << (selectedElectrons ? selectedElectrons->size() : 0) << "\n";
