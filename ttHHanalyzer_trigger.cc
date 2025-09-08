@@ -229,43 +229,51 @@ void ttHHanalyzer::loop(sysName sysType, bool up) {
     }
 
 		
-        if (entry % 1000 == 0) {
+        if (entry % LOG_INTERVAL == 0) {
             std::cout << "[INFO] Processed events of " << analysisInfo << ": " << entry << std::endl;
             currentEvent->summarize();
         }
+auto logSFSummary = [&](std::ofstream* logFile) {
+    if (!logFile || !logFile->is_open()) return;
 
-	auto logSFSummary = [&](std::ofstream* logFile) {
-	    if (!logFile || !logFile->is_open()) return;
-	
-	    *logFile << "\n========= SF SUMMARY =========\n";
-	    *logFile << "Total Electrons Processed: " << this->total_electrons_processed << "\n";
-	    *logFile << "Total Muons Processed: " << this->total_muons_processed << "\n";
-	
-	    auto logAverage = [&](TH1F* avgH, TH1F* countH, const char* type, const char* var) {
-	        if (!avgH || !countH) return;
-	        *logFile << "\n[" << type << " Avg per " << var << " Bin]\n";
-	        for (int i = 1; i <= avgH->GetNbinsX(); ++i) {
-	            double count = countH->GetBinContent(i);
-	            if (count > 0) {
-	                double avg = avgH->GetBinContent(i);
-	                *logFile << "Bin " << i << " (~" << avgH->GetBinCenter(i) << "): "
-	                         << avg << " [entries: " << count << "]\n";
-	            }
-	        }
-	    };
-	
-	    logAverage(h_sf_vs_pt_sum, h_sf_vs_pt_count, "Electron SF", "pt");
-	    logAverage(h_sf_vs_eta_sum, h_sf_vs_eta_count, "Electron SF", "eta");    
-	    logAverage(h_effMC_vs_pt_avg, h_effMC_vs_pt_count, "Electron EffMC", "pT");
-	    logAverage(h_effMC_vs_eta_avg, h_effMC_vs_eta_count, "Electron EffMC", "η");
-	    logAverage(h_sf_muon_vs_pt_sum, h_sf_muon_vs_pt_count, "Muon SF", "pt");
-	    logAverage(h_sf_muon_vs_eta_sum, h_sf_muon_vs_eta_count, "Muon SF", "eta");
-	};
-	
-	// agora chama ele periodicamente
-	if (_entryInLoop % LOG_INTERVAL == 0) {
-	    logSFSummary(this->sf_summary_log_file.get());
-	}
+    *logFile << "\n========= SF SUMMARY =========\n";
+    *logFile << "Total Electrons Processed: " << this->total_electrons_processed << "\n";
+    *logFile << "Total Muons Processed: " << this->total_muons_processed << "\n";
+
+    // Lambda para imprimir médias "on-the-fly"
+    auto logAverage = [&](TH1F* sumH, TH1F* countH, const char* type, const char* var) {
+        if (!sumH || !countH) return;
+        *logFile << "\n[" << type << " Avg per " << var << " Bin]\n";
+        for (int i = 1; i <= sumH->GetNbinsX(); ++i) {
+            double sum   = sumH->GetBinContent(i);
+            double sum2  = std::pow(sumH->GetBinError(i), 2); // erro acumulado
+            double count = countH->GetBinContent(i);
+            if (count > 0) {
+                double avg = sum / count;              // média correta
+                double err = std::sqrt(sum2) / count; // aproximação do erro da média
+                *logFile << "Bin " << i << " (~" << sumH->GetBinCenter(i) << "): "
+                         << avg << " ± " << err << " [entries: " << count << "]\n";
+            } else {
+                *logFile << "Bin " << i << " (~" << sumH->GetBinCenter(i) << "): "
+                         << "0 [entries: 0]\n";
+            }
+        }
+    };
+
+    // Agora chama para todos os histogramas de SF/eff
+    logAverage(h_sf_vs_pt_sum,       h_sf_vs_pt_count,       "Electron SF", "pt");
+    logAverage(h_sf_vs_eta_sum,      h_sf_vs_eta_count,      "Electron SF", "eta");
+    logAverage(h_effMC_vs_pt_sum,    h_effMC_vs_pt_count,    "Electron EffMC", "pT");
+    logAverage(h_effMC_vs_eta_sum,   h_effMC_vs_eta_count,   "Electron EffMC", "η");
+    logAverage(h_sf_muon_vs_pt_sum,  h_sf_muon_vs_pt_count,  "Muon SF", "pt");
+    logAverage(h_sf_muon_vs_eta_sum, h_sf_muon_vs_eta_count, "Muon SF", "eta");
+};
+
+// Chamar periodicamente dentro do loop
+if (_entryInLoop % LOG_INTERVAL == 0) {
+    logSFSummary(this->sf_summary_log_file.get());
+}
+
 
 
 		
