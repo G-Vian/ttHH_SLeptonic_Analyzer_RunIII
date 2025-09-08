@@ -292,7 +292,7 @@ void ttHHanalyzer::createObjects(event * thisEvent, sysName sysType, bool up){
 
     ////Log of selection///
     event_counter++;
-    bool doLog = (event_counter % 10000 == 0);
+    bool doLog = (event_counter % LOG_INTERVAL == 0);
     if (doLog) (*event_log_file) << "==== Evento " << event_counter << " ====" << std::endl;
 
     cutflow["noCut"]+=1;
@@ -484,7 +484,7 @@ void ttHHanalyzer::createObjects(event * thisEvent, sysName sysType, bool up){
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 bool ttHHanalyzer::selectObjects(event *thisEvent) {
     // Trigger cut
-    bool doLog = (event_counter % 10000 == 0);
+    bool doLog = (event_counter % LOG_INTERVAL == 0);
 
     if (cut["trigger"] > 0) {
         if (!thisEvent->getTriggerAccept()) {
