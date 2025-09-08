@@ -1115,7 +1115,7 @@ class ttHHanalyzer {
 	float getEleTrigSF(float eta, float pt, float& sf_unc);
 	float triggerSFUncertainty = 0.0;
 	float eleTriggerSF = 1.0;  // para armazenar o SF do evento atual
-	int _entryInLoop = -1;
+	int _entryInLoop = 0;
 	
 	// Histogramas para elétrons
 	TH1F* h_sf_vs_pt         = nullptr;
