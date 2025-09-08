@@ -23,7 +23,7 @@ static std::unique_ptr<std::ofstream> event_log_file;
 static std::unique_ptr<std::ofstream> sf_log_file;
 static std::unique_ptr<std::ofstream> sf_summary_log_file;
 
-static int event_counter = 0;
+//static int event_counter = 0;
 
 
 
@@ -291,9 +291,9 @@ void ttHHanalyzer::loop(sysName sysType, bool up) {
 void ttHHanalyzer::createObjects(event * thisEvent, sysName sysType, bool up){
 
     ////Log of selection///
-    event_counter++;
-    bool doLog = (event_counter % LOG_INTERVAL == 0);
-    if (doLog) (*event_log_file) << "==== Evento " << event_counter << " ====" << std::endl;
+//    _entryInLoop++;
+    bool doLog = (_entryInLoop % LOG_INTERVAL == 0);
+    if (doLog) (*event_log_file) << "==== Evento " << _entryInLoop << " ====" << std::endl;
 
     cutflow["noCut"]+=1;
     hCutFlow->Fill("noCut",1);
@@ -484,97 +484,129 @@ void ttHHanalyzer::createObjects(event * thisEvent, sysName sysType, bool up){
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 bool ttHHanalyzer::selectObjects(event *thisEvent) {
     // Trigger cut
-    bool doLog = (event_counter % LOG_INTERVAL == 0);
+bool doLog = (_entryInLoop % LOG_INTERVAL == 0);
 
-    if (cut["trigger"] > 0) {
-        if (!thisEvent->getTriggerAccept()) {
-            if (doLog) (*event_log_file) << "Evento rejeitado pelo trigger.\n";
-            return false;
-        } else {
-            cutflow["nHLTrigger"] += 1;
-            hCutFlow->Fill("nHLTrigger", 1);
-            hCutFlow_w->Fill("nHLTrigger", _weight);
+if (cut["trigger"] > 0) {
+    if (!thisEvent->getTriggerAccept()) {
+        if (doLog) (*event_log_file) << "Evento rejeitado pelo trigger.\n";
+        return false;
+    } else {
+        cutflow["nHLTrigger"] += 1;
+        hCutFlow->Fill("nHLTrigger", 1);
+        hCutFlow_w->Fill("nHLTrigger", _weight);
 
-            if (_ev->HLT_IsoMu24) {
-                if (doLog) (*event_log_file) << "Trigger múon OK.\n";
-                cutflow["Muon_Trigger"] += 1;
-                hCutFlow->Fill("Muon_Trigger", 1);
-                hCutFlow_w->Fill("Muon_Trigger", _weight);
-            } 
-            else if (_ev->HLT_Ele30_WPTight_Gsf) {
-                if (doLog) (*event_log_file) << "Trigger elétron OK.\n";
-                cutflow["Elec_Trigger"] += 1;
-                hCutFlow->Fill("Elec_Trigger", 1);
-                hCutFlow_w->Fill("Elec_Trigger", _weight);
-            }
+        if (_ev->HLT_IsoMu24) {
+            if (doLog) (*event_log_file) << "Trigger múon OK.\n";
+            cutflow["Muon_Trigger"] += 1;
+            hCutFlow->Fill("Muon_Trigger", 1);
+            hCutFlow_w->Fill("Muon_Trigger", _weight);
+        } 
+        else if (_ev->HLT_Ele30_WPTight_Gsf) {
+            if (doLog) (*event_log_file) << "Trigger elétron OK.\n";
+            cutflow["Elec_Trigger"] += 1;
+            hCutFlow->Fill("Elec_Trigger", 1);
+            hCutFlow_w->Fill("Elec_Trigger", _weight);
         }
     }
+}
 
-    // Filter cut
-    if (cut["filter"] > 0) {
-        if (!thisEvent->getMETFilter()) {
-            if (doLog) (*event_log_file) << "Evento rejeitado pelo Filters.\n";
-            return false;
-        } else {
-            if (doLog) (*event_log_file) << "Filters OK.\n";
-            cutflow["nFilter"] += 1;
-            hCutFlow->Fill("nFilter", 1);
-            hCutFlow_w->Fill("nFilter", _weight);
-        }
+// Filter cut
+if (cut["filter"] > 0) {
+    if (!thisEvent->getMETFilter()) {
+        if (doLog) (*event_log_file) << "Evento rejeitado pelo Filters.\n";
+        return false;
+    } else {
+        if (doLog) (*event_log_file) << "Filters OK.\n";
+        cutflow["nFilter"] += 1;
+        hCutFlow->Fill("nFilter", 1);
+        hCutFlow_w->Fill("nFilter", _weight);
     }
+}
 
-    // Primary vertex cut
-    if (doLog) (*event_log_file) << "PV_npvsGood=" << _ev->PV_npvsGood << "\n";
-    if (cut["pv"] > 0) {
-        if (!thisEvent->getPVvalue()) {
-            if (doLog) (*event_log_file) << "Evento rejeitado pelo PV.\n";
-            return false;
-        } else {
-            if (doLog) (*event_log_file) << "PV OK.\n";
-            cutflow["nPV"] += 1;
-            hCutFlow->Fill("nPV", 1);
-            hCutFlow_w->Fill("nPV", _weight);
-        }
+// Primary vertex cut
+if (doLog) (*event_log_file) << "PV_npvsGood=" << _ev->PV_npvsGood << "\n";
+if (cut["pv"] > 0) {
+    if (!thisEvent->getPVvalue()) {
+        if (doLog) (*event_log_file) << "Evento rejeitado pelo PV.\n";
+        return false;
+    } else {
+        if (doLog) (*event_log_file) << "PV OK.\n";
+        cutflow["nPV"] += 1;
+        hCutFlow->Fill("nPV", 1);
+        hCutFlow_w->Fill("nPV", _weight);
     }
+}
 
-    // Jet multiplicity
-    if (thisEvent->getnSelJet() < cut["nJets"]) return false;
-    cutflow["njets>5"] += 1;
-    hCutFlow->Fill("njets>5", 1);
-    hCutFlow_w->Fill("njets>5", _weight);
+// Jet multiplicity
+if (thisEvent->getnSelJet() < cut["nJets"]) {
+    if (doLog) (*event_log_file) << "Evento rejeitado: nJets = " << thisEvent->getnSelJet() 
+                                 << " (mínimo requerido = " << cut["nJets"] << ")\n";
+    return false;
+}
+cutflow["njets>5"] += 1;
+hCutFlow->Fill("njets>5", 1);
+hCutFlow_w->Fill("njets>5", _weight);
+if (doLog) (*event_log_file) << "Jets selecionados = " << thisEvent->getnSelJet() << "\n";
 
-    // b-jet multiplicity
-    if (thisEvent->getnbJet() < cut["nbJets"]) return false;
-    cutflow["nbjets>4"] += 1;
-    hCutFlow->Fill("nbjets>4", 1);
-    hCutFlow_w->Fill("nbjets>4", _weight);
+// b-jet multiplicity
+if (thisEvent->getnbJet() < cut["nbJets"]) {
+    if (doLog) (*event_log_file) << "Evento rejeitado: nbJets = " << thisEvent->getnbJet() 
+                                 << " (mínimo requerido = " << cut["nbJets"] << ")\n";
+    return false;
+}
+cutflow["nbjets>4"] += 1;
+hCutFlow->Fill("nbjets>4", 1);
+hCutFlow_w->Fill("nbjets>4", _weight);
+if (doLog) (*event_log_file) << "b-Jets selecionados = " << thisEvent->getnbJet() << "\n";
 
-    // Lepton multiplicity
-    if (thisEvent->getnSelLepton() != cut["nLeptons"]) return false;
-    cutflow["nlepton==1"] += 1;
-    hCutFlow->Fill("nlepton==1", 1);
-    hCutFlow_w->Fill("nlepton==1", _weight);
+// Lepton multiplicity
+if (thisEvent->getnSelLepton() != cut["nLeptons"]) {
+    if (doLog) (*event_log_file) << "Evento rejeitado: nLeptons = " << thisEvent->getnSelLepton()
+                                 << " (esperado = " << cut["nLeptons"] << ")\n";
+    return false;
+}
+cutflow["nlepton==1"] += 1;
+hCutFlow->Fill("nlepton==1", 1);
+hCutFlow_w->Fill("nlepton==1", _weight);
+if (doLog) (*event_log_file) << "Leptons selecionados = " << thisEvent->getnSelLepton() << "\n";
 
-    thisEvent->getStatsComb(thisEvent->getSelJets(), thisEvent->getSelLeptons(), ljetStat);
-    thisEvent->getStatsComb(thisEvent->getSelbJets(), thisEvent->getSelLeptons(), lbjetStat);
+thisEvent->getStatsComb(thisEvent->getSelJets(), thisEvent->getSelLeptons(), ljetStat);
+thisEvent->getStatsComb(thisEvent->getSelbJets(), thisEvent->getSelLeptons(), lbjetStat);
 
-    // Leading lepton cuts
-    if (thisEvent->getSelElectrons()->size() == 1 && thisEvent->getSelMuons()->size() == 0) {
-        auto ele = thisEvent->getSelElectrons()->at(0);
-        if (!(ele->getp4()->Pt() >= cut["leadElePt"] && fabs(ele->getp4()->Eta()) <= cut["eleEta"])) return false;
-    } 
-    else if (thisEvent->getSelElectrons()->size() == 0 && thisEvent->getSelMuons()->size() == 1) {
-        auto mu = thisEvent->getSelMuons()->at(0);
-        if (!(mu->getp4()->Pt() >= cut["leadMuonPt"] && fabs(mu->getp4()->Eta()) <= cut["muonEta"])) return false;
+// Leading lepton cuts
+if (thisEvent->getSelElectrons()->size() == 1 && thisEvent->getSelMuons()->size() == 0) {
+    auto ele = thisEvent->getSelElectrons()->at(0);
+    if (!(ele->getp4()->Pt() >= cut["leadElePt"] && fabs(ele->getp4()->Eta()) <= cut["eleEta"])) {
+        if (doLog) (*event_log_file) << "Evento rejeitado: elétron líder pT=" << ele->getp4()->Pt() 
+                                     << " eta=" << ele->getp4()->Eta() << "\n";
+        return false;
     }
+    if (doLog) (*event_log_file) << "Elétron líder OK: pT=" << ele->getp4()->Pt()
+                                 << " eta=" << ele->getp4()->Eta() << "\n";
+} 
+else if (thisEvent->getSelElectrons()->size() == 0 && thisEvent->getSelMuons()->size() == 1) {
+    auto mu = thisEvent->getSelMuons()->at(0);
+    if (!(mu->getp4()->Pt() >= cut["leadMuonPt"] && fabs(mu->getp4()->Eta()) <= cut["muonEta"])) {
+        if (doLog) (*event_log_file) << "Evento rejeitado: múon líder pT=" << mu->getp4()->Pt() 
+                                     << " eta=" << mu->getp4()->Eta() << "\n";
+        return false;
+    }
+    if (doLog) (*event_log_file) << "Múon líder OK: pT=" << mu->getp4()->Pt()
+                                 << " eta=" << mu->getp4()->Eta() << "\n";
+}
 
-    // MET cut
-    if (!(thisEvent->getMET()->getp4()->Pt() > cut["MET"])) return false;
-    cutflow["MET>20"] += 1;
-    hCutFlow->Fill("MET>20", 1);
-    hCutFlow_w->Fill("MET>20", _weight);
+// MET cut
+if (!(thisEvent->getMET()->getp4()->Pt() > cut["MET"])) {
+    if (doLog) (*event_log_file) << "Evento rejeitado: MET=" << thisEvent->getMET()->getp4()->Pt()
+                                 << " (mínimo requerido = " << cut["MET"] << ")\n";
+    return false;
+}
+cutflow["MET>20"] += 1;
+hCutFlow->Fill("MET>20", 1);
+hCutFlow_w->Fill("MET>20", _weight);
+if (doLog) (*event_log_file) << "MET OK: " << thisEvent->getMET()->getp4()->Pt() << "\n";
 
-    return true;
+return true;
 }
 /// end of selection
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
