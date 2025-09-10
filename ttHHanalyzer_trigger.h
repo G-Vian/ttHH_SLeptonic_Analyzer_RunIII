@@ -73,7 +73,7 @@ class objectPhysics {
     }
     void addp4(const std::vector<float>& offset){
 	_p4.SetPxPyPzE(_p4.Px()+offset[0],_p4.Py()+offset[1],_p4.Pz()+offset[2], _p4.E()+offset[3]);
-    } 
+    }
 
 //    void setYear(const int year){
 //	_year = year;
@@ -81,7 +81,7 @@ class objectPhysics {
 
  private:
     TLorentzVector _p4;
-//    float _pxOffset = 0., _pyOffset = 0., _pzOffset = 0., _EOffset = 0.;
+    float _pxOffset = 0., _pyOffset = 0., _pzOffset = 0., _EOffset = 0.;
     std::string _year;
 };
 
@@ -1250,7 +1250,7 @@ class ttHHanalyzer {
 	for(int bind = 1; bind < nbinsx+1; bind++){
 	    _hSysbTagM->SetBinContent(bind, sysbTagM[bind-1]);
 	}
-    
+    }
 
     void getbJetEffMap(){ ////calcula mapa de eficiência de b-tag.
 	_hbJetEff->Divide(_hJetEff);
