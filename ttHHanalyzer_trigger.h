@@ -1010,7 +1010,7 @@ class ttHHanalyzer {
 
 	initHistograms();	
 	initTree();
-	//initSys();
+	initSys();
        	std::string dummy = "";
 	HypoComb = new tthHypothesisCombinatorics(std::string("data/blrbdtweights_80X_V4/weights_64.xml"), std::string(""));
     }
