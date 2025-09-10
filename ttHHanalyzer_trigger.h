@@ -53,7 +53,7 @@ class objectPhysics {
 	return &_p4;
     }
     objectPhysics(){};
-    void scale(float JES, bool up = true){
+    /*void scale(float JES, bool up = true){
 	_pxOffset = JES * _p4.Px();
 	_pyOffset = JES * _p4.Py();
 	_pzOffset = JES * _p4.Pz();
@@ -73,7 +73,7 @@ class objectPhysics {
     }
     void addp4(const std::vector<float>& offset){
 	_p4.SetPxPyPzE(_p4.Px()+offset[0],_p4.Py()+offset[1],_p4.Pz()+offset[2], _p4.E()+offset[3]);
-    }
+    } */
 
 //    void setYear(const int year){
 //	_year = year;
@@ -1267,7 +1267,7 @@ class ttHHanalyzer {
 	hCutFlow = new TH1F("cutflow", "N_{cutFlow}", cutflow.size(), 0, cutflow.size()-1);
 	hCutFlow_w = new TH1F("cutflow_w", "N_{weighted}", cutflow.size(), 0, cutflow.size()-1);
 //// here it just names the corrections
-	    
+/*	    
 	TString trail = "";
 	if(sysType == kbTag){
 	    if(up) trail += "btag_up";
@@ -1279,7 +1279,7 @@ class ttHHanalyzer {
 	    if(up) trail += "JER_up";
 	    else trail += "JER_down";
 	}
-
+*/
 	_of->file->cd();
 	std::vector<TDirectory *> tmpDirs; 	
 	TDirectory *jet = _of->file->mkdir("jet"+trail);
