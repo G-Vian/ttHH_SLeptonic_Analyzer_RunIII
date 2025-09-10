@@ -53,7 +53,7 @@ class objectPhysics {
 	return &_p4;
     }
     objectPhysics(){};
-    /*void scale(float JES, bool up = true){
+    void scale(float JES, bool up = true){
 	_pxOffset = JES * _p4.Px();
 	_pyOffset = JES * _p4.Py();
 	_pzOffset = JES * _p4.Pz();
@@ -73,7 +73,7 @@ class objectPhysics {
     }
     void addp4(const std::vector<float>& offset){
 	_p4.SetPxPyPzE(_p4.Px()+offset[0],_p4.Py()+offset[1],_p4.Pz()+offset[2], _p4.E()+offset[3]);
-    } */
+    } 
 
 //    void setYear(const int year){
 //	_year = year;
@@ -1010,7 +1010,7 @@ class ttHHanalyzer {
 
 	initHistograms();	
 	initTree();
-	initSys();
+	//initSys();
        	std::string dummy = "";
 	HypoComb = new tthHypothesisCombinatorics(std::string("data/blrbdtweights_80X_V4/weights_64.xml"), std::string(""));
     }
@@ -1235,7 +1235,7 @@ class ttHHanalyzer {
     float getSysJER(float sigma){
 	return _rand.Gaus(sigma/2., sigma);
     } 
-/*
+
     void initSys(){
 	TFile *_fJES = TFile::Open(_pathJES);
 	_hJES = (TH1D*)_fJES->Get(_nameJES);
@@ -1250,7 +1250,7 @@ class ttHHanalyzer {
 	for(int bind = 1; bind < nbinsx+1; bind++){
 	    _hSysbTagM->SetBinContent(bind, sysbTagM[bind-1]);
 	}
-    }*/
+    
 
     void getbJetEffMap(){ ////calcula mapa de eficiência de b-tag.
 	_hbJetEff->Divide(_hJetEff);
@@ -1267,7 +1267,7 @@ class ttHHanalyzer {
 	hCutFlow = new TH1F("cutflow", "N_{cutFlow}", cutflow.size(), 0, cutflow.size()-1);
 	hCutFlow_w = new TH1F("cutflow_w", "N_{weighted}", cutflow.size(), 0, cutflow.size()-1);
 //// here it just names the corrections
-/*	    
+	    
 	TString trail = "";
 	if(sysType == kbTag){
 	    if(up) trail += "btag_up";
@@ -1279,7 +1279,7 @@ class ttHHanalyzer {
 	    if(up) trail += "JER_up";
 	    else trail += "JER_down";
 	}
-*/
+
 	_of->file->cd();
 	std::vector<TDirectory *> tmpDirs; 	
 	TDirectory *jet = _of->file->mkdir("jet"+trail);
@@ -1513,7 +1513,7 @@ class ttHHanalyzer {
 	_of->file->cd();
 	std::vector<TDirectory*> tmpDirs;
 	TString trail = "";
-	/*if(sysType == kbTag){
+	if(sysType == kbTag){
 	    if(up) trail += "_btag_up";
 	    else trail += "_btag_down";
 	} else if(sysType == kJES){
@@ -1523,7 +1523,7 @@ class ttHHanalyzer {
 	    if(up) trail += "_JER_up";
 	    else trail += "_JER_down";
 	}
-	*/
+	
 	TDirectory *tree = _of->file->mkdir("Tree"+trail);
 	tree->cd();
 	tmpDirs.push_back(tree);
