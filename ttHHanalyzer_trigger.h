@@ -1509,11 +1509,11 @@ class ttHHanalyzer {
     float jetPT1, jetPT2, jetPT3, jetPT4, jetPT5, jetPT6, jetPT7, jetPT8, bjetPT1, bjetPT2, bjetPT3, bjetPT4, bjetPT5, bjetPT6, bjetPT7, bjetPT8, jetEta1, jetEta2, jetEta3, jetEta4, jetEta5, jetEta6, jetEta7, jetEta8, bjetEta1, bjetEta2, bjetEta3, bjetEta4, bjetEta5, bjetEta6, bjetEta7, bjetEta8, lightjetPT1, lightjetPT2, lightjetPT3, lightjetEta1, lightjetEta2, lightjetEta3, jetBTagDisc1, jetBTagDisc2, jetBTagDisc3, jetBTagDisc4, jetBTagDisc5, jetBTagDisc6, jetBTagDisc7, jetBTagDisc8, bjetBTagDisc1,bjetBTagDisc2, bjetBTagDisc3, bjetBTagDisc4, bjetBTagDisc5, bjetBTagDisc6, bjetBTagDisc7, bjetBTagDisc8, lightjetBTagDisc1, lightjetBTagDisc2, lightjetBTagDisc3, met, metPhi, metEta, averageDeltaRjj, averageDeltaRbb, averageDeltaEtajj, averageDeltaEtabb, minDeltaRjj, minDeltaRbb, maxDeltaEtajj, maxDeltaEtabb, jetAverageMass, bjetAverageMass, lightJetAverageMass, bjetAverageMassSqr, jetHT, bjetHT, lightjetHT, invMassHadW, invMassZ1, invMassZ2, invMassH1, invMassH2, chi2Higgs, chi2HiggsZ, chi2HadW, chi2Z, invMassHiggsZ1, invMassHiggsZ2, PTH1, PTH2, weight, aplanarity, sphericity, transSphericity, cValue, dValue, baplanarity, centralityjb, centralityjl, bsphericity, btransSphericity, bcValue, bdValue, leptonEta1, muonEta1, eleEta1, leptonPT1, muonPT1, elePT1, leptonEta2, muonEta2, eleEta2, leptonPT2, muonPT2, elePT2, diElectronMass, diMuonMass, leptonHT, ST, leptonCharge1, leptonCharge2, H0, H1, H2, H3, H4, bH0, bH1, bH2, bH3, bH4, R1, R2, R3, R4, bR1, bR2, bR3, bR4, maxPTmassjbb, maxPTmassjjj, minDeltaRpTbb, minDeltaRpTjj, minDeltaRpTbj, minDeltaRMassjj, minDeltaRMassbj, minDeltaRMassbb, averageDeltaRbj,  averageDeltaEtabj, minDeltaRbj, maxDeltaEtabj, bbjetHiggsMatched1, bbjetHiggsMatched2, bbjetHiggsMatched3, bbjetHiggsMatched4, bbjetHiggsMatched5, bbjetHiggsMatched6,bbjetHiggsMatcheddR1, bbjetHiggsMatcheddR2, bbjetHiggsMatcheddR3, bbjetHiggsMatcheddR4, bbjetHiggsMatcheddR5, bbjetHiggsMatcheddR6, bbjetMinChiHiggsIndex1, bbjetMinChiHiggsIndex2, bbjetMinChiHiggsIndex3, bbjetMinChiHiggsIndex4, bbjetMinChiHiggsIndex5, bbjetMinChiHiggsIndex6;
 /// O código adiciona um sufixo ao nome da árvore dependendo do sistemático ativo.
     int jetNumber, bjetNumber, lightjetNumber; 
-    /* void initTree(sysName sysType = noSys, bool up = false){
+    void initTree(sysName sysType = noSys, bool up = false){
 	_of->file->cd();
 	std::vector<TDirectory*> tmpDirs;
 	TString trail = "";
-	if(sysType == kbTag){
+	/*if(sysType == kbTag){
 	    if(up) trail += "_btag_up";
 	    else trail += "_btag_down";
 	} else if(sysType == kJES){
