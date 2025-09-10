@@ -44,7 +44,7 @@ extern std::map<std::string, float> cut;
 
 class objectPhysics { 
  public: 
-    enum lFlavor{kNA, kEle, kMuon}; 
+    enum lFlavor{kNA, kEle, kMuon}; ////genereic method to calculate energy correction
     explicit objectPhysics(const float pT, const float eta, const float phi, const float mass = 0){ 
 	_p4.SetPtEtaPhiM(pT, eta, phi, mass); 
     }
@@ -1061,7 +1061,7 @@ class ttHHanalyzer {
     std::string _DataOrMC, _year, _sampleName; 
     TH1D * _hJES, * _hbJES, *_hbJetEff, *_hJetEff, *_hSysbTagM ;
     TString _pathJES = "HL_YR_JEC.root";
-    TString _nameJES = "TOTAL_DIJET_AntiKt4EMTopo_YR2018";
+    TString _nameJES = "TOTAL_DIJET_AntiKt4EMTopo_YR2018";   ///here are the jets corrections histograms 
     TString _namebJES = "TOTAL_BJES_AntiKt4EMTopo_YR2018";
     static const int nHistsJets = 8;
     static const int nHistsbJets = 6;
@@ -1227,7 +1227,7 @@ class ttHHanalyzer {
 	return bTagValue;
 	}*/
 
-
+///abre histogramas de jes e prepara os objetos para armazenar e aplicar sistemáticas de JES/b-tag.
     float getSysJES(TH1* hSys, float pT){
 	return hSys->GetBinContent(hSys->FindBin(pT));
     } 
@@ -1252,7 +1252,7 @@ class ttHHanalyzer {
 	}
     }
 
-    void getbJetEffMap(){
+    void getbJetEffMap(){ ////calcula mapa de eficiência de b-tag.
 	_hbJetEff->Divide(_hJetEff);
     }
 
@@ -1266,7 +1266,7 @@ class ttHHanalyzer {
 
 	hCutFlow = new TH1F("cutflow", "N_{cutFlow}", cutflow.size(), 0, cutflow.size()-1);
 	hCutFlow_w = new TH1F("cutflow_w", "N_{weighted}", cutflow.size(), 0, cutflow.size()-1);
-
+//// here it just names the corrections
 	    
 	TString trail = "";
 	if(sysType == kbTag){
@@ -1507,7 +1507,7 @@ class ttHHanalyzer {
     
     TTree * _inputTree;
     float jetPT1, jetPT2, jetPT3, jetPT4, jetPT5, jetPT6, jetPT7, jetPT8, bjetPT1, bjetPT2, bjetPT3, bjetPT4, bjetPT5, bjetPT6, bjetPT7, bjetPT8, jetEta1, jetEta2, jetEta3, jetEta4, jetEta5, jetEta6, jetEta7, jetEta8, bjetEta1, bjetEta2, bjetEta3, bjetEta4, bjetEta5, bjetEta6, bjetEta7, bjetEta8, lightjetPT1, lightjetPT2, lightjetPT3, lightjetEta1, lightjetEta2, lightjetEta3, jetBTagDisc1, jetBTagDisc2, jetBTagDisc3, jetBTagDisc4, jetBTagDisc5, jetBTagDisc6, jetBTagDisc7, jetBTagDisc8, bjetBTagDisc1,bjetBTagDisc2, bjetBTagDisc3, bjetBTagDisc4, bjetBTagDisc5, bjetBTagDisc6, bjetBTagDisc7, bjetBTagDisc8, lightjetBTagDisc1, lightjetBTagDisc2, lightjetBTagDisc3, met, metPhi, metEta, averageDeltaRjj, averageDeltaRbb, averageDeltaEtajj, averageDeltaEtabb, minDeltaRjj, minDeltaRbb, maxDeltaEtajj, maxDeltaEtabb, jetAverageMass, bjetAverageMass, lightJetAverageMass, bjetAverageMassSqr, jetHT, bjetHT, lightjetHT, invMassHadW, invMassZ1, invMassZ2, invMassH1, invMassH2, chi2Higgs, chi2HiggsZ, chi2HadW, chi2Z, invMassHiggsZ1, invMassHiggsZ2, PTH1, PTH2, weight, aplanarity, sphericity, transSphericity, cValue, dValue, baplanarity, centralityjb, centralityjl, bsphericity, btransSphericity, bcValue, bdValue, leptonEta1, muonEta1, eleEta1, leptonPT1, muonPT1, elePT1, leptonEta2, muonEta2, eleEta2, leptonPT2, muonPT2, elePT2, diElectronMass, diMuonMass, leptonHT, ST, leptonCharge1, leptonCharge2, H0, H1, H2, H3, H4, bH0, bH1, bH2, bH3, bH4, R1, R2, R3, R4, bR1, bR2, bR3, bR4, maxPTmassjbb, maxPTmassjjj, minDeltaRpTbb, minDeltaRpTjj, minDeltaRpTbj, minDeltaRMassjj, minDeltaRMassbj, minDeltaRMassbb, averageDeltaRbj,  averageDeltaEtabj, minDeltaRbj, maxDeltaEtabj, bbjetHiggsMatched1, bbjetHiggsMatched2, bbjetHiggsMatched3, bbjetHiggsMatched4, bbjetHiggsMatched5, bbjetHiggsMatched6,bbjetHiggsMatcheddR1, bbjetHiggsMatcheddR2, bbjetHiggsMatcheddR3, bbjetHiggsMatcheddR4, bbjetHiggsMatcheddR5, bbjetHiggsMatcheddR6, bbjetMinChiHiggsIndex1, bbjetMinChiHiggsIndex2, bbjetMinChiHiggsIndex3, bbjetMinChiHiggsIndex4, bbjetMinChiHiggsIndex5, bbjetMinChiHiggsIndex6;
-
+/// O código adiciona um sufixo ao nome da árvore dependendo do sistemático ativo.
     int jetNumber, bjetNumber, lightjetNumber; 
     void initTree(sysName sysType = noSys, bool up = false){
 	_of->file->cd();
