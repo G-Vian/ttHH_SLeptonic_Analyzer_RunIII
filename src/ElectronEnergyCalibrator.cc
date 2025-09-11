@@ -1,8 +1,7 @@
 #include "ElectronEnergyCalibrator.h"
-#include <fstream>
-#include <variant>
 #include <cmath>
 #include <stdexcept>
+#include <variant>
 
 ElectronEnergyCalibrator::ElectronEnergyCalibrator(
     const std::string& jsonPath,
@@ -38,22 +37,15 @@ void ElectronEnergyCalibrator::applyElectronCalibration(
         double newPt = pt;
 
         if (isMC) {
-            // smearing for MC
             auto smearCorr = cset->at("ElectronSmear");
             std::vector<std::variant<int,double,std::string>> args;
             args.emplace_back(pt);
             args.emplace_back(r9);
             args.emplace_back(std::abs(eta));
 
-            auto result = smearCorr->evaluate(args);
-            if (std::holds_alternative<double>(result)) {
-                newPt = pt * std::get<double>(result);
-            } else {
-                throw std::runtime_error("Unexpected type returned by ElectronSmear correction");
-            }
+            newPt = pt * correction::any_cast<double>(smearCorr->evaluate(args));
 
         } else {
-            // scale for DATA
             auto scaleCorr = cset->at("ElectronScale");
             std::vector<std::variant<int,double,std::string>> args;
             args.emplace_back(runNumber);
@@ -62,12 +54,7 @@ void ElectronEnergyCalibrator::applyElectronCalibration(
             args.emplace_back(pt);
             args.emplace_back(static_cast<double>(gain));
 
-            auto result = scaleCorr->evaluate(args);
-            if (std::holds_alternative<double>(result)) {
-                newPt = std::get<double>(result);
-            } else {
-                throw std::runtime_error("Unexpected type returned by ElectronScale correction");
-            }
+            newPt = correction::any_cast<double>(scaleCorr->evaluate(args));
         }
 
         Electron_pt[i] = static_cast<float>(newPt);
