@@ -40,14 +40,34 @@ void ElectronEnergyCalibrator::applyElectronCalibration(
         if (isMC) {
             // smearing for MC
             auto smearCorr = cset->at("ElectronSmear");
-            std::vector<std::variant<int,double,std::string>> args = {pt, r9, std::abs(eta)};
-            double rho = std::get<double>(smearCorr->evaluate(args));
-            newPt = pt * rho;
+            std::vector<std::variant<int,double,std::string>> args;
+            args.emplace_back(pt);
+            args.emplace_back(r9);
+            args.emplace_back(std::abs(eta));
+
+            auto result = smearCorr->evaluate(args);
+            if (std::holds_alternative<double>(result)) {
+                newPt = pt * std::get<double>(result);
+            } else {
+                throw std::runtime_error("Unexpected type returned by ElectronSmear correction");
+            }
+
         } else {
             // scale for DATA
             auto scaleCorr = cset->at("ElectronScale");
-            std::vector<std::variant<int,double,std::string>> args = {runNumber, eta, r9, pt, static_cast<double>(gain)};
-            newPt = std::get<double>(scaleCorr->evaluate(args));
+            std::vector<std::variant<int,double,std::string>> args;
+            args.emplace_back(runNumber);
+            args.emplace_back(eta);
+            args.emplace_back(r9);
+            args.emplace_back(pt);
+            args.emplace_back(static_cast<double>(gain));
+
+            auto result = scaleCorr->evaluate(args);
+            if (std::holds_alternative<double>(result)) {
+                newPt = std::get<double>(result);
+            } else {
+                throw std::runtime_error("Unexpected type returned by ElectronScale correction");
+            }
         }
 
         Electron_pt[i] = static_cast<float>(newPt);
