@@ -1150,7 +1150,10 @@ class ttHHanalyzer {
 	float getMuonTrigSF(float eta, float pt);
 
 ///////////////////////////
+	// Electron calibrations
+	void applyElectronCalibration(event* thisEvent, unsigned int runNumber, long long eventNumber);
 
+//////////////////////////
 
     void diMotherReco(const TLorentzVector & dPar1p4,const TLorentzVector & dPar2p4,const TLorentzVector & dPar3p4,const TLorentzVector & dPar4p4, const float mother1mass, const float  mother2mass, float & _minChi2,float & _bbMassMin1, float & _bbMassMin2);
     void motherReco(const TLorentzVector & dPar1p4,const TLorentzVector & dPar2p4, const float mother1mass, float & _minChi2,float & _bbMassMin1);
