@@ -651,6 +651,38 @@ void ttHHanalyzer::analyze(event *thisEvent) {
     std::vector<objectLep*>* selectedElectrons = thisEvent->getSelElectrons();
     std::vector<objectLep*>* selectedMuons     = thisEvent->getSelMuons();
 
+    // ========================
+    // Aplica calibração em todos os elétrons do evento
+    // ========================
+    std::vector<float> Electron_pt_before;
+    std::vector<float> Electron_pt_after;
+
+    if (selectedElectrons && !selectedElectrons->empty()) {
+        std::vector<float> Electron_pt, Electron_eta, Electron_r9;
+        std::vector<int>   Electron_seedGain;
+
+        for (auto* ele : *selectedElectrons) {
+            float pt = ele->getp4()->Pt();
+            Electron_pt.push_back(pt);
+            Electron_pt_before.push_back(pt); // guarda o pT antes da calibração
+            Electron_eta.push_back(ele->getp4()->Eta());
+            Electron_r9.push_back(ele->getR9());       
+            Electron_seedGain.push_back(ele->getGain());
+        }
+
+        calibrator.applyElectronCalibration(
+            Electron_pt, Electron_eta, Electron_r9, Electron_seedGain,
+            thisEvent->runNumber, thisEvent->eventNumber
+        );
+
+        Electron_pt_after = Electron_pt; // guarda o pT depois da calibração
+
+        // Atualiza os objetos com os pT calibrados
+        for (size_t i = 0; i < selectedElectrons->size(); ++i) {
+            (*selectedElectrons)[i]->setPt(Electron_pt[i]);
+        }
+    }
+
     // Peso original antes de aplicar SFs
     float weight_before_SFs = _weight;
 
@@ -696,9 +728,15 @@ void ttHHanalyzer::analyze(event *thisEvent) {
 
         if (selectedElectrons && !selectedElectrons->empty()) {
             objectLep* ele = selectedElectrons->at(0);
+
+            float pt_before = Electron_pt_before.empty() ? ele->getp4()->Pt() : Electron_pt_before[0];
+            float pt_after  = Electron_pt_after.empty()  ? ele->getp4()->Pt() : Electron_pt_after[0];
+
             (*sf_log_file) << "Electron | η = " << ele->getp4()->Eta()
                            << ", φ = " << ele->getp4()->Phi()
-                           << ", pT = " << ele->getp4()->Pt()
+                           << ", pT before calibration = " << pt_before
+                           << ", pT after calibration = "  << pt_after
+                           << " | Calibration applied = " << (_DataOrMC=="MC" ? "Smearing (MC)" : "Scale Correction (Data)")
                            << " | Trigger SF = " << triggerSF
                            << " | Reco SF = " << recoSF
                            << " | ID SF = " << idSF
@@ -720,7 +758,7 @@ void ttHHanalyzer::analyze(event *thisEvent) {
 
     // Incrementa contador de evento no loop
     _entryInLoop++;
-
+}
 
 ///////////////////////////////////////
 
