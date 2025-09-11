@@ -19,7 +19,7 @@ public:
         const std::vector<int>& Electron_seedGain,
         unsigned int runNumber,
         long long eventNumber,
-        std::ofstream& logFile
+
     );
 
 private:
