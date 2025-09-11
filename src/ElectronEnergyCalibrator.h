@@ -18,8 +18,7 @@ public:
         const std::vector<float>& Electron_r9,
         const std::vector<int>& Electron_seedGain,
         unsigned int runNumber,
-        long long eventNumber,
-
+        long long eventNumber
     );
 
 private:
