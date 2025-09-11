@@ -74,7 +74,8 @@ CINT	:= rootcint
 #-----------------------------------------------------------------------
 # 	Define paths to be searched for C++ header files (#include ....)
 #-----------------------------------------------------------------------
-CPPFLAGS:= -I. -I$(incdir) -I$(libgsl) -I$(liblhad) -I$(srcdir) $(shell root-config --cflags) $(cppflags)
+CPPFLAGS:= -I. -I$(incdir) -I$(libgsl) -I$(liblhad) -I$(srcdir) -I$(HOME)/.local/lib/python3.6/site-packages/correctionlib/include $(shell root-config --cflags) $(cppflags)
+#^ included the correction lib location ^ 
 
 # 	Define compiler flags to be used
 #	-c		perform compilation step only 
