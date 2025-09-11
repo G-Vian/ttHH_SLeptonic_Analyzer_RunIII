@@ -1,7 +1,6 @@
 #include "ElectronEnergyCalibrator.h"
 #include <cmath>
 #include <stdexcept>
-#include <variant>
 
 ElectronEnergyCalibrator::ElectronEnergyCalibrator(
     const std::string& jsonPath,
@@ -38,23 +37,15 @@ void ElectronEnergyCalibrator::applyElectronCalibration(
 
         if (isMC) {
             auto smearCorr = cset->at("ElectronSmear");
-            std::vector<std::variant<int,double,std::string>> args;
-            args.emplace_back(pt);
-            args.emplace_back(r9);
-            args.emplace_back(std::abs(eta));
-
-            newPt = pt * correction::any_cast<double>(smearCorr->evaluate(args));
+            // Correctionlib aceita std::vector<correction::Variable>
+            std::vector<correction::Variable> args = {pt, r9, std::abs(eta)};
+            double scale = smearCorr->evaluate(args); // já retorna double
+            newPt = pt * scale;
 
         } else {
             auto scaleCorr = cset->at("ElectronScale");
-            std::vector<std::variant<int,double,std::string>> args;
-            args.emplace_back(runNumber);
-            args.emplace_back(eta);
-            args.emplace_back(r9);
-            args.emplace_back(pt);
-            args.emplace_back(static_cast<double>(gain));
-
-            newPt = correction::any_cast<double>(scaleCorr->evaluate(args));
+            std::vector<correction::Variable> args = {runNumber, eta, r9, pt, static_cast<double>(gain)};
+            newPt = scaleCorr->evaluate(args); // já retorna double
         }
 
         Electron_pt[i] = static_cast<float>(newPt);
