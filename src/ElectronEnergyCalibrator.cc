@@ -37,15 +37,14 @@ void ElectronEnergyCalibrator::applyElectronCalibration(
 
         if (isMC) {
             auto smearCorr = cset->at("ElectronSmear");
-            // Correctionlib aceita std::vector<correction::Variable>
-            std::vector<correction::Variable> args = {pt, r9, std::abs(eta)};
-            double scale = smearCorr->evaluate(args); // já retorna double
-            newPt = pt * scale;
+            // Correção: usar std::vector<correction::Variable::Type> que é std::variant<int,double,string>
+            std::vector<correction::Variable::Type> args = {pt, r9, std::abs(eta)};
+            newPt = pt * smearCorr->evaluate(args);
 
         } else {
             auto scaleCorr = cset->at("ElectronScale");
-            std::vector<correction::Variable> args = {runNumber, eta, r9, pt, static_cast<double>(gain)};
-            newPt = scaleCorr->evaluate(args); // já retorna double
+            std::vector<correction::Variable::Type> args = {runNumber, eta, r9, pt, static_cast<double>(gain)};
+            newPt = scaleCorr->evaluate(args);
         }
 
         Electron_pt[i] = static_cast<float>(newPt);
