@@ -652,6 +652,19 @@ void ttHHanalyzer::analyze(event *thisEvent) {
     std::vector<objectLep*>* selectedMuons     = thisEvent->getSelMuons();
 
     // ========================
+    // Preenche r9 e seedGain para cada elétron a partir do evento
+    // ========================
+    if (selectedElectrons && !selectedElectrons->empty()) {
+        for (size_t i = 0; i < selectedElectrons->size(); ++i) {
+            // Supondo que os arrays do evento tenham os valores corretos
+            // Substitua `thisEvent->Electron_r9[i]` e `thisEvent->Electron_seedGain[i]` 
+            // pelos nomes corretos no seu eventBuffer
+            selectedElectrons->at(i)->setR9(thisEvent->Electron_r9[i]);
+            selectedElectrons->at(i)->setGain(thisEvent->Electron_seedGain[i]);
+        }
+    }
+
+    // ========================
     // Aplica calibração em todos os elétrons do evento
     // ========================
     std::vector<float> Electron_pt_before;
@@ -666,7 +679,7 @@ void ttHHanalyzer::analyze(event *thisEvent) {
             Electron_pt.push_back(pt);
             Electron_pt_before.push_back(pt); // guarda o pT antes da calibração
             Electron_eta.push_back(ele->getp4()->Eta());
-            Electron_r9.push_back(ele->getR9());
+            Electron_r9.push_back(ele->getR9());       
             Electron_seedGain.push_back(ele->getGain());
         }
 
@@ -683,20 +696,17 @@ void ttHHanalyzer::analyze(event *thisEvent) {
         }
     }
 
-    // Peso original antes de aplicar SFs
+    // ========================
+    // Calcula SFs e aplica no peso do evento
+    // ========================
     float weight_before_SFs = _weight;
-
-    // SFs e incerteza
     float triggerSF = 1.0;
     float recoSF    = 1.0;
     float idSF      = 1.0;
     float totalSFUnc = 0.0;
-
     float trigSF_unc = 0.0, recoSF_unc = 0.0, idSF_unc = 0.0;
 
-    // ========================
-    // Processa lead lepton
-    // ========================
+    // Lead lepton
     if (selectedElectrons && !selectedElectrons->empty()) {
         objectLep* ele = selectedElectrons->at(0);
         triggerSF = getEleTrigSF(ele->getp4()->Eta(), ele->getp4()->Pt(), trigSF_unc);
@@ -723,8 +733,6 @@ void ttHHanalyzer::analyze(event *thisEvent) {
         (_entryInLoop % LOG_INTERVAL == 0 && hasLeadLepton)) {
 
         (*sf_log_file) << "=== Entry " << _entryInLoop << " ===\n";
-        (*sf_log_file) << "Run: "   << thisEvent->runNumber
-                       << " | Event: " << thisEvent->eventNumber << "\n";
         (*sf_log_file) << "Number of selected electrons: " << (selectedElectrons ? selectedElectrons->size() : 0) << "\n";
         (*sf_log_file) << "Number of selected muons: "     << (selectedMuons ? selectedMuons->size() : 0) << "\n";
 
@@ -758,7 +766,6 @@ void ttHHanalyzer::analyze(event *thisEvent) {
         }
     }
 
-    // Incrementa contador de evento no loop
     _entryInLoop++;
 }
 
