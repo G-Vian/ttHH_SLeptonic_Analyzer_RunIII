@@ -321,18 +321,23 @@ class objectLep : public objectPhysics {
 public:
     using objectPhysics::objectPhysics;
 
-    int charge;
-    float miniPFRelIso;
-    float pfRelIso03;
-    float pfRelIso04;
+    // Lepton properties
+    int charge = 0;
+    float miniPFRelIso = 0.0;
+    float pfRelIso03 = 0.0;
+    float pfRelIso04 = 0.0;
     lFlavor flavor;
 
-private:
+    // Electron-specific calibration variables
     float r9 = 0.0;
     int seedGain = 0;
 
+private:
+    TLorentzVector _p4;
+
 public:
     // Getters
+    TLorentzVector* getp4() { return &_p4; }
     float getR9() const { return r9; }
     int getGain() const { return seedGain; }
 
@@ -340,9 +345,31 @@ public:
     void setR9(float val) { r9 = val; }
     void setGain(int val) { seedGain = val; }
 
-    // Atualizar pT depois da calibração
-    void setPt(float val) { p4.SetPt(val); }
+    // Atualiza pT mantendo η, φ e massa
+    void setPt(float pT) { 
+        _p4.SetPtEtaPhiM(pT, _p4.Eta(), _p4.Phi(), _p4.M()); 
+    }
+
+    void setEta(float eta) { 
+        _p4.SetPtEtaPhiM(_p4.Pt(), eta, _p4.Phi(), _p4.M()); 
+    }
+
+    void setPhi(float phi) { 
+        _p4.SetPtEtaPhiM(_p4.Pt(), _p4.Eta(), phi, _p4.M()); 
+    }
+
+    void setMass(float mass) { 
+        _p4.SetPtEtaPhiM(_p4.Pt(), _p4.Eta(), _p4.Phi(), mass); 
+    }
+
+    // Inicializa o 4-vetor completo de uma vez
+    void setP4(float pT, float eta, float phi, float mass) {
+        _p4.SetPtEtaPhiM(pT, eta, phi, mass);
+    }
 };
+
+
+
 
 class event{
  public:
