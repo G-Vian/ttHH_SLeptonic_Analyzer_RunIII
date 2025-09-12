@@ -368,8 +368,7 @@ public:
     void setP4(float pT, float eta, float phi, float mass) {
         _p4.SetPtEtaPhiM(pT, eta, phi, mass);
     }
-};
-
+};///end of class object lep
 
 
 
@@ -379,6 +378,23 @@ class event{
     // IDs do evento
     unsigned int runNumber = 0;      // branch: Events/run
     unsigned long long eventNumber = 0; // branch: Events/event
+
+    // getter para vetor de elétrons
+    std::vector<objectLep*>* getElectrons() {
+        return &_electrons;
+    }
+
+    // getter const (se precisar em funções const)
+    const std::vector<objectLep*>* getElectrons() const {
+        return &_electrons;
+    }
+
+    // idem para muons se precisar
+    std::vector<objectLep*>* getMuons() {
+        return &_muons;
+    }
+
+
 
     struct evShapes{
 	float objectP;
@@ -1039,14 +1055,20 @@ class event{
     int _nVetoLepton = 0;
     TLorentzVector _sumJetp4, _sumSelJetp4, _sumSelbJetp4, _sumHadronicHiggsp4, _sumLightJetp4, _sumSelMuonp4, _sumSelElectronp4; 
 };
+///// end of class event
 
 class ttHHanalyzer {
  public:
     static const int LOG_INTERVAL = 1000;
     enum sysName { kJES, kJER, kbTag, noSys };
-	ttHHanalyzer(const std::string & cl, eventBuffer * ev, float weight = 1., bool systematics = false,
-	             std::string year = "0", std::string DataOrMC = "nothing", std::string sampleName = "nothing")
-	    : calibrator("data/ElectronCalib.json", DataOrMC, std::stoi(year))  // inicialização correta
+    ttHHanalyzer(const std::string & cl,
+                 eventBuffer * ev,
+                 float weight = 1.,
+                 bool systematics = false,
+                 std::string year = "0",
+                 std::string DataOrMC = "nothing",
+                 std::string sampleName = "nothing")
+        : calibrator("data/ElectronCalib.json", DataOrMC, std::stoi(year)) // inicialização correta
 	{
     _weight = weight;
     _initialWeight = weight;
