@@ -1,34 +1,32 @@
-#ifndef TTHHANALYZER_TRIGGER_H
-#define TTHHANALYZER_TRIGGER_H
+#ifndef ELECTRON_ENERGY_CALIBRATOR_H
+#define ELECTRON_ENERGY_CALIBRATOR_H
 
-#include "ElectronEnergyCalibrator.h"
 #include <vector>
 #include <string>
+#include <random>
+#include <memory>
+#include <correction.h>
+//#include "ttHHanalyzer_trigger.h"  // para LOG_INTERVAL, _DataOrMC, _year etc.
 
-class ttHHanalyzer {
+class ElectronEnergyCalibrator {
 public:
-    ttHHanalyzer(const std::string& inputFile,
-                 eventBuffer* buffer,
-                 float lumi,
-                 bool isMC,
-                 std::string year,
-                 std::string DataOrMC,
-                 std::string sampleName);
+    ElectronEnergyCalibrator(const std::string& jsonPath, const std::string& dataOrMC, int year);
 
-    void analyze(event* thisEvent);
+    void applyElectronCalibration(
+        std::vector<float>& Electron_pt,
+        const std::vector<float>& Electron_eta,
+        const std::vector<float>& Electron_r9,
+        const std::vector<int>& Electron_seedGain,
+        unsigned int runNumber,
+        long long eventNumber,
+        int isMC // flag para diferenciar MC (smearing) de DATA (scale)
+    );
 
 private:
-    ElectronEnergyCalibrator calibrator;
-
-    // Exemplo de vetores (se quiser usar diretos do evento):
-    std::vector<float> Electron_pt;
-    std::vector<float> Electron_eta;
-    std::vector<float> Electron_r9;
-    std::vector<int>   Electron_seedGain;
-
-    bool _isMC;
-    std::string _year;
-    std::string _DataOrMC;
+    std::unique_ptr<correction::CorrectionSet> cset;
+    std::string _dataOrMC;
+    int _year;
+    mutable std::mt19937 rng;
 };
 
 #endif
