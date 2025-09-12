@@ -994,6 +994,15 @@ class event{
 
 class ttHHanalyzer {
  public:
+    // Getters para run e event
+    unsigned int getRunNumber() const { return _runNumber; }
+    long long getEventNumber() const { return _eventNumber; }
+
+    // Setters
+    void setRunNumber(unsigned int val) { _runNumber = val; }
+    void setEventNumber(long long val) { _eventNumber = val; }
+
+
     static const int LOG_INTERVAL = 1000;
     enum sysName { kJES, kJER, kbTag, noSys };
     ttHHanalyzer(const std::string & cl, eventBuffer * ev, float weight = 1., bool systematics = false,
@@ -1055,6 +1064,11 @@ class ttHHanalyzer {
     bool _sys;
     float _weight;
     float _initialWeight;  //Trigger SF for electron (TSFel)
+////////////
+    unsigned int _runNumber = 0;
+    long long _eventNumber = 0;
+
+
 //    int _year;
 //    std::string _data;
 //    std::string _sample;
