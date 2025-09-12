@@ -11,6 +11,8 @@
 #include "TFile.h"
 #include <iterator>
 #include <string>  
+#include "ElectronEnergyCalibrator.h" //pt correction& smearing
+
 //#include "EventShape/Class/src/EventShape.cc"
 #include "EventShape/Class/interface/EventShape.h"
 #include <TLorentzVector.h>
