@@ -652,6 +652,18 @@ void ttHHanalyzer::analyze(event *thisEvent) {
     std::vector<objectLep*>* selectedMuons     = thisEvent->getSelMuons();
 
     // ========================
+    // Popula r9 e seedGain para cada elétron
+    // ========================
+    if (selectedElectrons && !selectedElectrons->empty()) {
+        for (size_t i = 0; i < selectedElectrons->size(); ++i) {
+            objectLep* ele = selectedElectrons->at(i);
+            // Preenche valores do evento (assumindo que _electrons[i] existe)
+            ele->setR9(thisEvent->_electrons[i].r9);          
+            ele->setGain(thisEvent->_electrons[i].seedGain);
+        }
+    }
+
+    // ========================
     // Aplica calibração em todos os elétrons do evento
     // ========================
     std::vector<float> Electron_pt_before;
@@ -666,14 +678,13 @@ void ttHHanalyzer::analyze(event *thisEvent) {
             Electron_pt.push_back(pt);
             Electron_pt_before.push_back(pt); // guarda o pT antes da calibração
             Electron_eta.push_back(ele->getp4()->Eta());
-            Electron_r9.push_back(ele->getR9());
+            Electron_r9.push_back(ele->getR9());       
             Electron_seedGain.push_back(ele->getGain());
         }
 
         calibrator.applyElectronCalibration(
             Electron_pt, Electron_eta, Electron_r9, Electron_seedGain,
-            thisEvent->runNumber, thisEvent->eventNumber,
-            (_DataOrMC == "MC" ? 1 : 0)   // isMC flag
+            thisEvent->runNumber, thisEvent->eventNumber
         );
 
         Electron_pt_after = Electron_pt; // guarda o pT depois da calibração
