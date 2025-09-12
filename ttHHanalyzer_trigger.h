@@ -316,21 +316,40 @@ class objectLightJet:public objectPhysics {
     using objectPhysics::objectPhysics;
     };
 
-class objectLep:public objectPhysics {
- public:
+////added more quantities for the correction lib
+class objectLep : public objectPhysics {
+public:
     using objectPhysics::objectPhysics;
+
     int charge;
     float miniPFRelIso;
     float pfRelIso03;
     float pfRelIso04;
     lFlavor flavor;
+
+private:
+    float r9 = 0.0;
+    int seedGain = 0;
+
+public:
+    // Getters
+    float getR9() const { return r9; }
+    int getGain() const { return seedGain; }
+
+    // Setters
+    void setR9(float val) { r9 = val; }
+    void setGain(int val) { seedGain = val; }
+
+    // Atualizar pT depois da calibração
+    void setPt(float val) { p4.SetPt(val); }
 };
 
 class event{
  public:
-    event(){
-
-    }
+    event(){    }
+    // IDs do evento
+    unsigned int runNumber = 0;      // branch: Events/run
+    unsigned long long eventNumber = 0; // branch: Events/event
 
     struct evShapes{
 	float objectP;
