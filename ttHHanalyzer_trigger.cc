@@ -666,7 +666,7 @@ void ttHHanalyzer::analyze(event *thisEvent) {
             Electron_pt.push_back(pt);
             Electron_pt_before.push_back(pt); // guarda o pT antes da calibração
             Electron_eta.push_back(ele->getp4()->Eta());
-            Electron_r9.push_back(ele->getR9());       
+            Electron_r9.push_back(ele->getR9());
             Electron_seedGain.push_back(ele->getGain());
         }
 
@@ -723,6 +723,8 @@ void ttHHanalyzer::analyze(event *thisEvent) {
         (_entryInLoop % LOG_INTERVAL == 0 && hasLeadLepton)) {
 
         (*sf_log_file) << "=== Entry " << _entryInLoop << " ===\n";
+        (*sf_log_file) << "Run: "   << thisEvent->runNumber
+                       << " | Event: " << thisEvent->eventNumber << "\n";
         (*sf_log_file) << "Number of selected electrons: " << (selectedElectrons ? selectedElectrons->size() : 0) << "\n";
         (*sf_log_file) << "Number of selected muons: "     << (selectedMuons ? selectedMuons->size() : 0) << "\n";
 
