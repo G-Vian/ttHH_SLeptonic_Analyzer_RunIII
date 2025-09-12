@@ -1044,20 +1044,19 @@ class ttHHanalyzer {
  public:
     static const int LOG_INTERVAL = 1000;
     enum sysName { kJES, kJER, kbTag, noSys };
-    ttHHanalyzer(const std::string & cl, eventBuffer * ev, float weight = 1., bool systematics = false,
-                 std::string year= "nothing", std::string DataOrMC = "nothing", std::string sampleName = "nothing")
-        : calibrator("data/ElectronCalib.json", DataOrMC, std::stoi(year))  // <<< inicializa aqui
-    {
-        _weight = weight;
-        _initialWeight = weight;
-        _ev = ev;
-        _cl = cl;
-        _sys = systematics;
-        _of = new outputFile(_cl);
-        _year = year;
-        _DataOrMC = DataOrMC;
-        _sampleName = sampleName;
-
+	ttHHanalyzer(const std::string & cl, eventBuffer * ev, float weight = 1., bool systematics = false,
+	             std::string year = "0", std::string DataOrMC = "nothing", std::string sampleName = "nothing")
+	    : calibrator("data/ElectronCalib.json", DataOrMC, std::stoi(year))  // inicialização correta
+	{
+    _weight = weight;
+    _initialWeight = weight;
+    _ev = ev;
+    _cl = cl;
+    _sys = systematics;
+    _of = new outputFile(_cl);
+    _year = year;
+    _DataOrMC = DataOrMC;
+    _sampleName = sampleName;
 	initHistograms();	
 	initTree();
 	initSys();
