@@ -652,15 +652,14 @@ void ttHHanalyzer::analyze(event *thisEvent) {
     std::vector<objectLep*>* selectedMuons     = thisEvent->getSelMuons();
 
     // ========================
-    // Preenche r9 e seedGain para cada elétron a partir do evento
+    // Popula r9 e seedGain para cada elétron
     // ========================
     if (selectedElectrons && !selectedElectrons->empty()) {
         for (size_t i = 0; i < selectedElectrons->size(); ++i) {
-            // Supondo que os arrays do evento tenham os valores corretos
-            // Substitua `thisEvent->Electron_r9[i]` e `thisEvent->Electron_seedGain[i]` 
-            // pelos nomes corretos no seu eventBuffer
-            selectedElectrons->at(i)->setR9(thisEvent->Electron_r9[i]);
-            selectedElectrons->at(i)->setGain(thisEvent->Electron_seedGain[i]);
+            objectLep* ele = selectedElectrons->at(i);
+            // Preenche valores do evento (assumindo que _electrons[i] existe)
+            ele->setR9(thisEvent->_electrons[i].r9);          
+            ele->setGain(thisEvent->_electrons[i].seedGain);
         }
     }
 
@@ -697,22 +696,24 @@ void ttHHanalyzer::analyze(event *thisEvent) {
     }
 
     // ========================
-    // Calcula SFs e aplica no peso do evento
+    // SFs e incerteza
     // ========================
     float weight_before_SFs = _weight;
+
     float triggerSF = 1.0;
     float recoSF    = 1.0;
     float idSF      = 1.0;
     float totalSFUnc = 0.0;
     float trigSF_unc = 0.0, recoSF_unc = 0.0, idSF_unc = 0.0;
 
-    // Lead lepton
+    // ========================
+    // Processa lead lepton
+    // ========================
     if (selectedElectrons && !selectedElectrons->empty()) {
         objectLep* ele = selectedElectrons->at(0);
         triggerSF = getEleTrigSF(ele->getp4()->Eta(), ele->getp4()->Pt(), trigSF_unc);
         recoSF    = getEleRecoSF(ele->getp4()->Eta(), ele->getp4()->Pt(), recoSF_unc);
         idSF      = getEleIDSF(ele->getp4()->Eta(), ele->getp4()->Phi(), ele->getp4()->Pt(), idSF_unc);
-
         totalSFUnc = sqrt(trigSF_unc*trigSF_unc + recoSF_unc*recoSF_unc + idSF_unc*idSF_unc);
         _weight *= (triggerSF * recoSF * idSF);
     }
@@ -767,7 +768,8 @@ void ttHHanalyzer::analyze(event *thisEvent) {
     }
 
     _entryInLoop++;
-}
+
+
 
 ///////////////////////////////////////
 
