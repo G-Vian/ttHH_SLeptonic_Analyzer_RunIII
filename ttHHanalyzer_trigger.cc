@@ -665,20 +665,20 @@ void ttHHanalyzer::analyze(event *thisEvent) {
         for (auto* ele : *selectedElectrons) {
             float pt = ele->getp4()->Pt();
             Electron_pt.push_back(pt);
-            Electron_pt_before.push_back(pt); // guarda o pT antes da calibração
+            Electron_pt_before.push_back(pt); // guarda pT antes da calibração
             Electron_eta.push_back(ele->getp4()->Eta());
             Electron_r9.push_back(ele->getR9());
             Electron_seedGain.push_back(ele->getGain());
         }
 
-        // Aplica calibração (passando isMC como flag)
+        // Aplica calibração usando o calibrator (EOS paths incorporados)
         calibrator.applyElectronCalibration(
             Electron_pt, Electron_eta, Electron_r9, Electron_seedGain,
             thisEvent->runNumber, thisEvent->eventNumber,
             (_DataOrMC == "MC" ? 1 : 0)
         );
 
-        Electron_pt_after = Electron_pt; // guarda o pT depois da calibração
+        Electron_pt_after = Electron_pt; // guarda pT depois da calibração
 
         // Atualiza os objetos com os pT calibrados
         for (size_t i = 0; i < selectedElectrons->size(); ++i) {
@@ -730,7 +730,6 @@ void ttHHanalyzer::analyze(event *thisEvent) {
 
         if (selectedElectrons && !selectedElectrons->empty()) {
             objectLep* ele = selectedElectrons->at(0);
-
             float pt_before = Electron_pt_before.empty() ? ele->getp4()->Pt() : Electron_pt_before[0];
             float pt_after  = Electron_pt_after.empty()  ? ele->getp4()->Pt() : Electron_pt_after[0];
 
@@ -759,7 +758,6 @@ void ttHHanalyzer::analyze(event *thisEvent) {
     }
 
     _entryInLoop++;
-
 
 
 
