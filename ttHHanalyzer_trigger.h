@@ -1044,9 +1044,25 @@ class ttHHanalyzer {
  public:
     static const int LOG_INTERVAL = 1000;
     enum sysName { kJES, kJER, kbTag, noSys };
-	ttHHanalyzer(const std::string & cl, eventBuffer * ev, float weight = 1., bool systematics = false,
-	             std::string year = "0", std::string DataOrMC = "nothing", std::string sampleName = "nothing")
-	    : calibrator("data/ElectronCalib.json", DataOrMC, std::stoi(year))  // inicialização correta
+ttHHanalyzer(const std::string & cl, eventBuffer * ev, float weight = 1., bool systematics = false,
+             std::string year = "0", std::string DataOrMC = "nothing", std::string sampleName = "nothing")
+{
+    std::string jsonPath;
+
+    if (year == "2022") {
+        jsonPath = "/eos/cms/store/group/phys_egamma/ScaleFactors/Data2022/ForRe-recoBCD/SS/electronSS_EtDependent.json";
+    } else if (year == "2022EE") {
+        jsonPath = "/eos/cms/store/group/phys_egamma/ScaleFactors/Data2022/ForRe-recoE+PromptFG/SS/electronSS_EtDependent.json";
+    } else if (year == "2023") {
+        jsonPath = "/eos/cms/store/group/phys_egamma/ScaleFactors/Data2023/ForPrompt23C/SS/electronSS_EtDependent.json";
+    } else if (year == "2023B" || year == "2024") {
+        jsonPath = "/eos/cms/store/group/phys_egamma/ScaleFactors/Data2023/ForPrompt23D/SS/electronSS_EtDependent.json";
+    } else {
+        std::cerr << "[ttHHanalyzer] Ano não suportado para calibração de elétrons: " << year << std::endl;
+        throw std::runtime_error("Ano não suportado para calibração de elétrons");
+    }
+
+    calibrator = ElectronEnergyCalibrator(jsonPath, DataOrMC, std::stoi(year)); // inicialização correta
 	{
     _weight = weight;
     _initialWeight = weight;
@@ -1097,7 +1113,7 @@ class ttHHanalyzer {
 
  private: 
 
-    ElectronEnergyCalibrator calibrator;
+    //ElectronEnergyCalibrator calibrator;
 
     std::unique_ptr<std::ofstream> sf_summary_log_file;  // Log para summary SF
     std::unique_ptr<std::ofstream> event_log_file; // logs
