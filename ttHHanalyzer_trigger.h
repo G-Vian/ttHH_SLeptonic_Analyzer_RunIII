@@ -1044,35 +1044,27 @@ class ttHHanalyzer {
  public:
     static const int LOG_INTERVAL = 1000;
     enum sysName { kJES, kJER, kbTag, noSys };
-ttHHanalyzer(const std::string & cl, eventBuffer * ev, float weight = 1., bool systematics = false,
-             std::string year = "0", std::string DataOrMC = "nothing", std::string sampleName = "nothing")
+ttHHanalyzer::ttHHanalyzer(const std::string & cl,
+                           eventBuffer * ev,
+                           float weight,
+                           bool systematics,
+                           std::string year,
+                           std::string DataOrMC,
+                           std::string sampleName)
 {
-    std::string jsonPath;
+    // Inicialização do calibrador de elétrons (a lógica de escolha de JSON está dentro dele)
+    calibrator = ElectronEnergyCalibrator(year, DataOrMC);
 
-    if (year == "2022") {
-        jsonPath = "/eos/cms/store/group/phys_egamma/ScaleFactors/Data2022/ForRe-recoBCD/SS/electronSS_EtDependent.json";
-    } else if (year == "2022EE") {
-        jsonPath = "/eos/cms/store/group/phys_egamma/ScaleFactors/Data2022/ForRe-recoE+PromptFG/SS/electronSS_EtDependent.json";
-    } else if (year == "2023") {
-        jsonPath = "/eos/cms/store/group/phys_egamma/ScaleFactors/Data2023/ForPrompt23C/SS/electronSS_EtDependent.json";
-    } else if (year == "2023B" || year == "2024") {
-        jsonPath = "/eos/cms/store/group/phys_egamma/ScaleFactors/Data2023/ForPrompt23D/SS/electronSS_EtDependent.json";
-    } else {
-        std::cerr << "[ttHHanalyzer] Ano não suportado para calibração de elétrons: " << year << std::endl;
-        throw std::runtime_error("Ano não suportado para calibração de elétrons");
-    }
-
-    calibrator = ElectronEnergyCalibrator(jsonPath, DataOrMC, std::stoi(year)); // inicialização correta
-	{
-    _weight = weight;
+    // Inicializações padrão
+    _weight        = weight;
     _initialWeight = weight;
-    _ev = ev;
-    _cl = cl;
-    _sys = systematics;
-    _of = new outputFile(_cl);
-    _year = year;
-    _DataOrMC = DataOrMC;
-    _sampleName = sampleName;
+    _ev            = ev;
+    _cl            = cl;
+    _sys           = systematics;
+    _of            = new outputFile(_cl);
+    _year          = year;
+    _DataOrMC      = DataOrMC;
+    _sampleName    = sampleName;
 	initHistograms();	
 	initTree();
 	initSys();
