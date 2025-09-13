@@ -1,31 +1,30 @@
 #include "ElectronEnergyCalibrator.h"
-#include <cmath>
 #include <stdexcept>
 
-ElectronEnergyCalibrator::ElectronEnergyCalibrator(const std::string& dataOrMC, int year)
-    : _dataOrMC(dataOrMC), _year(year), rng(std::random_device{}())
+ElectronEnergyCalibrator::ElectronEnergyCalibrator(const std::string& year, const std::string& dataOrMC)
+    : _year(year), _dataOrMC(dataOrMC), rng(std::random_device{}())
 {
     std::string jsonPath = getElectronJSONPath();
     cset = correction::CorrectionSet::from_file(jsonPath);
 }
 
-// Retorna o caminho absoluto do JSON dependendo do ano
 std::string ElectronEnergyCalibrator::getElectronJSONPath() const {
-    if (_year == 2023) {
-        if (_dataOrMC == "MC") {
-            // MC: smearing
-            return "/eos/cms/store/group/phys_egamma/ScaleFactors/Data2023/ForPrompt23C/SS/electronSS_EtDependent.json";
-        } else {
-            // DATA: scale
-            return "/eos/cms/store/group/phys_egamma/ScaleFactors/Data2023/ForPrompt23C/SS/electronSS_EtDependent.json";
-        }
-    }
-    else if (_year == 2024) {
-        return "/eos/cms/store/group/phys_egamma/ScaleFactors/Data2024/SS/electronSS_EtDependent_v1.json";
-    }
-    else if (_year == 2022) {
-        return "/eos/cms/store/group/phys_egamma/ScaleFactors/Data2022/ForPrompt23C/SS/electronSS_EtDependent.json";
-    }
+    if (_year == "2022") {
+        return (_dataOrMC == "MC") 
+            ? "/eos/cms/store/group/phys_egamma/ScaleFactors/Data2022/MC/electronSS_EtDependent.json"
+            : "/eos/cms/store/group/phys_egamma/ScaleFactors/Data2022/SS/electronSS_EtDependent.json";
+    } 
+    else if (_year == "2022EE") {
+        return "/eos/cms/store/group/phys_egamma/ScaleFactors/Data2022/ForRe-recoE+PromptFG/SS/electronSS_EtDependent.json";
+    } 
+    else if (_year == "2023") {
+        return (_dataOrMC == "MC")
+            ? "/eos/cms/store/group/phys_egamma/ScaleFactors/Data2023/MC/electronSS_EtDependent.json"
+            : "/eos/cms/store/group/phys_egamma/ScaleFactors/Data2023/SS/electronSS_EtDependent.json";
+    } 
+    else if (_year == "2023B" || _year == "2024") {
+        return "/eos/cms/store/group/phys_egamma/ScaleFactors/Data2023/ForPrompt23D/SS/electronSS_EtDependent.json";
+    } 
     else {
         throw std::runtime_error("Year not supported for electron corrections!");
     }
