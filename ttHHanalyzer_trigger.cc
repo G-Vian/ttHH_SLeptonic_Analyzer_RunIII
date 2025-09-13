@@ -661,33 +661,32 @@ void ttHHanalyzer::analyze(event *thisEvent) {
         std::vector<float> Electron_pt, Electron_eta, Electron_r9;
         std::vector<int>   Electron_seedGain;
 
-        // Preenche vetores para calibração
         for (auto* ele : *selectedElectrons) {
             float pt = ele->getp4()->Pt();
             Electron_pt.push_back(pt);
-            Electron_pt_before.push_back(pt); // guarda pT antes da calibração
+            Electron_pt_before.push_back(pt);
             Electron_eta.push_back(ele->getp4()->Eta());
             Electron_r9.push_back(ele->getR9());
             Electron_seedGain.push_back(ele->getGain());
         }
 
-        // Aplica calibração usando o calibrator (EOS paths incorporados)
+        // Aplica calibração usando o calibrator já configurado com o ano correto
         calibrator.applyElectronCalibration(
             Electron_pt, Electron_eta, Electron_r9, Electron_seedGain,
             thisEvent->runNumber, thisEvent->eventNumber,
             (_DataOrMC == "MC" ? 1 : 0)
         );
 
-        Electron_pt_after = Electron_pt; // guarda pT depois da calibração
+        Electron_pt_after = Electron_pt;
 
-        // Atualiza os objetos com os pT calibrados
+        // Atualiza objetos com os pT calibrados
         for (size_t i = 0; i < selectedElectrons->size(); ++i) {
             (*selectedElectrons)[i]->setPt(Electron_pt[i]);
         }
     }
 
     // ========================
-    // SFs e incerteza
+    // Scale factors e incerteza
     // ========================
     float weight_before_SFs = _weight;
 
@@ -697,18 +696,15 @@ void ttHHanalyzer::analyze(event *thisEvent) {
     float totalSFUnc = 0.0;
     float trigSF_unc = 0.0, recoSF_unc = 0.0, idSF_unc = 0.0;
 
-    // ========================
-    // Processa lead lepton
-    // ========================
     if (selectedElectrons && !selectedElectrons->empty()) {
         objectLep* ele = selectedElectrons->at(0);
         triggerSF = getEleTrigSF(ele->getp4()->Eta(), ele->getp4()->Pt(), trigSF_unc);
         recoSF    = getEleRecoSF(ele->getp4()->Eta(), ele->getp4()->Pt(), recoSF_unc);
         idSF      = getEleIDSF(ele->getp4()->Eta(), ele->getp4()->Phi(), ele->getp4()->Pt(), idSF_unc);
-        totalSFUnc = sqrt(trigSF_unc*trigSF_unc + recoSF_unc*recoSF_unc + idSF_unc*idSF_unc);
+        totalSFUnc = std::sqrt(trigSF_unc*trigSF_unc + recoSF_unc*recoSF_unc + idSF_unc*idSF_unc);
         _weight *= (triggerSF * recoSF * idSF);
-    }
-    else if (selectedMuons && !selectedMuons->empty()) {
+
+    } else if (selectedMuons && !selectedMuons->empty()) {
         objectLep* mu = selectedMuons->at(0);
         triggerSF = getMuonTrigSF(mu->getp4()->Eta(), mu->getp4()->Pt());
         totalSFUnc = 0.0;
@@ -721,15 +717,14 @@ void ttHHanalyzer::analyze(event *thisEvent) {
     bool hasLeadLepton = (selectedElectrons && !selectedElectrons->empty()) || 
                          (selectedMuons && !selectedMuons->empty());
 
-    if (sf_log_file && sf_log_file->is_open() && 
-        (_entryInLoop % LOG_INTERVAL == 0 && hasLeadLepton)) {
-
+    if (sf_log_file && sf_log_file->is_open() && (_entryInLoop % LOG_INTERVAL == 0 && hasLeadLepton)) {
         (*sf_log_file) << "=== Entry " << _entryInLoop << " ===\n";
         (*sf_log_file) << "Number of selected electrons: " << (selectedElectrons ? selectedElectrons->size() : 0) << "\n";
         (*sf_log_file) << "Number of selected muons: "     << (selectedMuons ? selectedMuons->size() : 0) << "\n";
 
         if (selectedElectrons && !selectedElectrons->empty()) {
             objectLep* ele = selectedElectrons->at(0);
+
             float pt_before = Electron_pt_before.empty() ? ele->getp4()->Pt() : Electron_pt_before[0];
             float pt_after  = Electron_pt_after.empty()  ? ele->getp4()->Pt() : Electron_pt_after[0];
 
@@ -745,8 +740,7 @@ void ttHHanalyzer::analyze(event *thisEvent) {
                            << " | Weight after = " << _weight
                            << " | Total SF Uncertainty = " << totalSFUnc
                            << "\n";
-        }
-        else if (selectedMuons && !selectedMuons->empty()) {
+        } else if (selectedMuons && !selectedMuons->empty()) {
             objectLep* mu = selectedMuons->at(0);
             (*sf_log_file) << "Muon | η = " << mu->getp4()->Eta()
                            << ", pT = " << mu->getp4()->Pt()
@@ -758,6 +752,7 @@ void ttHHanalyzer::analyze(event *thisEvent) {
     }
 
     _entryInLoop++;
+
 
 
 
