@@ -9,10 +9,10 @@
 
 class ElectronEnergyCalibrator {
 public:
-    // Constructor: recebe caminho para JSON, tipo de dado (Data ou MC) e ano
-    ElectronEnergyCalibrator(const std::string& jsonPath, const std::string& dataOrMC, int year);
+    // Construtor: dataOrMC = "DATA" ou "MC", year = 2022, 2023, 2024
+    ElectronEnergyCalibrator(const std::string& dataOrMC, int year);
 
-    // Aplica calibração nos elétrons
+    // Aplica calibração nos vetores de elétrons
     void applyElectronCalibration(
         std::vector<float>& Electron_pt,
         const std::vector<float>& Electron_eta,
@@ -20,14 +20,16 @@ public:
         const std::vector<int>& Electron_seedGain,
         unsigned int runNumber,
         long long eventNumber,
-        int isMC
+        int isMC // 1 para MC (smearing), 0 para DATA (scale)
     );
 
 private:
     std::unique_ptr<correction::CorrectionSet> cset;
     std::string _dataOrMC;
     int _year;
-    mutable std::mt19937 rng; // gerador aleatório para smearing MC
+    mutable std::mt19937 rng;
+
+    std::string getElectronJSONPath() const;
 };
 
 #endif
