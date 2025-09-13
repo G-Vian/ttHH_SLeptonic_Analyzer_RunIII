@@ -1,5 +1,4 @@
-#ifndef ELECTRON_ENERGY_CALIBRATOR_H
-#define ELECTRON_ENERGY_CALIBRATOR_H
+#pragma once
 
 #include <vector>
 #include <string>
@@ -29,7 +28,7 @@ private:
     int _year;
     mutable std::mt19937 rng;
 
+    // Retorna o caminho absoluto do JSON dependendo do ano e data/MC
     std::string getElectronJSONPath() const;
 };
 
-#endif
