@@ -1046,24 +1046,35 @@ public:
     enum sysName { kJES, kJER, kbTag, noSys };
 
     // Construtor
-    ttHHanalyzer(const std::string & cl, eventBuffer * ev, float weight = 1., bool systematics = false,
- 		  std::string runYear = "nothing", std::string DataOrMC = "nothing", std::string sampleName = "nothing"){
-	calibrator(year, DataOrMC),  // ✅ inicialização correta
-	_weight = weight;
-	_ev = ev;
-	_cl = cl;
-	_sys = systematics;
-	_of = new outputFile(_cl);
-	_runYear = runYear;
-	_DataOrMC = DataOrMC;
-	_sampleName = sampleName;
+ttHHanalyzer(const std::string & cl,
+             eventBuffer * ev,
+             float weight = 1.,
+             bool systematics = false,
+             std::string runYear = "nothing",
+             std::string DataOrMC = "nothing",
+             std::string sampleName = "nothing")
+    : calibrator(runYear, DataOrMC),   // ✅ constrói corretamente o calibrador
+      _weight(weight),                 // ✅ inicializa diretamente
+      _initialWeight(weight),          // se tiver esse membro
+      _ev(ev),
+      _cl(cl),
+      _sys(systematics),
+      _of(new outputFile(cl)),         // já cria direto
+      _runYear(runYear),
+      _DataOrMC(DataOrMC),
+      _sampleName(sampleName)
+{
+    // Corpo do construtor (apenas lógica, sem atribuições de membros)
+    initHistograms();
+    initTree();
+    initSys();
 
-	initHistograms();	
-	initTree();
-	initSys();
-       	std::string dummy = "";
-	HypoComb = new tthHypothesisCombinatorics(std::string("data/blrbdtweights_80X_V4/weights_64.xml"), std::string(""));
-    }
+    std::string dummy = "";
+    HypoComb = new tthHypothesisCombinatorics(
+        "data/blrbdtweights_80X_V4/weights_64.xml",
+        ""
+    );
+}
     // Métodos públicos
     void createObjects(event*, sysName, bool);
     bool selectObjects(event*);
