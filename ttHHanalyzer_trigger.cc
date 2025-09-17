@@ -361,9 +361,79 @@ void ttHHanalyzer::createObjects(event * thisEvent, sysName sysType, bool up){
     }
     if(doLog) (*event_log_file) << "Boosted jets selecionados: " << nBoostedJets << ", Hadronic Higgs: " << nHadronicHiggs << std::endl;
 
-		
-	// === Calibração dos elétrons antes da seleção ===
-	// --- Preparação ---
+			
+	// ========================
+	// Calibração dos elétrons antes da seleção
+	// ========================
+	std::vector<float> Electron_pt_before;
+	std::vector<float> Electron_pt_after;
+	
+	bool isMC = (_DataOrMC == "MC");
+	std::vector<float> Electron_pt, Electron_eta, Electron_r9;
+	std::vector<int>   Electron_seedGain;
+	
+	// Salva o pt antigo antes da calibração
+	for (size_t i = 0; i < ele.size(); ++i) {
+	    ele[i].pt_old = ele[i].pt;
+	    Electron_pt.push_back(ele[i].pt);
+	    Electron_pt_before.push_back(ele[i].pt);
+	    Electron_eta.push_back(ele[i].eta);
+	    Electron_r9.push_back(ele[i].r9);
+	    Electron_seedGain.push_back(ele[i].seedGain);
+	}
+	
+	// Aplica calibração
+	calibrator.applyElectronCalibration(
+	    Electron_pt,
+	    Electron_eta,
+	    Electron_r9,
+	    Electron_seedGain,
+	    thisEvent->runNumber,
+	    thisEvent->eventNumber,
+	    isMC
+	);
+	
+	// Atualiza os objetos e salva o pt após calibração
+	for (size_t i = 0; i < ele.size(); ++i) {
+	    ele[i].pt = Electron_pt[i];
+	    Electron_pt_after.push_back(Electron_pt[i]);
+	}
+	
+	// ========================
+	// Recalcula MET após calibração dos elétrons
+	// ========================
+	{
+	    float met_px = _MET->Px();
+	    float met_py = _MET->Py();
+	
+	    for (size_t i = 0; i < ele.size(); ++i) {
+	        float oldPx = ele[i].pt_old * cos(ele[i].phi);
+	        float oldPy = ele[i].pt_old * sin(ele[i].phi);
+	        met_px += oldPx;
+	        met_py += oldPy;
+	
+	        float newPx = ele[i].pt * cos(ele[i].phi);
+	        float newPy = ele[i].pt * sin(ele[i].phi);
+	        met_px -= newPx;
+	        met_py -= newPy;
+	    }
+	
+	    objectMET* newMET = new objectMET();
+	    newMET->SetPxPyPzE(met_px, met_py, 0., sqrt(met_px*met_px + met_py*met_py));
+	    thisEvent->setMET(newMET);
+	}
+	
+	// ========================
+	// Print de debug no terminal
+	// ========================
+	if (!ele.empty()) {
+	    std::cout << "[DEBUG] Primeiro elétron: pT = " << ele[0].pt << ", eta = " << ele[0].eta << ", phi = " << ele[0].phi << std::endl;
+	}
+	if (!muonT.empty()) {
+	    std::cout << "[DEBUG] Primeiro múon: pT = " << muonT[0].pt << ", eta = " << muonT[0].eta << ", phi = " << muonT[0].phi << std::endl;
+	}
+
+	
 	// === Lepton Leading Selection ===
 	bool thereIsALeadLepton = false;
 	int nLeadingMuons = 0;
