@@ -656,6 +656,8 @@ void ttHHanalyzer::analyze(event *thisEvent) {
     std::vector<float> Electron_pt_before;
     std::vector<float> Electron_pt_after;
 
+    bool isMC = (_DataOrMC == "MC");
+
     if (selectedElectrons && !selectedElectrons->empty()) {
         std::vector<float> Electron_pt, Electron_eta, Electron_r9;
         std::vector<int>   Electron_seedGain;
@@ -669,10 +671,7 @@ void ttHHanalyzer::analyze(event *thisEvent) {
             Electron_seedGain.push_back(ele->getGain());
         }
 
-        // ========================
         // Aplica a calibração usando o calibrator (DATA/MC e ano corretos)
-        // ========================
-        bool isMC = (_DataOrMC == "MC");
         calibrator.applyElectronCalibration(
             Electron_pt, Electron_eta, Electron_r9, Electron_seedGain,
             thisEvent->runNumber, thisEvent->eventNumber,
@@ -726,7 +725,6 @@ void ttHHanalyzer::analyze(event *thisEvent) {
 
         if (selectedElectrons && !selectedElectrons->empty()) {
             objectLep* ele = selectedElectrons->at(0);
-
             float pt_before = Electron_pt_before.empty() ? ele->getp4()->Pt() : Electron_pt_before[0];
             float pt_after  = Electron_pt_after.empty()  ? ele->getp4()->Pt() : Electron_pt_after[0];
 
@@ -742,6 +740,7 @@ void ttHHanalyzer::analyze(event *thisEvent) {
                            << " | Weight after = " << _weight
                            << " | Total SF Uncertainty = " << totalSFUnc
                            << "\n";
+
         } else if (selectedMuons && !selectedMuons->empty()) {
             objectLep* mu = selectedMuons->at(0);
             (*sf_log_file) << "Muon | η = " << mu->getp4()->Eta()
@@ -754,6 +753,7 @@ void ttHHanalyzer::analyze(event *thisEvent) {
     }
 
     _entryInLoop++;
+
 
 
 
