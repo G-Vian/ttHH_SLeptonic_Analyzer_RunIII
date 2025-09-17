@@ -1053,7 +1053,7 @@ ttHHanalyzer::ttHHanalyzer(const std::string & cl,
                            std::string sampleName)
 {
     // Inicialização do calibrador de elétrons (a lógica de escolha de JSON está dentro dele)
-    calibrator = ElectronEnergyCalibrator(year, DataOrMC);
+	ElectronEnergyCalibrator(const std::string& dataOrMC, int year);
 
     // Inicializações padrão
     _weight        = weight;
@@ -1105,7 +1105,7 @@ ttHHanalyzer::ttHHanalyzer(const std::string & cl,
 
  private: 
 
-    //ElectronEnergyCalibrator calibrator;
+    ElectronEnergyCalibrator calibrator;
 
     std::unique_ptr<std::ofstream> sf_summary_log_file;  // Log para summary SF
     std::unique_ptr<std::ofstream> event_log_file; // logs
