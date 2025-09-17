@@ -44,7 +44,6 @@ std::string ElectronEnergyCalibrator::getCompoundName(bool isMC) const {
         throw std::runtime_error("Year not supported for compound name!");
     }
 }
-
 void ElectronEnergyCalibrator::applyElectronCalibration(
     std::vector<float>& Electron_pt,
     const std::vector<float>& Electron_eta,
@@ -61,9 +60,6 @@ void ElectronEnergyCalibrator::applyElectronCalibration(
         throw std::runtime_error("Electron vectors have different sizes!");
     }
 
-    std::string compoundName = getCompoundName(isMC);
-    auto compound = cset->compound().at(compoundName);
-
     for (size_t i = 0; i < Electron_pt.size(); ++i) {
         double pt  = Electron_pt[i];
         double eta = Electron_eta[i];
@@ -72,10 +68,24 @@ void ElectronEnergyCalibrator::applyElectronCalibration(
 
         double newPt = pt;
 
+        // Pega o nome do compound correto
+        std::string compoundName = getCompoundName(isMC);
+        auto compound = (*cset).compound().at(compoundName);
+
         if (isMC) {
-            newPt = pt * compound->evaluate("esmear", pt, r9, std::abs(eta));
+            // MC: aplica smearing
+            std::vector<correction::Variable::Type> args = {pt, r9, std::abs(eta)};
+            newPt = pt * compound->evaluate(args);
         } else {
-            newPt = compound->evaluate("scale", static_cast<int>(runNumber), eta, r9, pt, static_cast<double>(gain));
+            // Data: aplica scale
+            std::vector<correction::Variable::Type> args = {
+                static_cast<int>(runNumber),
+                eta,
+                r9,
+                pt,
+                static_cast<double>(gain)
+            };
+            newPt = compound->evaluate(args);
         }
 
         Electron_pt[i] = static_cast<float>(newPt);
