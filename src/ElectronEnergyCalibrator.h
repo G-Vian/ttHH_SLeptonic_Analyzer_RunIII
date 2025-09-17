@@ -5,10 +5,11 @@
 #include <random>
 #include <memory>
 #include <correction.h>
+#include <stdexcept>
 
 class ElectronEnergyCalibrator {
 public:
-    // Construtor: dataOrMC = "DATA" ou "MC", year = 2022, 2023, 2024
+    // Construtor: dataOrMC = "DATA" ou "MC", year = "2022", "2023", "2024", etc.
     ElectronEnergyCalibrator(const std::string& year, const std::string& dataOrMC);
 
     // Aplica calibração nos vetores de elétrons
@@ -25,10 +26,11 @@ public:
 private:
     std::unique_ptr<correction::CorrectionSet> cset;
     std::string _dataOrMC;
-    int _year;
+    std::string _year;          // agora é string
     mutable std::mt19937 rng;
 
     // Retorna o caminho absoluto do JSON dependendo do ano e data/MC
     std::string getElectronJSONPath() const;
 };
+
 
