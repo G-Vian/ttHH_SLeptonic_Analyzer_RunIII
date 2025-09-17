@@ -1038,66 +1038,89 @@ class event{
     //    int nJet = 0, nbJet = 0, nSelJet = 0, nSelbJet = 0;
     int _nVetoLepton = 0;
     TLorentzVector _sumJetp4, _sumSelJetp4, _sumSelbJetp4, _sumHadronicHiggsp4, _sumLightJetp4, _sumSelMuonp4, _sumSelElectronp4; 
-};
+};////fim da classe evento
 
 class ttHHanalyzer {
- public:
+public:
     static const int LOG_INTERVAL = 1000;
     enum sysName { kJES, kJER, kbTag, noSys };
-	ttHHanalyzer(const std::string & cl,
-                           eventBuffer * ev,
-                           float weight,
-                           bool systematics,
-                           std::string year,
-                           std::string DataOrMC,
-                           std::string sampleName)
-{
 
-    // Inicializações padrão
-	calibrator(year, DataOrMC),
-    _weight        = weight;
-    _initialWeight = weight;
-    _ev            = ev;
-    _cl            = cl;
-    _sys           = systematics;
-    _of            = new outputFile(_cl);
-    _year          = year;
-    _DataOrMC      = DataOrMC;
-    _sampleName    = sampleName;
-	initHistograms();	
-	initTree();
-	initSys();
-       	std::string dummy = "";
-	HypoComb = new tthHypothesisCombinatorics(std::string("data/blrbdtweights_80X_V4/weights_64.xml"), std::string(""));
+    // Construtor
+    ttHHanalyzer(const std::string & cl,
+                 eventBuffer * ev,
+                 float weight,
+                 bool systematics,
+                 std::string year,
+                 std::string DataOrMC,
+                 std::string sampleName)
+        : calibrator(year, DataOrMC),  // ✅ inicialização correta
+          _weight(weight),
+          _initialWeight(weight),
+          _ev(ev),
+          _cl(cl),
+          _sys(systematics),
+          _of(new outputFile(_cl)),
+          _year(year),
+          _DataOrMC(DataOrMC),
+          _sampleName(sampleName)
+    {
+        // Corpo do construtor
+        initHistograms();	
+        initTree();
+        initSys();
+
+        std::string dummy = "";
+        HypoComb = new tthHypothesisCombinatorics(
+            "data/blrbdtweights_80X_V4/weights_64.xml",
+            ""
+        );
     }
-    void createObjects(event*,sysName,bool);
+
+    // Métodos públicos
+    void createObjects(event*, sysName, bool);
     bool selectObjects(event*);
     void analyze(event*);
     void process(event*, sysName, bool);
     void loop(sysName, bool);
     void performAnalysis();
-    void fillHistos(event * thisevent);
+    void fillHistos(event*);
     void writeHistos();
-    void fillTree(event * thisevent);
+    void fillTree(event*);
     void writeTree();
-    TH1F * hmet,* hmetPhi, *hmetEta, *hAvgDeltaRjj, *hAvgDeltaRbb,*hAvgDeltaRbj, *hAvgDeltaEtajj, *hAvgDeltaEtabb, *hAvgDeltaEtabj, *hminDeltaRjj, *hminDeltaRbb, *hminDeltaRbj,  *hminDeltaRpTjj, *hminDeltaRpTbb, *hminDeltaRpTbj, *hminDeltaRMassjj, *hminDeltaRMassbb,*hminDeltaRMassbj, *hmaxDeltaEtajj, *hmaxDeltaEtabb, *hmaxDeltaEtabj, *hmaxPTmassjbb, *hmaxPTmassjjj, *hjetAverageMass, *hBjetAverageMass, *hHadronicHiggsAverageMass, *hLightJetAverageMass, *hBjetAverageMassSqr, *hHadronicHiggsSoftDropMass1, *hHadronicHiggsSoftDropMass2, *hjetHT, *hBjetHT, *hHadronicHiggsHT, *hLightJetHT, *hjetNumber, *hBjetNumber, *hHadronicHiggsNumber, *hLightJetNumber, *hInvMassHadW, *hInvMassZ1, *hInvMassZ2,*hInvMassHSingleMatched,*hInvMassHSingleNotMatched ,*hChi2HiggsSingleNotMatched, *hChi2HiggsSingleMatched , *hInvMassH1, *hInvMassH2,*hInvMassHZ1, *hInvMassHZ2, *hInvMassH1mChi, *hInvMassH2mChi,*hPTH1, *hPTH2, *hChi2Higgs, *hChi2HiggsZ, *hChi2HadW, *hChi2Z, *hAplanarity, *hSphericity, *hTransSphericity, *hCvalue, *hDvalue, *hBjetAplanarity, *hBjetSphericity, *hBjetTransSphericity ,*hBjetCvalue, *hBjetDvalue, *hCentralityjl, *hCentralityjb, *hleptonNumber,  *hElecNumber, *hMuonNumber, *hLeptonPT1, *hMuonPT1, *hElePT1, *hLeptonPhi1, *hMuonPhi1, *hElePhi1, *hLeptonEta1, *hMuonEta1, *hEleEta1, *hLeptonPT2, *hMuonPT2, *hElePT2, *hLeptonPhi2, *hMuonPhi2, *hElePhi2, *hLeptonEta2, *hMuonEta2, *hEleEta2, *hLepCharge1, *hLepCharge2, *hleptonHT, *hST, *hDiMuonMass, *hDiElectronMass, *hDiMuonPT, *hDiElectronPT, *hDiMuonEta, *hDiElectronEta, *hH0, *hH1, *hH2, *hH3, *hH4, *hR1, *hR2, * hR3, *hR4, *hBjetH0, *hBjetH1, *hBjetH2, *hBjetH3, *hBjetH4, *hBjetR1, *hBjetR2, * hBjetR3, *hBjetR4, *hCutFlow, *hCutFlow_w,
-	*hInvMassHH1Matched,
-	*hInvMassHH1NotMatched,
-	*hInvMassHH2Matched,
-        *hInvMassHH2NotMatched,
-        *hChi2HHNotMatched,
-        *hChi2HHMatched;
 
+    // Histogramas
+    TH1F * hmet,* hmetPhi, *hmetEta, *hAvgDeltaRjj, *hAvgDeltaRbb, *hAvgDeltaRbj,
+         *hAvgDeltaEtajj, *hAvgDeltaEtabb, *hAvgDeltaEtabj, *hminDeltaRjj, *hminDeltaRbb,
+         *hminDeltaRbj,  *hminDeltaRpTjj, *hminDeltaRpTbb, *hminDeltaRpTbj, *hminDeltaRMassjj,
+         *hminDeltaRMassbb,*hminDeltaRMassbj, *hmaxDeltaEtajj, *hmaxDeltaEtabb, *hmaxDeltaEtabj,
+         *hmaxPTmassjbb, *hmaxPTmassjjj, *hjetAverageMass, *hBjetAverageMass, *hHadronicHiggsAverageMass,
+         *hLightJetAverageMass, *hBjetAverageMassSqr, *hHadronicHiggsSoftDropMass1, *hHadronicHiggsSoftDropMass2,
+         *hjetHT, *hBjetHT, *hHadronicHiggsHT, *hLightJetHT, *hjetNumber, *hBjetNumber, *hHadronicHiggsNumber,
+         *hLightJetNumber, *hInvMassHadW, *hInvMassZ1, *hInvMassZ2, *hInvMassHSingleMatched, *hInvMassHSingleNotMatched,
+         *hChi2HiggsSingleNotMatched, *hChi2HiggsSingleMatched, *hInvMassH1, *hInvMassH2, *hInvMassHZ1, *hInvMassHZ2,
+         *hInvMassH1mChi, *hInvMassH2mChi, *hPTH1, *hPTH2, *hChi2Higgs, *hChi2HiggsZ, *hChi2HadW, *hChi2Z, *hAplanarity,
+         *hSphericity, *hTransSphericity, *hCvalue, *hDvalue, *hBjetAplanarity, *hBjetSphericity, *hBjetTransSphericity,
+         *hBjetCvalue, *hBjetDvalue, *hCentralityjl, *hCentralityjb, *hleptonNumber, *hElecNumber, *hMuonNumber,
+         *hLeptonPT1, *hMuonPT1, *hElePT1, *hLeptonPhi1, *hMuonPhi1, *hElePhi1, *hLeptonEta1, *hMuonEta1, *hEleEta1,
+         *hLeptonPT2, *hMuonPT2, *hElePT2, *hLeptonPhi2, *hMuonPhi2, *hElePhi2, *hLeptonEta2, *hMuonEta2, *hEleEta2,
+         *hLepCharge1, *hLepCharge2, *hleptonHT, *hST, *hDiMuonMass, *hDiElectronMass, *hDiMuonPT, *hDiElectronPT,
+         *hDiMuonEta, *hDiElectronEta, *hH0, *hH1, *hH2, *hH3, *hH4, *hR1, *hR2, *hR3, *hR4,
+         *hBjetH0, *hBjetH1, *hBjetH2, *hBjetH3, *hBjetH4, *hBjetR1, *hBjetR2, *hBjetR3, *hBjetR4,
+         *hCutFlow, *hCutFlow_w,
+         *hInvMassHH1Matched, *hInvMassHH1NotMatched,
+         *hInvMassHH2Matched, *hInvMassHH2NotMatched,
+         *hChi2HHNotMatched, *hChi2HHMatched;
 
-    tthHypothesisCombinatorics * HypoComb; 
+    tthHypothesisCombinatorics * HypoComb;
 
-
-    //fifo_map<std::string,int> cutflow{{"noCut", 0}, {"nlepton==2", 0}, {"nOpositeChargedLep", 0}, {"nMassCut", 0}, {"MET>40", 0}};
-    //fifo_map<std::string,float> cutflow_w{{"noCut", 0}, {"nlepton==2", 0}, {"nOpositeChargedLep", 0}, {"nMassCut", 0}, {"MET>40", 0}};
-    fifo_map<std::string,int> cutflow{ {"noCut", 0}, {"nHLTrigger", 0}, {"Muon_Trigger", 0}, {"Elec_Trigger", 0}, {"nFilter", 0}, {"nPV", 0}, {"njets>5", 0}, {"nbjets>4", 0}, {"nlepton==1", 0}, {"MET>20", 0}};
-    fifo_map<std::string,int> cutflow_w{ {"noCut", 0}, {"nHLTrigger", 0}, {"Muon_Trigger", 0}, {"Elec_Trigger", 0}, {"nFilter", 0}, {"nPV", 0}, {"njets>5", 0}, {"nbjets>4", 0}, {"nlepton==1", 0}, {"MET>20", 0}};
-
-
+    fifo_map<std::string,int> cutflow{
+        {"noCut", 0}, {"nHLTrigger", 0}, {"Muon_Trigger", 0}, {"Elec_Trigger", 0},
+        {"nFilter", 0}, {"nPV", 0}, {"njets>5", 0}, {"nbjets>4", 0}, {"nlepton==1", 0}, {"MET>20", 0}
+    };
+    fifo_map<std::string,int> cutflow_w{
+        {"noCut", 0}, {"nHLTrigger", 0}, {"Muon_Trigger", 0}, {"Elec_Trigger", 0},
+        {"nFilter", 0}, {"nPV", 0}, {"njets>5", 0}, {"nbjets>4", 0}, {"nlepton==1", 0}, {"MET>20", 0}
+    };
 
 
     //    std::unordered_map<std::string, int> cutflow {{"noCut", 0}, {"njets>3", 0}, {"nbjets>2", 0}, {"nlepton==2", 0}, {"nOpositeChargedLep", 0}, {"nMassCut", 0}, {"nTotal", 0}};
