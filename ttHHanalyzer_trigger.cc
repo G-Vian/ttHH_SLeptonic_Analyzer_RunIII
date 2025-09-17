@@ -672,11 +672,11 @@ void ttHHanalyzer::analyze(event *thisEvent) {
         }
 
         // Aplica a calibração usando o calibrator (DATA/MC e ano corretos)
-        calibrator.applyElectronCalibration(
+      /*  calibrator.applyElectronCalibration(
             Electron_pt, Electron_eta, Electron_r9, Electron_seedGain,
             thisEvent->runNumber, thisEvent->eventNumber,
             isMC ? 1 : 0
-        );
+        ); */
 
         Electron_pt_after = Electron_pt;
 
