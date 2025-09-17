@@ -1050,17 +1050,17 @@ ttHHanalyzer(const std::string & cl,
              eventBuffer * ev,
              float weight = 1.,
              bool systematics = false,
-             std::string runYear = "nothing",
+             std::string year = "nothing",
              std::string DataOrMC = "nothing",
              std::string sampleName = "nothing")
-    : calibrator(runYear, DataOrMC),   // ✅ constrói corretamente o calibrador
+    : calibrator(year, DataOrMC),   // ✅ constrói corretamente o calibrador
       _weight(weight),                 // ✅ inicializa diretamente
       _initialWeight(weight),          // se tiver esse membro
       _ev(ev),
       _cl(cl),
       _sys(systematics),
       _of(new outputFile(cl)),         // já cria direto
-      _runYear(runYear),
+      _year(year),
       _DataOrMC(DataOrMC),
       _sampleName(sampleName)
 {
