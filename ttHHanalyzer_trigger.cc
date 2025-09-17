@@ -362,75 +362,70 @@ void ttHHanalyzer::createObjects(event * thisEvent, sysName sysType, bool up){
     if(doLog) (*event_log_file) << "Boosted jets selecionados: " << nBoostedJets << ", Hadronic Higgs: " << nHadronicHiggs << std::endl;
 
 			
-	// ========================
+		// ========================
 	// Calibração dos elétrons antes da seleção
 	// ========================
 	std::vector<float> Electron_pt_before;
 	std::vector<float> Electron_pt_after;
 	
 	bool isMC = (_DataOrMC == "MC");
+	
+	// Prepara vetores de entrada para o calibrador
 	std::vector<float> Electron_pt, Electron_eta, Electron_r9;
 	std::vector<int>   Electron_seedGain;
 	
-	// Salva o pt antigo antes da calibração
-	for (size_t i = 0; i < ele.size(); ++i) {
-	    ele[i].pt_old = ele[i].pt;
-	    Electron_pt.push_back(ele[i].pt);
-	    Electron_pt_before.push_back(ele[i].pt);
-	    Electron_eta.push_back(ele[i].eta);
-	    Electron_r9.push_back(ele[i].r9);
-	    Electron_seedGain.push_back(ele[i].seedGain);
+	for (auto& e : ele) {
+	    Electron_pt.push_back(e.pt);
+	    Electron_pt_before.push_back(e.pt); // pT antes da calibração
+	    Electron_eta.push_back(e.eta);
+	    Electron_r9.push_back(e.r9);
+	    Electron_seedGain.push_back(e.seedGain);
 	}
 	
 	// Aplica calibração
 	calibrator.applyElectronCalibration(
-	    Electron_pt,
-	    Electron_eta,
-	    Electron_r9,
-	    Electron_seedGain,
-	    thisEvent->runNumber,
-	    thisEvent->eventNumber,
-	    isMC
+	    Electron_pt, Electron_eta, Electron_r9, Electron_seedGain,
+	    thisEvent->runNumber, thisEvent->eventNumber, isMC
 	);
 	
-	// Atualiza os objetos e salva o pt após calibração
+	// Atualiza os elétrons com pT calibrado
 	for (size_t i = 0; i < ele.size(); ++i) {
 	    ele[i].pt = Electron_pt[i];
 	    Electron_pt_after.push_back(Electron_pt[i]);
 	}
 	
 	// ========================
-	// Recalcula MET após calibração dos elétrons
+	// Recalcula MET com os pT calibrados
 	// ========================
-	{
-	    float met_px = _MET->Px();
-	    float met_py = _MET->Py();
+	float met_px = 0.;
+	float met_py = 0.;
 	
-	    for (size_t i = 0; i < ele.size(); ++i) {
-	        float oldPx = ele[i].pt_old * cos(ele[i].phi);
-	        float oldPy = ele[i].pt_old * sin(ele[i].phi);
-	        met_px += oldPx;
-	        met_py += oldPy;
+	// Subtrai os vetores antigos e adiciona os novos
+	for (size_t i = 0; i < ele.size(); ++i) {
+	    float oldPx = Electron_pt_before[i] * cos(ele[i].phi);
+	    float oldPy = Electron_pt_before[i] * sin(ele[i].phi);
+	    float newPx = Electron_pt_after[i]  * cos(ele[i].phi);
+	    float newPy = Electron_pt_after[i]  * sin(ele[i].phi);
 	
-	        float newPx = ele[i].pt * cos(ele[i].phi);
-	        float newPy = ele[i].pt * sin(ele[i].phi);
-	        met_px -= newPx;
-	        met_py -= newPy;
-	    }
-	
-	    objectMET* newMET = new objectMET();
-	    newMET->SetPxPyPzE(met_px, met_py, 0., sqrt(met_px*met_px + met_py*met_py));
-	    thisEvent->setMET(newMET);
+	    met_px += oldPx - newPx;
+	    met_py += oldPy - newPy;
 	}
 	
+	// Atualiza o MET do evento (assumindo objectMET possui setPxPy)
+	MET->SetPxPy(met_px, met_py); // adapte caso o seu objectMET use outro setter
+	
 	// ========================
-	// Print de debug no terminal
+	// Debug no terminal: imprime pT de pelo menos um elétron e um múon
 	// ========================
 	if (!ele.empty()) {
-	    std::cout << "[DEBUG] Primeiro elétron: pT = " << ele[0].pt << ", eta = " << ele[0].eta << ", phi = " << ele[0].phi << std::endl;
+	    std::cout << "[DEBUG] Eletron 0 | pT after calib = " << ele[0].pt
+	              << ", eta = " << ele[0].eta
+	              << ", phi = " << ele[0].phi << std::endl;
 	}
 	if (!muonT.empty()) {
-	    std::cout << "[DEBUG] Primeiro múon: pT = " << muonT[0].pt << ", eta = " << muonT[0].eta << ", phi = " << muonT[0].phi << std::endl;
+	    std::cout << "[DEBUG] Muon 0 | pT = " << muonT[0].pt
+	              << ", eta = " << muonT[0].eta
+	              << ", phi = " << muonT[0].phi << std::endl;
 	}
 
 	
