@@ -645,7 +645,6 @@ void ttHHanalyzer::diMotherReco(const TLorentzVector & dPar1p4,const TLorentzVec
 	_bpTHiggs2    = (dPar3p4+dPar4p4).Pt();
     }
 } 
-
 void ttHHanalyzer::analyze(event *thisEvent) {
     // Vetores de leptons selecionados
     std::vector<objectLep*>* selectedElectrons = thisEvent->getSelElectrons();
@@ -670,11 +669,14 @@ void ttHHanalyzer::analyze(event *thisEvent) {
             Electron_seedGain.push_back(ele->getGain());
         }
 
-        // Aplica calibração usando o calibrator já configurado com o ano correto
+        // ========================
+        // Aplica a calibração usando o calibrator (DATA/MC e ano corretos)
+        // ========================
+        bool isMC = (_DataOrMC == "MC");
         calibrator.applyElectronCalibration(
             Electron_pt, Electron_eta, Electron_r9, Electron_seedGain,
             thisEvent->runNumber, thisEvent->eventNumber,
-            (_DataOrMC == "MC" ? 1 : 0)
+            isMC ? 1 : 0
         );
 
         Electron_pt_after = Electron_pt;
@@ -732,7 +734,7 @@ void ttHHanalyzer::analyze(event *thisEvent) {
                            << ", φ = " << ele->getp4()->Phi()
                            << ", pT before calibration = " << pt_before
                            << ", pT after calibration = "  << pt_after
-                           << " | Calibration applied = " << (_DataOrMC=="MC" ? "Smearing (MC)" : "Scale Correction (Data)")
+                           << " | Calibration applied = " << (isMC ? "Smearing (MC)" : "Scale Correction (Data)")
                            << " | Trigger SF = " << triggerSF
                            << " | Reco SF = " << recoSF
                            << " | ID SF = " << idSF
@@ -752,7 +754,6 @@ void ttHHanalyzer::analyze(event *thisEvent) {
     }
 
     _entryInLoop++;
-
 
 
 
