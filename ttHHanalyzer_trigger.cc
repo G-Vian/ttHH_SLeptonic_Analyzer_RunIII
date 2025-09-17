@@ -361,6 +361,23 @@ void ttHHanalyzer::createObjects(event * thisEvent, sysName sysType, bool up){
     }
     if(doLog) (*event_log_file) << "Boosted jets selecionados: " << nBoostedJets << ", Hadronic Higgs: " << nHadronicHiggs << std::endl;
 
+	
+// === Calibração dos elétrons antes da seleção ===
+	bool isMC = (_DataOrMC == "MC");
+	
+	for (size_t i = 0; i < ele.size(); ++i) {
+	    float rawPt  = ele[i].pt;
+	    float rawEta = ele[i].eta;
+	    float rawPhi = ele[i].phi;
+	
+	    // Aplica calibração usando o calibrator
+	    float calibratedPt = calibrator.calibrate(rawPt, rawEta, rawPhi, year, isMC);
+	
+	    // Substitui o pt bruto pelo calibrado
+	    ele[i].pt = calibratedPt;
+	}
+
+	
     // === Lepton Leading Selection ===
     bool thereIsALeadLepton = false;
     int nLeadingMuons = 0;
@@ -651,7 +668,7 @@ void ttHHanalyzer::analyze(event *thisEvent) {
     std::vector<objectLep*>* selectedMuons     = thisEvent->getSelMuons();
 
     // ========================
-    // Aplica calibração em todos os elétrons do evento
+    // Só armazenamos os pt_before e pt_after (sem aplicar calibração aqui)
     // ========================
     std::vector<float> Electron_pt_before;
     std::vector<float> Electron_pt_after;
@@ -659,30 +676,13 @@ void ttHHanalyzer::analyze(event *thisEvent) {
     bool isMC = (_DataOrMC == "MC");
 
     if (selectedElectrons && !selectedElectrons->empty()) {
-        std::vector<float> Electron_pt, Electron_eta, Electron_r9;
-        std::vector<int>   Electron_seedGain;
-
         for (auto* ele : *selectedElectrons) {
-            float pt = ele->getp4()->Pt();
-            Electron_pt.push_back(pt);
-            Electron_pt_before.push_back(pt);
-            Electron_eta.push_back(ele->getp4()->Eta());
-            Electron_r9.push_back(ele->getR9());
-            Electron_seedGain.push_back(ele->getGain());
-        }
+            // O objeto já vem calibrado do selectObjects
+            float pt_after  = ele->getp4()->Pt();
+            float pt_before = ele->getPtBeforeCalib(); // <<<--- precisa salvar no objeto ou num vetor global no selectObjects
 
-        // Aplica a calibração usando o calibrator (DATA/MC e ano corretos)
-      /*  calibrator.applyElectronCalibration(
-            Electron_pt, Electron_eta, Electron_r9, Electron_seedGain,
-            thisEvent->runNumber, thisEvent->eventNumber,
-            isMC ? 1 : 0
-        ); */
-
-        Electron_pt_after = Electron_pt;
-
-        // Atualiza objetos com os pT calibrados
-        for (size_t i = 0; i < selectedElectrons->size(); ++i) {
-            (*selectedElectrons)[i]->setPt(Electron_pt[i]);
+            Electron_pt_before.push_back(pt_before);
+            Electron_pt_after.push_back(pt_after);
         }
     }
 
@@ -725,7 +725,7 @@ void ttHHanalyzer::analyze(event *thisEvent) {
 
         if (selectedElectrons && !selectedElectrons->empty()) {
             objectLep* ele = selectedElectrons->at(0);
-            float pt_before = Electron_pt_before.empty() ? ele->getp4()->Pt() : Electron_pt_before[0];
+            float pt_before = Electron_pt_before.empty() ? -999. : Electron_pt_before[0];
             float pt_after  = Electron_pt_after.empty()  ? ele->getp4()->Pt() : Electron_pt_after[0];
 
             (*sf_log_file) << "Electron | η = " << ele->getp4()->Eta()
@@ -753,7 +753,6 @@ void ttHHanalyzer::analyze(event *thisEvent) {
     }
 
     _entryInLoop++;
-
 
 
 
