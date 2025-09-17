@@ -689,21 +689,40 @@ void ttHHanalyzer::analyze(event *thisEvent) {
     std::vector<objectLep*>* selectedMuons     = thisEvent->getSelMuons();
 
     // ========================
-    // Só armazenamos os pt_before e pt_after (sem aplicar calibração aqui)
+    // Prepara vetores de pT para log
     // ========================
     std::vector<float> Electron_pt_before;
     std::vector<float> Electron_pt_after;
 
     bool isMC = (_DataOrMC == "MC");
 
+    // ========================
+    // Calibra pT de todos os elétrons do evento
+    // ========================
     if (selectedElectrons && !selectedElectrons->empty()) {
-        for (auto* ele : *selectedElectrons) {
-            // O objeto já vem calibrado do selectObjects
-            float pt_after  = ele->getp4()->Pt();
-            float pt_before = ele->getPtBeforeCalib(); // <<<--- precisa salvar no objeto ou num vetor global no selectObjects
+        std::vector<float> Electron_pt, Electron_eta, Electron_r9;
+        std::vector<int>   Electron_seedGain;
 
-            Electron_pt_before.push_back(pt_before);
-            Electron_pt_after.push_back(pt_after);
+        for (auto* ele : *selectedElectrons) {
+            float pt = ele->getp4()->Pt();
+            Electron_pt.push_back(pt);
+            Electron_pt_before.push_back(pt);
+            Electron_eta.push_back(ele->getp4()->Eta());
+            Electron_r9.push_back(ele->getR9());
+            Electron_seedGain.push_back(ele->getGain());
+        }
+
+        // Aplica calibração
+        calibrator.applyElectronCalibration(
+            Electron_pt, Electron_eta, Electron_r9, Electron_seedGain,
+            thisEvent->runNumber, thisEvent->eventNumber, isMC
+        );
+
+        Electron_pt_after = Electron_pt;
+
+        // Atualiza objetos com pT calibrado
+        for (size_t i = 0; i < selectedElectrons->size(); ++i) {
+            (*selectedElectrons)[i]->setPt(Electron_pt[i]);
         }
     }
 
@@ -725,7 +744,6 @@ void ttHHanalyzer::analyze(event *thisEvent) {
         idSF      = getEleIDSF(ele->getp4()->Eta(), ele->getp4()->Phi(), ele->getp4()->Pt(), idSF_unc);
         totalSFUnc = std::sqrt(trigSF_unc*trigSF_unc + recoSF_unc*recoSF_unc + idSF_unc*idSF_unc);
         _weight *= (triggerSF * recoSF * idSF);
-
     } else if (selectedMuons && !selectedMuons->empty()) {
         objectLep* mu = selectedMuons->at(0);
         triggerSF = getMuonTrigSF(mu->getp4()->Eta(), mu->getp4()->Pt());
@@ -745,23 +763,25 @@ void ttHHanalyzer::analyze(event *thisEvent) {
         (*sf_log_file) << "Number of selected muons: "     << (selectedMuons ? selectedMuons->size() : 0) << "\n";
 
         if (selectedElectrons && !selectedElectrons->empty()) {
-            objectLep* ele = selectedElectrons->at(0);
-            float pt_before = Electron_pt_before.empty() ? -999. : Electron_pt_before[0];
-            float pt_after  = Electron_pt_after.empty()  ? ele->getp4()->Pt() : Electron_pt_after[0];
+            for (size_t i = 0; i < selectedElectrons->size(); ++i) {
+                objectLep* ele = (*selectedElectrons)[i];
+                float pt_before = Electron_pt_before[i];
+                float pt_after  = Electron_pt_after[i];
 
-            (*sf_log_file) << "Electron | η = " << ele->getp4()->Eta()
-                           << ", φ = " << ele->getp4()->Phi()
-                           << ", pT before calibration = " << pt_before
-                           << ", pT after calibration = "  << pt_after
-                           << " | Calibration applied = " << (isMC ? "Smearing (MC)" : "Scale Correction (Data)")
-                           << " | Trigger SF = " << triggerSF
-                           << " | Reco SF = " << recoSF
-                           << " | ID SF = " << idSF
-                           << " | Weight before = " << weight_before_SFs
-                           << " | Weight after = " << _weight
-                           << " | Total SF Uncertainty = " << totalSFUnc
-                           << "\n";
-
+                (*sf_log_file) << "Electron " << i
+                               << " | η = " << ele->getp4()->Eta()
+                               << ", φ = " << ele->getp4()->Phi()
+                               << ", pT before calib = " << pt_before
+                               << ", pT after calib  = " << pt_after
+                               << " | Calibration applied = " << (isMC ? "Smearing (MC)" : "Scale Correction (Data)")
+                               << " | Trigger SF = " << triggerSF
+                               << " | Reco SF = " << recoSF
+                               << " | ID SF = " << idSF
+                               << " | Weight before = " << weight_before_SFs
+                               << " | Weight after = " << _weight
+                               << " | Total SF Uncertainty = " << totalSFUnc
+                               << "\n";
+            }
         } else if (selectedMuons && !selectedMuons->empty()) {
             objectLep* mu = selectedMuons->at(0);
             (*sf_log_file) << "Muon | η = " << mu->getp4()->Eta()
