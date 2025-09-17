@@ -361,106 +361,89 @@ void ttHHanalyzer::createObjects(event * thisEvent, sysName sysType, bool up){
     }
     if(doLog) (*event_log_file) << "Boosted jets selecionados: " << nBoostedJets << ", Hadronic Higgs: " << nHadronicHiggs << std::endl;
 
+		
+	// === Calibração dos elétrons antes da seleção ===
+	// --- Preparação ---
+	// === Lepton Leading Selection ===
+	bool thereIsALeadLepton = false;
+	int nLeadingMuons = 0;
+	int nLeadingElectrons = 0;
 	
-// === Calibração dos elétrons antes da seleção ===
-// --- Preparação ---
-	std::vector<float> Electron_pt_before;
-	std::vector<float> Electron_pt_after;
-	
-	bool isMC = (_DataOrMC == "MC");
-	
-	// Prepara vetores de entrada para o calibrador
-	std::vector<float> Electron_pt, Electron_eta, Electron_r9;
-	std::vector<int> Electron_seedGain;
-	
-	for (size_t i = 0; i < ele.size(); ++i) {
-	    Electron_pt.push_back(ele[i].pt);
-	    Electron_pt_before.push_back(ele[i].pt); // salva pT antes da calibração
-	    Electron_eta.push_back(ele[i].eta);
-	    Electron_r9.push_back(ele[i].r9);
-	    Electron_seedGain.push_back(ele[i].seedGain);
+	// Access seguro com count()
+	for (size_t i = 0; i < muonT.size(); i++) {
+	    if (cut.count("muonEta") && cut.count("muonIso") && cut.count("leadMuonPt")) {
+	        if (fabs(muonT[i].eta) < cut["muonEta"] &&
+	            muonT[i].tightId &&
+	            muonT[i].pfRelIso04_all < cut["muonIso"] &&
+	            muonT[i].pt > cut["leadMuonPt"]) 
+	        {
+	            thereIsALeadLepton = true;
+	            nLeadingMuons++;
+	            break;
+	        }
+	    }
 	}
 	
-	// Aplica a calibração usando o calibrator
-	calibrator.applyElectronCalibration(
-	    Electron_pt,
-	    Electron_eta,
-	    Electron_r9,
-	    Electron_seedGain,
-	    thisEvent->runNumber,
-	    thisEvent->eventNumber,
-	    isMC
-	);
-	
-	// Atualiza objetos com os pT calibrados
-	for (size_t i = 0; i < ele.size(); ++i) {
-	    ele[i].pt = Electron_pt[i];
-	    Electron_pt_after.push_back(Electron_pt[i]); // salva pT depois da calibração
+	if (!thereIsALeadLepton) {
+	    for (size_t i = 0; i < ele.size(); i++) {
+	        if (cut.count("eleEta") && cut.count("leadElePt")) {
+	            if ((fabs(ele[i].deltaEtaSC + ele[i].eta) < 1.4442 || fabs(ele[i].deltaEtaSC + ele[i].eta) > 1.5660) &&
+	                fabs(ele[i].eta) < cut["eleEta"] && ele[i].mvaIso_WP90 &&
+	                ele[i].pt > cut["leadElePt"])
+	            {
+	                thereIsALeadLepton = true;
+	                nLeadingElectrons++;
+	                break;
+	            }
+	        }
+	    }
 	}
-
 	
-    // === Lepton Leading Selection ===
-    bool thereIsALeadLepton = false;
-    int nLeadingMuons = 0;
-    int nLeadingElectrons = 0;
-    for (int i = 0; i < muonT.size(); i++) {
-        if (fabs(muonT[i].eta) < cut["muonEta"] && muonT[i].tightId && muonT[i].pfRelIso04_all < cut["muonIso"]) {
-            if (muonT[i].pt > cut["leadMuonPt"]) {
-                thereIsALeadLepton = true;
-                nLeadingMuons++;
-                break;
-            }
-        }
-    }
-    if (!thereIsALeadLepton) {
-        for (int i = 0; i < ele.size(); i++) {
-            if (fabs(ele[i].deltaEtaSC + ele[i].eta) < 1.4442 || fabs(ele[i].deltaEtaSC + ele[i].eta) > 1.5660) {
-                if (fabs(ele[i].eta) < cut["eleEta"] && ele[i].mvaIso_WP90) {
-                    if (ele[i].pt > cut["leadElePt"]) {
-                        thereIsALeadLepton = true;
-                        nLeadingElectrons++;
-                        break;
-                    }
-                }
-            }
-        }
-    }
-    if(doLog) (*event_log_file) << "Lepton líder encontrado? " << (thereIsALeadLepton ? "SIM" : "NÃO")
-                                 << " | Muons líderes: " << nLeadingMuons
-                                 << " | Elétrons líderes: " << nLeadingElectrons << std::endl;
-
-    // === Subleading Leptons ===
-    int nSubMuons = 0;
-    int nSubEles = 0;
-    if (thereIsALeadLepton) {
-        for (int i = 0; i < muonT.size(); i++) {
-            if (fabs(muonT[i].eta) < cut["muonEta"] && muonT[i].tightId && muonT[i].pfRelIso04_all < cut["muonIso"]) {
-                if (muonT[i].pt > cut["subLeadMuonPt"]) {
-                    currentMuon = new objectLep(muonT[i].pt, muonT[i].eta, muonT[i].phi, 0.);
-                    currentMuon->charge = muonT[i].charge;
-                    currentMuon->miniPFRelIso = muonT[i].miniPFRelIso_all;
-                    currentMuon->pfRelIso04 = muonT[i].pfRelIso04_all;
-                    thisEvent->selectMuon(currentMuon);
-                    nSubMuons++;
-                }
-            }
-        }
-        for (int i = 0; i < ele.size(); i++) {
-            if (fabs(ele[i].deltaEtaSC + ele[i].eta) < 1.4442 || fabs(ele[i].deltaEtaSC + ele[i].eta) > 1.5660) {
-                if (fabs(ele[i].eta) < cut["eleEta"] && ele[i].mvaIso_WP90) {
-                    if (ele[i].pt > cut["subLeadElePt"]) {
-                        currentEle = new objectLep(ele[i].pt, ele[i].eta, ele[i].phi, 0.);
-                        currentEle->charge = ele[i].charge;
-                        currentEle->miniPFRelIso = ele[i].miniPFRelIso_all;
-                        currentEle->pfRelIso03 = ele[i].pfRelIso03_all;
-                        thisEvent->selectEle(currentEle);
-                        nSubEles++;
-                    }
-                }
-            }
-        }
-    }
-    if(doLog) (*event_log_file) << "Sub-leading leptons: Muons: " << nSubMuons << ", Electrons: " << nSubEles << std::endl;
+	if(doLog) (*event_log_file) << "Lepton líder encontrado? " 
+	                             << (thereIsALeadLepton ? "SIM" : "NÃO")
+	                             << " | Muons líderes: " << nLeadingMuons
+	                             << " | Elétrons líderes: " << nLeadingElectrons << std::endl;
+	
+	// === Subleading Leptons ===
+	int nSubMuons = 0;
+	int nSubEles = 0;
+	if (thereIsALeadLepton) {
+	    for (size_t i = 0; i < muonT.size(); i++) {
+	        if (cut.count("muonEta") && cut.count("muonIso") && cut.count("subLeadMuonPt")) {
+	            if (fabs(muonT[i].eta) < cut["muonEta"] &&
+	                muonT[i].tightId &&
+	                muonT[i].pfRelIso04_all < cut["muonIso"] &&
+	                muonT[i].pt > cut["subLeadMuonPt"])
+	            {
+	                currentMuon = new objectLep(muonT[i].pt, muonT[i].eta, muonT[i].phi, 0.);
+	                currentMuon->charge = muonT[i].charge;
+	                currentMuon->miniPFRelIso = muonT[i].miniPFRelIso_all;
+	                currentMuon->pfRelIso04 = muonT[i].pfRelIso04_all;
+	                thisEvent->selectMuon(currentMuon);
+	                nSubMuons++;
+	            }
+	        }
+	    }
+	
+	    for (size_t i = 0; i < ele.size(); i++) {
+	        if (cut.count("eleEta") && cut.count("subLeadElePt")) {
+	            if ((fabs(ele[i].deltaEtaSC + ele[i].eta) < 1.4442 || fabs(ele[i].deltaEtaSC + ele[i].eta) > 1.5660) &&
+	                fabs(ele[i].eta) < cut["eleEta"] && ele[i].mvaIso_WP90 &&
+	                ele[i].pt > cut["subLeadElePt"])
+	            {
+	                currentEle = new objectLep(ele[i].pt, ele[i].eta, ele[i].phi, 0.);
+	                currentEle->charge = ele[i].charge;
+	                currentEle->miniPFRelIso = ele[i].miniPFRelIso_all;
+	                currentEle->pfRelIso03 = ele[i].pfRelIso03_all;
+	                thisEvent->selectEle(currentEle);
+	                nSubEles++;
+	            }
+	        }
+	    }
+	}
+	
+	if(doLog) (*event_log_file) << "Sub-leading leptons: Muons: " << nSubMuons
+	                             << ", Electrons: " << nSubEles << std::endl;
 
     // === Jets ===
     int nJets = 0, nLightJets = 0, nLooseBJets = 0, nMediumBJets = 0;
@@ -751,49 +734,60 @@ void ttHHanalyzer::analyze(event *thisEvent) {
         _weight *= triggerSF;
     }
 
-    // ========================
-    // Log detalhado
-    // ========================
-    bool hasLeadLepton = (selectedElectrons && !selectedElectrons->empty()) || 
-                         (selectedMuons && !selectedMuons->empty());
+	// ========================
+	// Log detalhado (versão segura)
+	// ========================
+	bool hasLeadLepton = (selectedElectrons && !selectedElectrons->empty()) || 
+	                     (selectedMuons && !selectedMuons->empty());
+	
+	if (sf_log_file && sf_log_file->is_open() && (_entryInLoop % LOG_INTERVAL == 0 && hasLeadLepton)) {
+	    (*sf_log_file) << "=== Entry " << _entryInLoop << " ===\n";
+	    size_t nEle = selectedElectrons ? selectedElectrons->size() : 0;
+	    size_t nMu  = selectedMuons ? selectedMuons->size() : 0;
+	
+	    (*sf_log_file) << "Number of selected electrons: " << nEle << "\n";
+	    (*sf_log_file) << "Number of selected muons: "     << nMu << "\n";
+	
+	    if (nEle > 0) {
+	        size_t nLog = std::min(nEle, Electron_pt_before.size());
+	        nLog = std::min(nLog, Electron_pt_after.size());
+	        for (size_t i = 0; i < nLog; ++i) {
+	            objectLep* ele = (*selectedElectrons)[i];
+	            if (!ele) continue;
+	
+	            float pt_before = Electron_pt_before[i];
+	            float pt_after  = Electron_pt_after[i];
+	
+	            (*sf_log_file) << "Electron " << i
+	                           << " | η = " << ele->getp4()->Eta()
+	                           << ", φ = " << ele->getp4()->Phi()
+	                           << ", pT before calib = " << pt_before
+	                           << ", pT after calib  = " << pt_after
+	                           << " | Calibration applied = " << (isMC ? "Smearing (MC)" : "Scale Correction (Data)")
+	                           << " | Trigger SF = " << triggerSF
+	                           << " | Reco SF = " << recoSF
+	                           << " | ID SF = " << idSF
+	                           << " | Weight before = " << weight_before_SFs
+	                           << " | Weight after = " << _weight
+	                           << " | Total SF Uncertainty = " << totalSFUnc
+	                           << "\n";
+	        }
+	    } 
+	    else if (nMu > 0) {
+	        objectLep* mu = (*selectedMuons)[0];
+	        if (mu) {
+	            (*sf_log_file) << "Muon | η = " << mu->getp4()->Eta()
+	                           << ", pT = " << mu->getp4()->Pt()
+	                           << " | Muon SF = " << triggerSF
+	                           << " | Weight before = " << weight_before_SFs
+	                           << " | Weight after = " << _weight
+	                           << "\n";
+	        }
+	    }
+	}
+	
+	_entryInLoop++;
 
-    if (sf_log_file && sf_log_file->is_open() && (_entryInLoop % LOG_INTERVAL == 0 && hasLeadLepton)) {
-        (*sf_log_file) << "=== Entry " << _entryInLoop << " ===\n";
-        (*sf_log_file) << "Number of selected electrons: " << (selectedElectrons ? selectedElectrons->size() : 0) << "\n";
-        (*sf_log_file) << "Number of selected muons: "     << (selectedMuons ? selectedMuons->size() : 0) << "\n";
-
-        if (selectedElectrons && !selectedElectrons->empty()) {
-            for (size_t i = 0; i < selectedElectrons->size(); ++i) {
-                objectLep* ele = (*selectedElectrons)[i];
-                float pt_before = Electron_pt_before[i];
-                float pt_after  = Electron_pt_after[i];
-
-                (*sf_log_file) << "Electron " << i
-                               << " | η = " << ele->getp4()->Eta()
-                               << ", φ = " << ele->getp4()->Phi()
-                               << ", pT before calib = " << pt_before
-                               << ", pT after calib  = " << pt_after
-                               << " | Calibration applied = " << (isMC ? "Smearing (MC)" : "Scale Correction (Data)")
-                               << " | Trigger SF = " << triggerSF
-                               << " | Reco SF = " << recoSF
-                               << " | ID SF = " << idSF
-                               << " | Weight before = " << weight_before_SFs
-                               << " | Weight after = " << _weight
-                               << " | Total SF Uncertainty = " << totalSFUnc
-                               << "\n";
-            }
-        } else if (selectedMuons && !selectedMuons->empty()) {
-            objectLep* mu = selectedMuons->at(0);
-            (*sf_log_file) << "Muon | η = " << mu->getp4()->Eta()
-                           << ", pT = " << mu->getp4()->Pt()
-                           << " | Muon SF = " << triggerSF
-                           << " | Weight before = " << weight_before_SFs
-                           << " | Weight after = " << _weight
-                           << "\n";
-        }
-    }
-
-    _entryInLoop++;
 
 
 
