@@ -1,16 +1,28 @@
 import os
 import subprocess
 
-# valores fixos
+# ------------------------------
+# Configurações fixas
 exe = "./ttHHanalyzer_trigger"
-folder = "filelistTrigger/TTH"
+folder = "filelistTrigger/TTH"   # pasta com os arquivos .txt
+
+# Defina o nome do processo aqui
+process_name = "ttH_MC_V15"
+
+# Pasta de saída no EOS
+output_folder = f"/eos/user/g/gvian/{process_name}"
+
 xsec = "0.002892"
 year = "2024"
 dataType = "MC"
-sampleName = "ttH_MC_V15"
+sampleName = process_name
+# ------------------------------
+
+# Cria a pasta de saída se não existir
+os.makedirs(output_folder, exist_ok=True)
 
 # ------------------------------------------------
-# OPÇÃO 1: Ler todos os arquivos .txt da pasta (padrão)
+# OPÇÃO 1: Ler todos os arquivos .txt da pasta
 txt_files = sorted([f for f in os.listdir(folder) if f.endswith(".txt")])
 
 # ------------------------------------------------
@@ -29,9 +41,8 @@ if not txt_files:
 for i, txt_file in enumerate(txt_files):
     input_txt = os.path.join(folder, txt_file)
     
-    # saída pode ser pelo índice ou pelo nome do arquivo de entrada
-    # output_root = f"ttH_V15_{i}.root"  # opção 1: usar índice
-    output_root = os.path.splitext(txt_file)[0] + ".root"  # opção 2: manter nome do .txt
+    # saída usando o nome do arquivo .txt
+    output_root = os.path.join(output_folder, os.path.splitext(txt_file)[0] + ".root")
     
     cmd = [
         exe,
@@ -45,4 +56,3 @@ for i, txt_file in enumerate(txt_files):
     
     print("Executando:", " ".join(cmd))
     subprocess.run(cmd)
-
