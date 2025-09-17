@@ -360,27 +360,28 @@ void ttHHanalyzer::createObjects(event * thisEvent, sysName sysType, bool up){
         }
     }
     if(doLog) (*event_log_file) << "Boosted jets selecionados: " << nBoostedJets << ", Hadronic Higgs: " << nHadronicHiggs << std::endl;
-
-			
 	// ========================
-	// Calibração dos elétrons antes da seleção
+	// 1) Vetores de pT para log
 	// ========================
-	bool isMC = (_DataOrMC == "MC");
-	
-	// Vetores para log de pT
 	std::vector<float> Electron_pt_before;
 	std::vector<float> Electron_pt_after;
 	
-	if (ele.size() > 0) {
-	    std::vector<float> Electron_pt, Electron_eta, Electron_r9;
-	    std::vector<int> Electron_seedGain;
+	bool isMC = (_DataOrMC == "MC");
 	
-	    for (size_t i = 0; i < ele.size(); ++i) {
-	        Electron_pt.push_back(ele[i].pt);
-	        Electron_pt_before.push_back(ele[i].pt);
-	        Electron_eta.push_back(ele[i].eta);
-	        Electron_r9.push_back(ele[i].r9);
-	        Electron_seedGain.push_back(ele[i].seedGain);
+	// ========================
+	// 2) Calibração dos elétrons
+	// ========================
+	if (selectedElectrons && !selectedElectrons->empty()) {
+	    std::vector<float> Electron_pt, Electron_eta, Electron_r9;
+	    std::vector<int>   Electron_seedGain;
+	
+	    for (auto* ele : *selectedElectrons) {
+	        float pt = ele->getp4()->Pt();
+	        Electron_pt.push_back(pt);
+	        Electron_pt_before.push_back(pt);
+	        Electron_eta.push_back(ele->getp4()->Eta());
+	        Electron_r9.push_back(ele->getR9());
+	        Electron_seedGain.push_back(ele->getGain());
 	    }
 	
 	    // Aplica calibração
@@ -389,45 +390,47 @@ void ttHHanalyzer::createObjects(event * thisEvent, sysName sysType, bool up){
 	        thisEvent->runNumber, thisEvent->eventNumber, isMC
 	    );
 	
-	    // Atualiza os pT dos elétrons
-	    for (size_t i = 0; i < ele.size(); ++i) {
-	        ele[i].pt = Electron_pt[i];
-	        Electron_pt_after.push_back(Electron_pt[i]);
+	    Electron_pt_after = Electron_pt;
+	
+	    // Atualiza objetos com pT calibrado
+	    for (size_t i = 0; i < selectedElectrons->size(); ++i) {
+	        (*selectedElectrons)[i]->setPt(Electron_pt[i]);
 	    }
 	
-	    // Print no terminal de pelo menos um elétron
-	    std::cout << "[Electron] Antes: " << Electron_pt_before[0]
-	              << ", Depois: " << Electron_pt_after[0] << std::endl;
-	}
+	    // ========================
+	    // 3) Recalculo do MET
+	    // ========================
+	    if (MET) {
+	        float met_px = MET->getp4()->Px();
+	        float met_py = MET->getp4()->Py();
+	        float met_pz = MET->getp4()->Pz();
+	        float met_E  = MET->getp4()->E();
 	
-	// ========================
-	// Recalcula MET usando os elétrons calibrados
-	// ========================
-	// Supondo que seu MET seja do tipo objectMET e tenha Px, Py públicos
-	float met_px = MET->Px();
-	float met_py = MET->Py();
+	        // Subtrai o vetor antigo do elétron e adiciona o vetor calibrado
+	        for (size_t i = 0; i < selectedElectrons->size(); ++i) {
+	            float old_px = Electron_pt_before[i] * cos((*selectedElectrons)[i]->getp4()->Phi());
+	            float old_py = Electron_pt_before[i] * sin((*selectedElectrons)[i]->getp4()->Phi());
 	
-	// Subtrai o velho elétron e soma o novo
-	for (size_t i = 0; i < ele.size(); ++i) {
-	    float oldPx = Electron_pt_before[i] * cos(ele[i].phi);
-	    float oldPy = Electron_pt_before[i] * sin(ele[i].phi);
-	    float newPx = Electron_pt_after[i]  * cos(ele[i].phi);
-	    float newPy = Electron_pt_after[i]  * sin(ele[i].phi);
+	            float new_px = Electron_pt_after[i] * cos((*selectedElectrons)[i]->getp4()->Phi());
+	            float new_py = Electron_pt_after[i] * sin((*selectedElectrons)[i]->getp4()->Phi());
 	
-	    met_px = met_px - oldPx + newPx;
-	    met_py = met_py - oldPy + newPy;
-	}
+	            met_px = met_px - old_px + new_px;
+	            met_py = met_py - old_py + new_py;
+	        }
 	
-	// Atualiza o MET
-	MET->Px = met_px;
-	MET->Py = met_py;
+	        float met_new_E = sqrt(met_px*met_px + met_py*met_py + met_pz*met_pz); // MET energia recomputada
+	        MET->getp4()->SetPxPyPzE(met_px, met_py, met_pz, met_new_E);
+	    }
 	
-	// ========================
-	// Print no terminal de pelo menos um múon
-	if (muonT.size() > 0) {
-	    std::cout << "[Muon] pT = " << muonT[0].pt 
-	              << ", η = " << muonT[0].eta 
-	              << ", φ = " << muonT[0].phi << std::endl;
+	    // ========================
+	    // 4) Print de um elétron e um múon calibrados
+	    // ========================
+	    std::cout << "[DEBUG] Electron[0] Pt before/after calib: "
+	              << Electron_pt_before[0] << " / " << Electron_pt_after[0] << std::endl;
+	
+	    if (selectedMuons && !selectedMuons->empty()) {
+	        std::cout << "[DEBUG] Muon[0] Pt: " << (*selectedMuons)[0]->getp4()->Pt() << std::endl;
+	    }
 	}
 
 	
