@@ -9,7 +9,7 @@
 class ElectronEnergyCalibrator {
 public:
     // Construtor: dataOrMC = "DATA" ou "MC", year = 2022, 2023, 2024
-    ElectronEnergyCalibrator(const std::string& dataOrMC, int year);
+    ElectronEnergyCalibrator(const std::string& year, const std::string& dataOrMC);
 
     // Aplica calibração nos vetores de elétrons
     void applyElectronCalibration(
