@@ -1,5 +1,4 @@
-#ifndef ELECTRON_ENERGY_CALIBRATOR_H
-#define ELECTRON_ENERGY_CALIBRATOR_H
+#pragma once
 
 #include <vector>
 #include <string>
@@ -9,10 +8,10 @@
 
 class ElectronEnergyCalibrator {
 public:
-    // Construtor: agora recebe ano como string e DataOrMC
+    // Construtor: define ano e Data/MC
     ElectronEnergyCalibrator(const std::string& year, const std::string& dataOrMC);
 
-    // Aplica calibração em vetores de elétrons
+    // Aplica a calibração em elétrons
     void applyElectronCalibration(
         std::vector<float>& Electron_pt,
         const std::vector<float>& Electron_eta,
@@ -20,7 +19,7 @@ public:
         const std::vector<int>& Electron_seedGain,
         unsigned int runNumber,
         long long eventNumber,
-        int isMC // flag para diferenciar MC (smearing) de DATA (scale)
+        bool isMC
     );
 
 private:
@@ -29,11 +28,7 @@ private:
     std::string _year;
     mutable std::mt19937 rng;
 
-    // Retorna o caminho do JSON ET-dependent apropriado
-    std::string getElectronJSONPath() const;
-
-    // Retorna o nome do compound usado internamente (para logs ou uso futuro)
-    std::string getCompoundName() const;
+    // Métodos auxiliares
+    std::string getElectronJSONPath() const;        // retorna o caminho ET-dependent correto
+    std::string getCompoundName(bool isMC) const;   // retorna o nome do compound dentro do JSON
 };
-
-#endif
