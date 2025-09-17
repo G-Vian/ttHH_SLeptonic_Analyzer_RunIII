@@ -1044,7 +1044,7 @@ class ttHHanalyzer {
  public:
     static const int LOG_INTERVAL = 1000;
     enum sysName { kJES, kJER, kbTag, noSys };
-ttHHanalyzer::ttHHanalyzer(const std::string & cl,
+	ttHHanalyzer(const std::string & cl,
                            eventBuffer * ev,
                            float weight,
                            bool systematics,
@@ -1052,10 +1052,9 @@ ttHHanalyzer::ttHHanalyzer(const std::string & cl,
                            std::string DataOrMC,
                            std::string sampleName)
 {
-    // Inicialização do calibrador de elétrons (a lógica de escolha de JSON está dentro dele)
-	ElectronEnergyCalibrator(const std::string& dataOrMC, int year);
 
     // Inicializações padrão
+	calibrator(year, DataOrMC),
     _weight        = weight;
     _initialWeight = weight;
     _ev            = ev;
