@@ -362,70 +362,72 @@ void ttHHanalyzer::createObjects(event * thisEvent, sysName sysType, bool up){
     if(doLog) (*event_log_file) << "Boosted jets selecionados: " << nBoostedJets << ", Hadronic Higgs: " << nHadronicHiggs << std::endl;
 
 			
-		// ========================
+	// ========================
 	// Calibração dos elétrons antes da seleção
 	// ========================
+	bool isMC = (_DataOrMC == "MC");
+	
+	// Vetores para log de pT
 	std::vector<float> Electron_pt_before;
 	std::vector<float> Electron_pt_after;
 	
-	bool isMC = (_DataOrMC == "MC");
+	if (ele.size() > 0) {
+	    std::vector<float> Electron_pt, Electron_eta, Electron_r9;
+	    std::vector<int> Electron_seedGain;
 	
-	// Prepara vetores de entrada para o calibrador
-	std::vector<float> Electron_pt, Electron_eta, Electron_r9;
-	std::vector<int>   Electron_seedGain;
+	    for (size_t i = 0; i < ele.size(); ++i) {
+	        Electron_pt.push_back(ele[i].pt);
+	        Electron_pt_before.push_back(ele[i].pt);
+	        Electron_eta.push_back(ele[i].eta);
+	        Electron_r9.push_back(ele[i].r9);
+	        Electron_seedGain.push_back(ele[i].seedGain);
+	    }
 	
-	for (auto& e : ele) {
-	    Electron_pt.push_back(e.pt);
-	    Electron_pt_before.push_back(e.pt); // pT antes da calibração
-	    Electron_eta.push_back(e.eta);
-	    Electron_r9.push_back(e.r9);
-	    Electron_seedGain.push_back(e.seedGain);
-	}
+	    // Aplica calibração
+	    calibrator.applyElectronCalibration(
+	        Electron_pt, Electron_eta, Electron_r9, Electron_seedGain,
+	        thisEvent->runNumber, thisEvent->eventNumber, isMC
+	    );
 	
-	// Aplica calibração
-	calibrator.applyElectronCalibration(
-	    Electron_pt, Electron_eta, Electron_r9, Electron_seedGain,
-	    thisEvent->runNumber, thisEvent->eventNumber, isMC
-	);
+	    // Atualiza os pT dos elétrons
+	    for (size_t i = 0; i < ele.size(); ++i) {
+	        ele[i].pt = Electron_pt[i];
+	        Electron_pt_after.push_back(Electron_pt[i]);
+	    }
 	
-	// Atualiza os elétrons com pT calibrado
-	for (size_t i = 0; i < ele.size(); ++i) {
-	    ele[i].pt = Electron_pt[i];
-	    Electron_pt_after.push_back(Electron_pt[i]);
+	    // Print no terminal de pelo menos um elétron
+	    std::cout << "[Electron] Antes: " << Electron_pt_before[0]
+	              << ", Depois: " << Electron_pt_after[0] << std::endl;
 	}
 	
 	// ========================
-	// Recalcula MET com os pT calibrados
+	// Recalcula MET usando os elétrons calibrados
 	// ========================
-	float met_px = 0.;
-	float met_py = 0.;
+	// Supondo que seu MET seja do tipo objectMET e tenha Px, Py públicos
+	float met_px = MET->Px();
+	float met_py = MET->Py();
 	
-	// Subtrai os vetores antigos e adiciona os novos
+	// Subtrai o velho elétron e soma o novo
 	for (size_t i = 0; i < ele.size(); ++i) {
 	    float oldPx = Electron_pt_before[i] * cos(ele[i].phi);
 	    float oldPy = Electron_pt_before[i] * sin(ele[i].phi);
 	    float newPx = Electron_pt_after[i]  * cos(ele[i].phi);
 	    float newPy = Electron_pt_after[i]  * sin(ele[i].phi);
 	
-	    met_px += oldPx - newPx;
-	    met_py += oldPy - newPy;
+	    met_px = met_px - oldPx + newPx;
+	    met_py = met_py - oldPy + newPy;
 	}
 	
-	// Atualiza o MET do evento (assumindo objectMET possui setPxPy)
-	MET->SetPxPy(met_px, met_py); // adapte caso o seu objectMET use outro setter
+	// Atualiza o MET
+	MET->Px = met_px;
+	MET->Py = met_py;
 	
 	// ========================
-	// Debug no terminal: imprime pT de pelo menos um elétron e um múon
-	// ========================
-	if (!ele.empty()) {
-	    std::cout << "[DEBUG] Eletron 0 | pT after calib = " << ele[0].pt
-	              << ", eta = " << ele[0].eta
-	              << ", phi = " << ele[0].phi << std::endl;
-	}
-	if (!muonT.empty()) {
-	    std::cout << "[DEBUG] Muon 0 | pT = " << muonT[0].pt
-	              << ", eta = " << muonT[0].eta
-	              << ", phi = " << muonT[0].phi << std::endl;
+	// Print no terminal de pelo menos um múon
+	if (muonT.size() > 0) {
+	    std::cout << "[Muon] pT = " << muonT[0].pt 
+	              << ", η = " << muonT[0].eta 
+	              << ", φ = " << muonT[0].phi << std::endl;
 	}
 
 	
