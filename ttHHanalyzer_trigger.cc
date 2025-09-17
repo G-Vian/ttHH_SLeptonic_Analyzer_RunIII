@@ -363,18 +363,39 @@ void ttHHanalyzer::createObjects(event * thisEvent, sysName sysType, bool up){
 
 	
 // === Calibração dos elétrons antes da seleção ===
+// --- Preparação ---
+	std::vector<float> Electron_pt_before;
+	std::vector<float> Electron_pt_after;
+	
 	bool isMC = (_DataOrMC == "MC");
 	
+	// Prepara vetores de entrada para o calibrador
+	std::vector<float> Electron_pt, Electron_eta, Electron_r9;
+	std::vector<int> Electron_seedGain;
+	
 	for (size_t i = 0; i < ele.size(); ++i) {
-	    float rawPt  = ele[i].pt;
-	    float rawEta = ele[i].eta;
-	    float rawPhi = ele[i].phi;
+	    Electron_pt.push_back(ele[i].pt);
+	    Electron_pt_before.push_back(ele[i].pt); // salva pT antes da calibração
+	    Electron_eta.push_back(ele[i].eta);
+	    Electron_r9.push_back(ele[i].r9);
+	    Electron_seedGain.push_back(ele[i].seedGain);
+	}
 	
-	    // Aplica calibração usando o calibrator
-	    float calibratedPt = calibrator.calibrate(rawPt, rawEta, rawPhi, year, isMC);
+	// Aplica a calibração usando o calibrator
+	calibrator.applyElectronCalibration(
+	    Electron_pt,
+	    Electron_eta,
+	    Electron_r9,
+	    Electron_seedGain,
+	    thisEvent->runNumber,
+	    thisEvent->eventNumber,
+	    isMC
+	);
 	
-	    // Substitui o pt bruto pelo calibrado
-	    ele[i].pt = calibratedPt;
+	// Atualiza objetos com os pT calibrados
+	for (size_t i = 0; i < ele.size(); ++i) {
+	    ele[i].pt = Electron_pt[i];
+	    Electron_pt_after.push_back(Electron_pt[i]); // salva pT depois da calibração
 	}
 
 	
