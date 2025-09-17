@@ -1,5 +1,4 @@
 #include "ElectronEnergyCalibrator.h"
-#include <stdexcept>
 
 ElectronEnergyCalibrator::ElectronEnergyCalibrator(const std::string& year, const std::string& dataOrMC)
     : _year(year), _dataOrMC(dataOrMC), rng(std::random_device{}())
