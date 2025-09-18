@@ -361,9 +361,9 @@ void ttHHanalyzer::createObjects(event * thisEvent, sysName sysType, bool up){
     }
     if(doLog) (*event_log_file) << "Boosted jets selecionados: " << nBoostedJets << ", Hadronic Higgs: " << nHadronicHiggs << std::endl;
 ////////////////////////////==Electron Calibration and MET Recalculation==
-	// ========================
-	// Calibração segura dos elétrons brutos + MET
-	// ========================
+// ========================
+// Calibração segura dos elétrons brutos + MET
+// ========================
 	
 	std::vector<float> Electron_pt_before;
 	std::vector<float> Electron_pt_after;
@@ -406,9 +406,11 @@ void ttHHanalyzer::createObjects(event * thisEvent, sysName sysType, bool up){
 	    // Aplicar calibração apenas se houver elétrons válidos
 	    if (!pts.empty()) {
 	        try {
+	            // Diferencia automaticamente MC vs DATA dentro da função
 	            calibrator.calibrateElectrons(
 	                pts, etas, r9s, gains,
-	                thisEvent->runNumber
+	                thisEvent->runNumber,
+	                thisEvent->eventNumber
 	            );
 	        } catch (const std::out_of_range& e) {
 	            std::cerr << "[ERROR] Calibração falhou: " << e.what() << std::endl;
@@ -461,8 +463,6 @@ void ttHHanalyzer::createObjects(event * thisEvent, sysName sysType, bool up){
 	} else {
 	    std::cout << "[DEBUG] Nenhum elétron no evento" << std::endl;
 	}
-
-
 
 ///////////////////////////////////////////	
 	// ========================
