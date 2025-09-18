@@ -1,7 +1,10 @@
 #include "ElectronEnergyCalibrator.h"
+#include <random>
 #include <stdexcept>
-#include <cmath>
 
+// ========================
+// Construtor
+// ========================
 ElectronEnergyCalibrator::ElectronEnergyCalibrator(const std::string& year, const std::string& dataOrMC)
     : _year(year), _dataOrMC(dataOrMC), rng(std::random_device{}())
 {
@@ -9,6 +12,9 @@ ElectronEnergyCalibrator::ElectronEnergyCalibrator(const std::string& year, cons
     cset = correction::CorrectionSet::from_file(jsonPath);
 }
 
+// ========================
+// Obter caminho do JSON
+// ========================
 std::string ElectronEnergyCalibrator::getElectronJSONPath() const {
     if (_year == "2022") {
         return (_dataOrMC == "MC")
@@ -25,65 +31,41 @@ std::string ElectronEnergyCalibrator::getElectronJSONPath() const {
     }
 }
 
-std::string ElectronEnergyCalibrator::getCompoundName(bool isMC) const {
-    if (!_dataOrMC.empty()) {
-        if (!isMC) {
-            if (_year == "2022" || _year == "2022EE") return "EGMScale_Compound_Ele_2022preEE";
-            if (_year == "2023") return "EGMScale_Compound_Ele_2023";
-            if (_year == "2024") return "EGMScale_Compound_Ele_2024";
-        } else {
-            if (_year == "2022" || _year == "2022EE") return "EGMSmearAndSyst_ElePTsplit_2022preEE";
-            if (_year == "2023") return "EGMSmearAndSyst_ElePT_2023";
-            if (_year == "2024") return "EGMSmearAndSyst_ElePT_2024";
+// ========================
+// Calibração de elétrons (DATA ou MC)
+// ========================
+void ElectronEnergyCalibrator::calibrateElectrons(
+    std::vector<float>& pts,
+    const std::vector<float>& etas,
+    const std::vector<float>& r9s,
+    const std::vector<int>& gains,
+    int runNumber
+)
+{
+    for (size_t i = 0; i < pts.size(); i++) {
+        try {
+            float absEta = std::abs(etas[i]);
+
+            if (_dataOrMC != "MC") {
+                // ========================
+                // DATA: aplica scale correction
+                // ========================
+                float scale = cset.compound.at("EGMScale_Compound_Ele_2022preEE")
+                                   .evaluate("scale", "Data", runNumber, etas[i], r9s[i], absEta, pts[i], gains[i]);
+                pts[i] *= scale;
+            } else {
+                // ========================
+                // MC: aplica smearing
+                // ========================
+                float smear = cset.at("EGMSmearAndSyst_ElePTsplit_2022preEE")
+                                   .evaluate("smear", pts[i], r9s[i], absEta);
+                std::normal_distribution<float> gauss(0.0, 1.0);
+                float rnd = gauss(rng);
+                pts[i] *= (1.0f + smear * rnd);
+            }
+
+        } catch (const std::out_of_range& e) {
+            std::cerr << "[ERROR] Calibração falhou: map::at inválido (verifique pt, eta, r9 ou seedGain)" << std::endl;
         }
-    }
-    throw std::runtime_error("Compound name not defined for this configuration!");
-}
-
-void ElectronEnergyCalibrator::applyElectronCalibration(
-    std::vector<float>& Electron_pt,
-    const std::vector<float>& Electron_eta,
-    const std::vector<float>& Electron_r9,
-    const std::vector<int>& Electron_seedGain,
-    unsigned int runNumber,
-    long long eventNumber,
-    bool isMC
-) {
-    if (Electron_pt.size() != Electron_eta.size() ||
-        Electron_pt.size() != Electron_r9.size() ||
-        Electron_pt.size() != Electron_seedGain.size()) 
-    {
-        throw std::runtime_error("Electron vectors have different sizes!");
-    }
-
-    for (size_t i = 0; i < Electron_pt.size(); ++i) {
-        double pt  = Electron_pt[i];
-        double eta = Electron_eta[i];
-        double r9  = Electron_r9[i];
-        int gain   = Electron_seedGain[i];
-
-        double newPt = pt;
-        std::string compoundName = getCompoundName(isMC);
-        auto compound = (*cset).compound().at(compoundName);
-
-        if (isMC) {
-            std::vector<correction::Variable::Type> args = {pt, r9, std::abs(eta), static_cast<double>(gain), 0.0};
-            double smear = compound->evaluate(args);
-            std::normal_distribution<double> dist(1.0, smear);
-            newPt = pt * dist(rng);
-        } else {
-            std::vector<correction::Variable::Type> args = {
-                "nominal",
-                static_cast<double>(runNumber),
-                eta,
-                r9,
-                std::abs(eta),
-                pt,
-                static_cast<double>(gain)
-            };
-            newPt = compound->evaluate(args);
-        }
-
-        Electron_pt[i] = static_cast<float>(newPt);
     }
 }
