@@ -366,7 +366,6 @@ void ttHHanalyzer::createObjects(event * thisEvent, sysName sysType, bool up){
 	
 	std::vector<float> Electron_pt_before;
 	std::vector<float> Electron_pt_after;
-	
 	std::vector<size_t> valid_indices; // índices de elétrons que podem ser calibrados
 	
 	// Ponteiros para os objetos do evento
@@ -395,14 +394,12 @@ void ttHHanalyzer::createObjects(event * thisEvent, sysName sysType, bool up){
 	
 	    // Aplicar calibração apenas se houver elétrons válidos
 	    if (!pts.empty()) {
-	        try {
-	            calibrator.applyElectronCalibration(pts, etas, r9s, gains,
-	                                                thisEvent->runNumber,
-	                                                thisEvent->eventNumber,
-	                                                (_DataOrMC == "MC"));
-	        } catch (const std::out_of_range& e) {
-	            std::cerr << "[ERROR] Calibração falhou: " << e.what() << std::endl;
-	        }
+	        calibrator.applyElectronCalibration(
+	            pts, etas, r9s, gains,
+	            thisEvent->runNumber,
+	            thisEvent->eventNumber,
+	            (_DataOrMC == "MC")
+	        );
 	
 	        Electron_pt_after = pts;
 	
@@ -436,25 +433,9 @@ void ttHHanalyzer::createObjects(event * thisEvent, sysName sysType, bool up){
 	            float met_E = sqrt(met_px*met_px + met_py*met_py + met_pz*met_pz);
 	            MET->getp4()->SetPxPyPzE(met_px, met_py, met_pz, met_E);
 	        }
-	
-	        // ========================
-	        // Debug seguro
-	        // ========================
-	        if (!Electron_pt_before.empty()) {
-	            std::cout << "[DEBUG] Electron[0] Pt antes/depois: "
-	                      << Electron_pt_before[0] << " / " << Electron_pt_after[0] << std::endl;
-	        }
-	
-	        if (selectedMuons && !selectedMuons->empty()) {
-	            std::cout << "[DEBUG] Muon[0] Pt: " << (*selectedMuons)[0]->getp4()->Pt() << std::endl;
-	        } else {
-	            std::cout << "[DEBUG] NENHUM LEPTON" << std::endl;
-	        }
 	    }
-	} else {
-	    std::cout << "[DEBUG] Nenhum elétron no evento" << std::endl;
 	}
-	
+
 
 	// ========================
 	// 2) Seleção de leading leptons
