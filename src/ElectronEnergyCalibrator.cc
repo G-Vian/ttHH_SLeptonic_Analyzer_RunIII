@@ -1,10 +1,10 @@
 #include "ElectronEnergyCalibrator.h"
 #include <algorithm>
-#include <iostream>
 #include <cmath>
+#include <stdexcept>
 
 ElectronEnergyCalibrator::ElectronEnergyCalibrator(const std::string& year, const std::string& dataOrMC)
-    : _year(year), _DataOrMC(dataOrMC), rng(std::random_device{}())
+    : _year(year), _dataOrMC(dataOrMC), rng(std::random_device{}())
 {
     std::string jsonPath = getElectronJSONPath();
     cset = std::make_unique<correction::CorrectionSet>(correction::CorrectionSet::from_file(jsonPath));
@@ -12,13 +12,17 @@ ElectronEnergyCalibrator::ElectronEnergyCalibrator(const std::string& year, cons
 
 std::string ElectronEnergyCalibrator::getElectronJSONPath() const {
     if (_year == "2022") {
-        return (_DataOrMC == "MC")
+        return (_dataOrMC == "MC")
             ? "/eos/cms/store/group/phys_egamma/ScaleFactors/Data2022/MC/electronSS_EtDependent.json.gz"
             : "/eos/cms/store/group/phys_egamma/ScaleFactors/Data2022/SS/electronSS_EtDependent.json.gz";
     } else if (_year == "2022EE") {
         return "/eos/cms/store/group/phys_egamma/ScaleFactors/Data2022/ForRe-recoE+PromptFG/SS/electronSS_EtDependent.json.gz";
     } else if (_year == "2023") {
         return "/eos/cms/store/group/phys_egamma/ScaleFactors/Data2023/ForPrompt23D/SS/electronSS_EtDependent.json.gz";
+    } else if (_year == "2023B") {
+        return (_dataOrMC == "MC")
+            ? "/eos/cms/store/group/phys_egamma/ScaleFactors/Data2023/MC_B/electronSS_EtDependent.json.gz"
+            : "/eos/cms/store/group/phys_egamma/ScaleFactors/Data2023/SS_B/electronSS_EtDependent.json.gz";
     } else if (_year == "2024") {
         return "/eos/cms/store/group/phys_egamma/ScaleFactors/Data2024/SS/electronSS_EtDependent_v1.json.gz";
     } else {
@@ -26,42 +30,71 @@ std::string ElectronEnergyCalibrator::getElectronJSONPath() const {
     }
 }
 
-void ElectronEnergyCalibrator::calibrateElectrons(
-    std::vector<float>& pts,
-    const std::vector<float>& etas,
-    const std::vector<float>& r9s,
-    const std::vector<int>& gains,
-    int runNumber,
-    int eventNumber
-)
+float ElectronEnergyCalibrator::getMin(const std::string& var) const {
+    // Exemplos de limites (ajuste conforme JSON)
+    if (var == "pt") return 5.0f;
+    if (var == "ScEta") return -2.5f;
+    if (var == "r9") return 0.0f;
+    if (var == "seedGain") return 0;
+    return 0.0f;
+}
+
+float ElectronEnergyCalibrator::getMax(const std::string& var) const {
+    if (var == "pt") return 1000.0f;
+    if (var == "ScEta") return 2.5f;
+    if (var == "r9") return 1.0f;
+    if (var == "seedGain") return 12;
+    return 0.0f;
+}
+
+void ElectronEnergyCalibrator::calibrateElectrons(std::vector<float>& pts,
+                                                  const std::vector<float>& etas,
+                                                  const std::vector<float>& r9s,
+                                                  const std::vector<int>& gains,
+                                                  int runNumber)
 {
     if (pts.empty()) return;
 
-    for (size_t i = 0; i < pts.size(); ++i) {
+    for (size_t i = 0; i < pts.size(); i++) {
+        float pt_clamped   = std::clamp(pts[i], getMin("pt"), getMax("pt"));
+        float eta_clamped  = std::clamp(etas[i], getMin("ScEta"), getMax("ScEta"));
+        float r9_clamped   = std::clamp(r9s[i], getMin("r9"), getMax("r9"));
+        int gain_clamped   = std::clamp(gains[i], (int)getMin("seedGain"), (int)getMax("seedGain"));
+
         try {
-            float pt_clamped   = pts[i];   // opcional: aplicar limites se desejar
-            float eta_clamped  = etas[i];
-            float r9_clamped   = r9s[i];
-            int gain_clamped   = gains[i];
-
-            float absEta = std::abs(eta_clamped);
-
-            if (_DataOrMC == "DATA") {
-                auto scale_corr = cset->compound().at("EGMScale_Compound_Ele_2022preEE");
-                float scale = scale_corr->evaluate("scale", runNumber, eta_clamped, r9_clamped, absEta, pt_clamped, gain_clamped);
+            if (_dataOrMC == "DATA") {
+                // Scale correction para DATA
+                auto scale_corr = cset->compound.at(
+                    (_year == "2022") ? "EGMScale_Compound_Ele_2022preEE" :
+                    (_year == "2023") ? "EGMScale_Compound_Ele_2023preBPIX" :
+                    (_year == "2023B") ? "EGMScale_Compound_Ele_2023B" :
+                    "EGMScale_Compound_Ele_2024"
+                );
+                std::vector<std::variant<int, double, std::string>> inputs;
+                if (_year == "2024") {
+                    inputs = {runNumber, eta_clamped, r9_clamped, pt_clamped, gain_clamped};
+                } else {
+                    inputs = {runNumber, eta_clamped, r9_clamped, std::abs(eta_clamped), pt_clamped, gain_clamped};
+                }
+                double scale = scale_corr->evaluate(inputs);
                 pts[i] *= scale;
-            } else if (_DataOrMC == "MC") {
-                auto smear_corr = cset->at("EGMSmearAndSyst_ElePTsplit_2022preEE");
-                float smear = smear_corr->evaluate("smear", pt_clamped, r9_clamped, absEta);
+            } else {
+                // Smearing para MC
+                auto smear_corr = cset->at(
+                    (_year == "2022") ? "EGMSmearAndSyst_ElePTsplit_2022preEE" :
+                    (_year == "2023") ? "EGMSmearAndSyst_ElePTsplit_2023preBPIX" :
+                    (_year == "2023B") ? "EGMSmearAndSyst_ElePTsplit_2023B" :
+                    "EGMSmearAndSyst_ElePTsplit_2024"
+                );
+                std::vector<std::variant<int, double, std::string>> inputs = {pt_clamped, r9_clamped, std::abs(eta_clamped)};
+                double smear = smear_corr->evaluate(inputs);
 
-                std::normal_distribution<float> dist(0.0, 1.0);
-                float rnd = dist(rng);
-
-                pts[i] *= (1.0f + smear * rnd);
+                std::normal_distribution<double> gauss(0.0, 1.0);
+                double rnd = gauss(rng);
+                pts[i] *= (1.0 + smear * rnd);
             }
-
         } catch (const std::out_of_range& e) {
-            std::cerr << "[ERROR] Calibração falhou: " << e.what() << std::endl;
+            std::cerr << "[ERROR] Correção falhou: " << e.what() << std::endl;
         }
     }
 }
