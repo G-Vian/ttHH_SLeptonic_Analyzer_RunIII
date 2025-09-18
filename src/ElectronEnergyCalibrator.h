@@ -8,13 +8,10 @@
 
 class ElectronEnergyCalibrator {
 public:
-    // Construtor: agora recebe apenas o ano e se é Data ou MC
+    // Construtor: ano e tipo de dado ("DATA" ou "MC")
     ElectronEnergyCalibrator(const std::string& year, const std::string& dataOrMC);
 
-    // Aplica a calibração de pT dos elétrons
-    // - Electron_pt, Electron_eta, Electron_r9, Electron_seedGain: vetores de elétrons do evento
-    // - runNumber, eventNumber: informações do evento
-    // - isMC: true se o evento é MC, false se é dado
+    // Aplica calibração de pT
     void applyElectronCalibration(
         std::vector<float>& Electron_pt,
         const std::vector<float>& Electron_eta,
@@ -27,13 +24,10 @@ public:
 
 private:
     std::unique_ptr<correction::CorrectionSet> cset; // Corrections carregadas
-    std::string _dataOrMC;   // "DATA" ou "MC"
-    std::string _year;       // Ano do dataset
-    mutable std::mt19937 rng; // Para geração de números aleatórios se necessário
+    std::string _year;
+    std::string _dataOrMC;
+    mutable std::mt19937 rng; // Para smearing MC
 
-    // Retorna o path correto do JSON ET-dependent, baseado no ano e se é Data ou MC
     std::string getElectronJSONPath() const;
-
-    // Retorna o nome do compound dentro do JSON dependendo se é MC ou DATA
     std::string getCompoundName(bool isMC) const;
 };
