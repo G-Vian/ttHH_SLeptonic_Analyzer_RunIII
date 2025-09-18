@@ -360,7 +360,9 @@ void ttHHanalyzer::createObjects(event * thisEvent, sysName sysType, bool up){
         }
     }
     if(doLog) (*event_log_file) << "Boosted jets selecionados: " << nBoostedJets << ", Hadronic Higgs: " << nHadronicHiggs << std::endl;
-////////////////////////////
+///////////////////////////////////////////
+
+	////////////////////////////
 // Electron Calibration + MET
 ////////////////////////////
 
@@ -382,11 +384,20 @@ if (!ele.empty()) {
     int gain_min   = calibrator.getMin("seedGain");
     int gain_max   = calibrator.getMax("seedGain");
 
+    // DEBUG: tipo de calibrador
+    std::cout << "[DEBUG] Calibrator type: " << (_dataOrMC.empty() ? "EMPTY" : _dataOrMC) << std::endl;
+
     for (size_t i = 0; i < ele.size(); i++) {
         float pt_clamped   = std::min(std::max(ele[i].pt, pt_min), pt_max);
         float eta_clamped  = std::min(std::max(ele[i].eta, eta_min), eta_max);
         float r9_clamped   = std::min(std::max(ele[i].r9, r9_min), r9_max);
         int gain_clamped   = std::min(std::max(ele[i].seedGain, gain_min), gain_max);
+
+        // Filtrar valores inválidos
+        if (!std::isfinite(pt_clamped) || !std::isfinite(eta_clamped) || !std::isfinite(r9_clamped)) {
+            std::cerr << "[WARNING] Eletrón " << i << " possui valor inválido e será ignorado" << std::endl;
+            continue;
+        }
 
         pts.push_back(pt_clamped);
         etas.push_back(eta_clamped);
@@ -395,11 +406,15 @@ if (!ele.empty()) {
 
         Electron_pt_before.push_back(ele[i].pt);
         valid_indices.push_back(i);
+
+        // DEBUG: valores enviados para calibração
+        std::cout << "[DEBUG] Eletrón " << i
+                  << " pt/eta/r9/gain: " << pt_clamped << "/" << eta_clamped
+                  << "/" << r9_clamped << "/" << gain_clamped << std::endl;
     }
 
     if (!pts.empty()) {
         try {
-            // ⚠️ Aplica calibração DATA ou MC internamente
             calibrator.calibrateElectrons(pts, etas, r9s, gains, _runNumber);
         } catch (const std::exception& e) {
             std::cerr << "[ERROR] Calibração falhou: " << e.what() << std::endl;
@@ -436,13 +451,16 @@ if (!ele.empty()) {
             MET->getp4()->SetPxPyPzE(met_px, met_py, met_pz, met_E);
         }
 
-        // Debug
+        // Debug final
         std::cout << "[DEBUG] Electron[0] Pt antes/depois: "
                   << Electron_pt_before[0] << " / " << Electron_pt_after[0] << std::endl;
+    } else {
+        std::cout << "[DEBUG] Nenhum elétron válido para calibração neste evento" << std::endl;
     }
 } else {
     std::cout << "[DEBUG] Nenhum elétron no evento" << std::endl;
 }
+
 
 
 ///////////////////////////////////////////	
