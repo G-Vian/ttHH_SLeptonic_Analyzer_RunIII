@@ -775,6 +775,18 @@ void ttHHanalyzer::diMotherReco(const TLorentzVector & dPar1p4,const TLorentzVec
 
 
 void ttHHanalyzer::analyze(event *thisEvent) {
+// Vetores de leptons selecionados
+std::vector<objectLep*> selectedElectrons;
+std::vector<objectLep*> selectedMuons;
+
+// Preencher vetores com os objetos selecionados do evento
+for (auto* currentEle : thisEvent->electrons) {
+    if (thisEvent->selectEle(currentEle)) selectedElectrons.push_back(currentEle);
+}
+for (auto* currentMuon : thisEvent->muons) {
+    if (thisEvent->selectMuon(currentMuon)) selectedMuons.push_back(currentMuon);
+}
+
 // ========================
 // Prepara vetores de pT para log
 // ========================
@@ -786,14 +798,11 @@ bool isMC = (_DataOrMC == "MC");
 // ========================
 // Preenche vetores de pT dos elétrons selecionados (já calibrados)
 // ========================
-if (selectedElectrons && !selectedElectrons->empty()) {
-    for (auto* ele : *selectedElectrons) {
-        float pt = ele->getp4()->Pt();
-        Electron_pt_before.push_back(pt);
-        Electron_pt_after.push_back(pt); // Mantém pT como está, sem recalibração
-    }
+for (auto* ele : selectedElectrons) {
+    float pt = ele->getp4()->Pt();
+    Electron_pt_before.push_back(pt);
+    Electron_pt_after.push_back(pt); // Mantém pT como está, sem recalibração
 }
-
 // ========================
 // Scale factors e incerteza
 // ========================
