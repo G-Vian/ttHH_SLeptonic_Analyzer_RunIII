@@ -1042,7 +1042,7 @@ class event{
 
 class ttHHanalyzer {
 public:
-    static const int LOG_INTERVAL = 1000;
+    static const int LOG_INTERVAL = 100;
     enum sysName { kJES, kJER, kbTag, noSys };
 
     // Construtor
