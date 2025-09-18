@@ -55,19 +55,21 @@ void ElectronEnergyCalibrator::calibrateElectrons(
             int gain = gains[i];
             float absEta = std::abs(eta);
 
+            // Declarar sistemática apenas uma vez
+            std::string syst = "nominal";
             std::vector<std::variant<int,double,std::string>> args;
 
             if (_dataOrMC == "DATA") {
                 // ========================
                 // DATA: Compound correction
                 // ========================
-                std::string syst = "nominal"; // sistemática padrão
                 args = { syst, runNumber, eta, r9, absEta, pt, gain };
 
                 auto scale_corr = cset->compound().at(
-                    (_year=="2022") ? "EGMScale_Compound_Ele_2022preEE" :
-                    (_year=="2023") ? "EGMScale_Compound_Ele_2023preBPIX" :
-                    (_year=="2023B") ? "EGMScale_Compound_Ele_2023B" :
+                    (_year=="2022")    ? "EGMScale_Compound_Ele_2022preEE" :
+                    (_year=="2022EE")  ? "EGMScale_Compound_Ele_2022postEE" :
+                    (_year=="2023")    ? "EGMScale_Compound_Ele_2023preBPIX" :
+                    (_year=="2023B")   ? "EGMScale_Compound_Ele_2023postBPIX" :
                     "EGMScale_Compound_Ele_2024"
                 );
 
@@ -78,19 +80,16 @@ void ElectronEnergyCalibrator::calibrateElectrons(
                 // ========================
                 // MC: Smearing + sistemática
                 // ========================
-                std::string syst = "nominal";
+                args = { pt, r9, absEta, syst };
 
                 auto smear_corr = cset->at(
-                    (_year=="2022") ? "EGMSmearAndSyst_ElePTsplit_2022preEE" :
-                    (_year=="2023") ? "EGMSmearAndSyst_ElePTsplit_2023preBPIX" :
-                    (_year=="2023B") ? "EGMSmearAndSyst_ElePTsplit_2023B" :
+                    (_year=="2022")    ? "EGMSmearAndSyst_ElePTsplit_2022preEE" :
+                    (_year=="2022EE")  ? "EGMSmearAndSyst_ElePTsplit_2022postEE" :
+                    (_year=="2023")    ? "EGMSmearAndSyst_ElePTsplit_2023preBPIX" :
+                    (_year=="2023B")   ? "EGMSmearAndSyst_ElePTsplit_2023postBPIX" :
                     "EGMSmearAndSyst_ElePTsplit_2024"
                 );
 
-                // ⚠️ Ajuste: verificar número de inputs do JSON de smearing
-                // Normalmente: pt, r9, absEta, syst
-                std::string syst = "nominal"; // sempre string
-                args = { syst, pt, r9, absEta }; // ⚠️ syst primeiro!
                 double smear = smear_corr->evaluate(args);
 
                 std::normal_distribution<float> gauss(0.0, 1.0);
