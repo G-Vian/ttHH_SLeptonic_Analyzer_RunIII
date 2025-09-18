@@ -56,7 +56,7 @@ void ElectronEnergyCalibrator::calibrateElectrons(
 
             std::vector<std::variant<int, double, std::string>> args;
 
-            if (_DataOrMC == "DATA") {
+            if (_dataOrMC == "DATA") {
                 // DATA: aplicar scale correction
                 if (_year == "2024") {
                     args = { runNumber, etas[i], r9, pt, gain };
