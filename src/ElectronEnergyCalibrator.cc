@@ -89,8 +89,8 @@ void ElectronEnergyCalibrator::calibrateElectrons(
 
                 // ⚠️ Ajuste: verificar número de inputs do JSON de smearing
                 // Normalmente: pt, r9, absEta, syst
-                args = { pt, r9, absEta, syst };
-
+                std::string syst = "nominal"; // sempre string
+                args = { syst, pt, r9, absEta }; // ⚠️ syst primeiro!
                 double smear = smear_corr->evaluate(args);
 
                 std::normal_distribution<float> gauss(0.0, 1.0);
