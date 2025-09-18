@@ -1,32 +1,31 @@
 #pragma once
-
 #include <vector>
 #include <string>
-#include <random>
 #include <memory>
-#include <iostream>
-#include <cmath>
+#include <random>
 #include <correction.h>
 
 class ElectronEnergyCalibrator {
 public:
-    // Construtor: recebe ano e se é MC ou DATA
     ElectronEnergyCalibrator(const std::string& year, const std::string& dataOrMC);
 
-    // Função principal que aplica correção dependendo se é DATA ou MC
     void calibrateElectrons(
         std::vector<float>& pts,
         const std::vector<float>& etas,
         const std::vector<float>& r9s,
         const std::vector<int>& gains,
-        int runNumber
+        int runNumber,
+        int eventNumber
     );
+
+    float getMin(const std::string& var) const;
+    float getMax(const std::string& var) const;
 
 private:
     std::string _year;
-    std::string _dataOrMC;
+    std::string _DataOrMC;
+    std::unique_ptr<correction::CorrectionSet> cset;
     std::mt19937 rng;
-    correction::CorrectionSet cset;
 
     std::string getElectronJSONPath() const;
 };
