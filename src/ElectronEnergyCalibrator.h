@@ -26,8 +26,8 @@ public:
     float getMax(const std::string& var) const;
 
 private:
-    std::string _year;
-    std::string _dataOrMC;
+ //   std::string _year;
+ //   std::string _dataOrMC;
     std::unique_ptr<correction::CorrectionSet> cset;
     std::mt19937 rng;
 
