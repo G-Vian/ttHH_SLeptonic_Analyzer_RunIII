@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <cmath>
 #include <iostream>
+#include <random>
 
 // ------------------------
 // Construtor
@@ -21,11 +22,11 @@ std::string ElectronEnergyCalibrator::getElectronJSONPath() const {
         return (_dataOrMC == "MC")
             ? "/eos/cms/store/group/phys_egamma/ScaleFactors/Data2022/MC/electronSS_EtDependent.json.gz"
             : "/eos/cms/store/group/phys_egamma/ScaleFactors/Data2022/SS/electronSS_EtDependent.json.gz";
-    } else if (_year == "2022EE") { // mudou para pós EE
+    } else if (_year == "2022EE") { // 2022 pós EE
         return "/eos/cms/store/group/phys_egamma/ScaleFactors/Data2022/ForRe-recoE+PromptFG/SS/electronSS_EtDependent.json.gz";
     } else if (_year == "2023") {
         return "/eos/cms/store/group/phys_egamma/ScaleFactors/Data2023/ForPrompt23D/SS/electronSS_EtDependent.json.gz";
-    } else if (_year == "2023B") { // mudou para pós BPIX
+    } else if (_year == "2023B") { // 2023 pós BPIX
         return "/eos/cms/store/group/phys_egamma/ScaleFactors/Data2023B/SS/electronSS_EtDependent.json.gz";
     } else if (_year == "2024") {
         return "/eos/cms/store/group/phys_egamma/ScaleFactors/Data2024/SS/electronSS_EtDependent_v1.json.gz";
@@ -61,9 +62,15 @@ void ElectronEnergyCalibrator::calibrateElectrons(
                 // ========================
                 // DATA: Compound correction
                 // ========================
-                std::string syst = "central"; // valor compatível com JSON
-
-                args = { syst, runNumber, eta, r9, absEta, pt, gain };
+                std::string syst = "central"; // compatível com JSON
+                args.clear();
+                args.emplace_back(syst);       // string
+                args.emplace_back(runNumber);  // int
+                args.emplace_back(eta);        // double
+                args.emplace_back(r9);         // double
+                args.emplace_back(absEta);     // double
+                args.emplace_back(pt);         // double
+                args.emplace_back(gain);       // int
 
                 auto scale_corr = cset->compound().at(
                     (_year=="2022") ? "EGMScale_Compound_Ele_2022preEE" :
@@ -81,6 +88,11 @@ void ElectronEnergyCalibrator::calibrateElectrons(
                 // MC: Smearing + sistemática
                 // ========================
                 std::string syst = "central"; // MC smearing sempre string e compatível com category
+                args.clear();
+                args.emplace_back(pt);       // double
+                args.emplace_back(r9);       // double
+                args.emplace_back(absEta);   // double
+                args.emplace_back(syst);     // string
 
                 auto smear_corr = cset->at(
                     (_year=="2022") ? "EGMSmearAndSyst_ElePTsplit_2022preEE" :
@@ -89,8 +101,6 @@ void ElectronEnergyCalibrator::calibrateElectrons(
                     (_year=="2023B") ? "EGMSmearAndSyst_ElePTsplit_2023postBPIX" :
                     "EGMSmearAndSyst_ElePTsplit_2024"
                 );
-
-                args = { pt, r9, absEta, syst };
 
                 double smear = smear_corr->evaluate(args);
 
@@ -121,3 +131,4 @@ float ElectronEnergyCalibrator::getMax(const std::string& var) const {
     if (var=="seedGain") return 12;
     return 1.0f;
 }
+
