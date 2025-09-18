@@ -360,103 +360,101 @@ void ttHHanalyzer::createObjects(event * thisEvent, sysName sysType, bool up){
         }
     }
     if(doLog) (*event_log_file) << "Boosted jets selecionados: " << nBoostedJets << ", Hadronic Higgs: " << nHadronicHiggs << std::endl;
-// ========================
-// 1) Calibração dos elétrons brutos (segura)
-// ========================
-std::vector<float> Electron_pt_before;
-std::vector<float> Electron_pt_after;
-std::vector<objectLep*>* selectedElectrons = thisEvent->getSelElectrons();
-std::vector<objectLep*>* selectedMuons     = thisEvent->getSelMuons();
-
-bool isMC = (_DataOrMC == "MC");
-
-if (!ele.empty()) {
-    std::vector<float> Electron_pt;
-    std::vector<float> Electron_eta;
-    std::vector<float> Electron_r9;
-    std::vector<int>   Electron_seedGain;
-    std::vector<size_t> valid_indices; // Indices de elétrons válidos para calibração
-
-    // Filtra elétrons com parâmetros válidos
-    for (size_t i = 0; i < ele.size(); i++) {
-        if (ele[i].eta != 0 && ele[i].r9 >= 0 && ele[i].r9 <= 1) { // exemplo de filtro seguro
-            Electron_pt.push_back(ele[i].pt);
-            Electron_eta.push_back(ele[i].eta);
-            Electron_r9.push_back(ele[i].r9);
-            Electron_seedGain.push_back(ele[i].seedGain);
-            Electron_pt_before.push_back(ele[i].pt);
-            valid_indices.push_back(i);
-        }
-    }
-
-    // Aplica calibração com try/catch para evitar crash
-    try {
-        calibrator.applyElectronCalibration(
-            Electron_pt, Electron_eta, Electron_r9, Electron_seedGain,
-            thisEvent->runNumber, thisEvent->eventNumber, isMC
-        );
-    } catch (const std::out_of_range& e) {
-        std::cerr << "[ERROR] Calibração falhou: " << e.what() << std::endl;
-        for (size_t i = 0; i < valid_indices.size(); i++) {
-            size_t idx = valid_indices[i];
-            std::cerr << "Eletron " << idx 
-                      << " pt=" << ele[idx].pt
-                      << " eta=" << ele[idx].eta
-                      << " r9=" << ele[idx].r9
-                      << " seedGain=" << ele[idx].seedGain
-                      << std::endl;
-        }
-    }
-
-    // Atualiza os elétrons brutos com os valores calibrados
-    Electron_pt_after = Electron_pt;
-    for (size_t i = 0; i < valid_indices.size(); i++) {
-        size_t idx = valid_indices[i];
-        ele[idx].pt = Electron_pt[i];
-    }
-
-    // Debug simples: mostra o primeiro elétron calibrado
-    std::cout << "[DEBUG] Electron[0] Pt calibrado: " << ele[valid_indices[0]].pt << std::endl;
-
-    // ========================
-    // 2) Recalculo do MET
-    // ========================
-    if (MET) {
-        float met_px = MET->getp4()->Px();
-        float met_py = MET->getp4()->Py();
-        float met_pz = MET->getp4()->Pz();
-        float met_E  = MET->getp4()->E();
-
-        for (size_t i = 0; i < valid_indices.size(); i++) {
-            size_t idx = valid_indices[i];
-            float old_px = Electron_pt_before[i] * cos(ele[idx].phi);
-            float old_py = Electron_pt_before[i] * sin(ele[idx].phi);
-
-            float new_px = Electron_pt_after[i] * cos(ele[idx].phi);
-            float new_py = Electron_pt_after[i] * sin(ele[idx].phi);
-
-            met_px = met_px - old_px + new_px;
-            met_py = met_py - old_py + new_py;
-        }
-
-        float met_new_E = sqrt(met_px*met_px + met_py*met_py + met_pz*met_pz);
-        MET->getp4()->SetPxPyPzE(met_px, met_py, met_pz, met_new_E);
-    }
-
-    // ========================
-    // 3) Print de um elétron e um múon
-    // ========================
-    if (!valid_indices.empty()) {
-        std::cout << "[DEBUG] Electron[0] Pt antes/depois: "
-                  << Electron_pt_before[0] << " / " << Electron_pt_after[0] << std::endl;
-    }
-
-    if (selectedMuons && !selectedMuons->empty()) {
-        std::cout << "[DEBUG] Muon[0] Pt: " << (*selectedMuons)[0]->getp4()->Pt() << std::endl;
-    } else {
-        std::cout << "[DEBUG] NENHUM LEPTON" << std::endl;
-    }
-}
+	// ========================
+	// Calibração robusta dos elétrons brutos + MET
+	// ========================
+	
+	std::vector<float> Electron_pt_before;
+	std::vector<float> Electron_pt_after;
+	
+	std::vector<size_t> valid_indices; // índices de elétrons que podem ser calibrados
+	
+	// Ponteiros para os objetos do evento
+	std::vector<objectLep*>* selectedElectrons = thisEvent->getSelElectrons();
+	std::vector<objectLep*>* selectedMuons     = thisEvent->getSelMuons();
+	
+	// Garantir que existam elétrons no evento
+	if (!ele.empty()) {
+	
+	    // Preparar vetores para o calibrator
+	    std::vector<float> pts, etas, r9s;
+	    std::vector<int> gains;
+	
+	    for (size_t i = 0; i < ele.size(); i++) {
+	        // Filtragem mínima para evitar erros no calibrator
+	        if (ele[i].r9 >= 0.0 && ele[i].r9 <= 1.0 && std::abs(ele[i].eta) < 5.0) {
+	            pts.push_back(ele[i].pt);
+	            etas.push_back(ele[i].eta);
+	            r9s.push_back(ele[i].r9);
+	            gains.push_back(ele[i].seedGain);
+	
+	            Electron_pt_before.push_back(ele[i].pt);
+	            valid_indices.push_back(i);
+	        }
+	    }
+	
+	    // Aplicar calibração apenas se houver elétrons válidos
+	    if (!pts.empty()) {
+	        try {
+	            calibrator.applyElectronCalibration(pts, etas, r9s, gains,
+	                                                thisEvent->runNumber,
+	                                                thisEvent->eventNumber,
+	                                                (_DataOrMC == "MC"));
+	        } catch (const std::out_of_range& e) {
+	            std::cerr << "[ERROR] Calibração falhou: " << e.what() << std::endl;
+	        }
+	
+	        Electron_pt_after = pts;
+	
+	        // Atualiza os elétrons brutos com os valores calibrados
+	        for (size_t j = 0; j < valid_indices.size(); j++) {
+	            size_t idx = valid_indices[j];
+	            ele[idx].pt = pts[j];
+	        }
+	
+	        // ========================
+	        // Recalculo seguro do MET
+	        // ========================
+	        if (MET) {
+	            float met_px = MET->getp4()->Px();
+	            float met_py = MET->getp4()->Py();
+	            float met_pz = MET->getp4()->Pz();
+	
+	            // Corrige o MET somente com elétrons que foram calibrados
+	            for (size_t j = 0; j < valid_indices.size(); j++) {
+	                size_t idx = valid_indices[j];
+	                float old_px = Electron_pt_before[j] * cos(ele[idx].phi);
+	                float old_py = Electron_pt_before[j] * sin(ele[idx].phi);
+	
+	                float new_px = Electron_pt_after[j] * cos(ele[idx].phi);
+	                float new_py = Electron_pt_after[j] * sin(ele[idx].phi);
+	
+	                met_px = met_px - old_px + new_px;
+	                met_py = met_py - old_py + new_py;
+	            }
+	
+	            float met_E = sqrt(met_px*met_px + met_py*met_py + met_pz*met_pz);
+	            MET->getp4()->SetPxPyPzE(met_px, met_py, met_pz, met_E);
+	        }
+	
+	        // ========================
+	        // Debug seguro
+	        // ========================
+	        if (!Electron_pt_before.empty()) {
+	            std::cout << "[DEBUG] Electron[0] Pt antes/depois: "
+	                      << Electron_pt_before[0] << " / " << Electron_pt_after[0] << std::endl;
+	        }
+	
+	        if (selectedMuons && !selectedMuons->empty()) {
+	            std::cout << "[DEBUG] Muon[0] Pt: " << (*selectedMuons)[0]->getp4()->Pt() << std::endl;
+	        } else {
+	            std::cout << "[DEBUG] NENHUM LEPTON" << std::endl;
+	        }
+	    }
+	} else {
+	    std::cout << "[DEBUG] Nenhum elétron no evento" << std::endl;
+	}
+	
 
 	// ========================
 	// 2) Seleção de leading leptons
