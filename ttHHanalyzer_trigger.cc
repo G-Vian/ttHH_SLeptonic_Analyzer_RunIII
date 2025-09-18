@@ -367,14 +367,12 @@ void ttHHanalyzer::createObjects(event * thisEvent, sysName sysType, bool up){
 	if (!ele.empty() && MET) {
 	    std::vector<float> Electron_pt_before;
 	    std::vector<float> Electron_pt_after;
-	
 	    std::vector<float> Electron_eta;
 	    std::vector<float> Electron_r9;
 	    std::vector<int>   Electron_seedGain;
 	
-	    // Prepara vetores a partir dos brutos
 	    for (size_t i = 0; i < ele.size(); i++) {
-	        Electron_pt_before.push_back(ele[i].pt);  // guarda antes da calibração
+	        Electron_pt_before.push_back(ele[i].pt);
 	        Electron_eta.push_back(ele[i].eta);
 	        Electron_r9.push_back(ele[i].r9);
 	        Electron_seedGain.push_back(ele[i].seedGain);
@@ -382,34 +380,26 @@ void ttHHanalyzer::createObjects(event * thisEvent, sysName sysType, bool up){
 	
 	    bool isMC = (_DataOrMC == "MC");
 	
-	    // Aplica calibração
 	    calibrator.applyElectronCalibration(
 	        Electron_pt_before, Electron_eta, Electron_r9, Electron_seedGain,
 	        thisEvent->runNumber, thisEvent->eventNumber, isMC
 	    );
 	
-	    // Copia os calibrados para "after"
 	    Electron_pt_after = Electron_pt_before;
 	
-	    // Atualiza os valores calibrados de volta nos brutos
 	    for (size_t i = 0; i < ele.size(); i++) {
 	        ele[i].pt = Electron_pt_after[i];
 	    }
 	
-	    // ========================
-	    // Recalculo do MET
-	    // ========================
+	    // === Recalculo do MET ===
 	    float met_px = MET->getp4()->Px();
 	    float met_py = MET->getp4()->Py();
 	    float met_pz = MET->getp4()->Pz();
 	    float met_E  = MET->getp4()->E();
 	
 	    for (size_t i = 0; i < ele.size(); ++i) {
-	        // px, py antigo (antes da calibração)
 	        float old_px = Electron_pt_before[i] * cos(ele[i].phi);
 	        float old_py = Electron_pt_before[i] * sin(ele[i].phi);
-	
-	        // px, py novo (após calibração)
 	        float new_px = Electron_pt_after[i] * cos(ele[i].phi);
 	        float new_py = Electron_pt_after[i] * sin(ele[i].phi);
 	
@@ -420,28 +410,19 @@ void ttHHanalyzer::createObjects(event * thisEvent, sysName sysType, bool up){
 	    float met_new_E = sqrt(met_px*met_px + met_py*met_py + met_pz*met_pz);
 	    MET->getp4()->SetPxPyPzE(met_px, met_py, met_pz, met_new_E);
 	
-	    // ========================
-	    // Debug: imprime calibração e leptons
-	    // ========================
 	    std::cout << "[DEBUG] Electron[0] Pt before/after calib: "
 	              << Electron_pt_before[0] << " / " << Electron_pt_after[0] << std::endl;
-	
-	    if (!muonT.empty()) {
+	    if (!muonT.empty())
 	        std::cout << "[DEBUG] Muon[0] Pt: " << muonT[0].pt << std::endl;
-	    } else {
-	        std::cout << "[DEBUG] NENHUM MUON" << std::endl;
-	    }
 	}
-
 	
-
-	
-	// === Lepton Leading Selection ===
+	// ========================
+	// 2) Seleção de leading leptons
+	// ========================
 	bool thereIsALeadLepton = false;
 	int nLeadingMuons = 0;
 	int nLeadingElectrons = 0;
 	
-	// Access seguro com count()
 	for (size_t i = 0; i < muonT.size(); i++) {
 	    if (cut.count("muonEta") && cut.count("muonIso") && cut.count("leadMuonPt")) {
 	        if (fabs(muonT[i].eta) < cut["muonEta"] &&
@@ -471,12 +452,14 @@ void ttHHanalyzer::createObjects(event * thisEvent, sysName sysType, bool up){
 	    }
 	}
 	
-	if(doLog) (*event_log_file) << "Lepton líder encontrado? " 
+	if (doLog) (*event_log_file) << "Lepton líder encontrado? "
 	                             << (thereIsALeadLepton ? "SIM" : "NÃO")
 	                             << " | Muons líderes: " << nLeadingMuons
 	                             << " | Elétrons líderes: " << nLeadingElectrons << std::endl;
 	
-	// === Subleading Leptons ===
+	// ========================
+	// 3) Seleção de subleading leptons
+	// ========================
 	int nSubMuons = 0;
 	int nSubEles = 0;
 	if (thereIsALeadLepton) {
@@ -514,7 +497,7 @@ void ttHHanalyzer::createObjects(event * thisEvent, sysName sysType, bool up){
 	    }
 	}
 	
-	if(doLog) (*event_log_file) << "Sub-leading leptons: Muons: " << nSubMuons
+	if (doLog) (*event_log_file) << "Sub-leading leptons: Muons: " << nSubMuons
 	                             << ", Electrons: " << nSubEles << std::endl;
 
     // === Jets ===
