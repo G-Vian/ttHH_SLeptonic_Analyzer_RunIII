@@ -8,7 +8,7 @@
 // Construtor
 // ------------------------
 ElectronEnergyCalibrator::ElectronEnergyCalibrator(const std::string& year, const std::string& dataOrMC)
-    : _year(year), _dataOrMC(dataOrMC), rng(std::random_device{}())
+    : _year(year), _DataOrMC(DataOrMC), rng(std::random_device{}())
 {
     std::string jsonPath = getElectronJSONPath();
     cset = correction::CorrectionSet::from_file(jsonPath);
@@ -19,7 +19,7 @@ ElectronEnergyCalibrator::ElectronEnergyCalibrator(const std::string& year, cons
 // ------------------------
 std::string ElectronEnergyCalibrator::getElectronJSONPath() const {
     if (_year == "2022") {
-        return (_dataOrMC == "MC")
+        return (_DataOrMC == "MC")
             ? "/eos/cms/store/group/phys_egamma/ScaleFactors/Data2022/MC/electronSS_EtDependent.json.gz"
             : "/eos/cms/store/group/phys_egamma/ScaleFactors/Data2022/SS/electronSS_EtDependent.json.gz";
     } else if (_year == "2022EE") { // 2022 pós EE
@@ -58,7 +58,7 @@ void ElectronEnergyCalibrator::calibrateElectrons(
 
             std::vector<std::variant<int,double,std::string>> args;
 
-            if (_dataOrMC == "DATA") {
+            if (_DataOrMC == "DATA") {
                 // ========================
                 // DATA: Compound correction
                 // ========================
