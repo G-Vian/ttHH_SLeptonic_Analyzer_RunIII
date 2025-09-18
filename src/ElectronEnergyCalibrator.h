@@ -2,32 +2,43 @@
 
 #include <vector>
 #include <string>
-#include <random>
-#include <memory>
-#include <correction.h>
+#include <stdexcept>
+#include "correction.h"  // sua implementação do CorrectionSet
 
 class ElectronEnergyCalibrator {
 public:
-    // Construtor: ano e tipo de dado ("DATA" ou "MC")
-    ElectronEnergyCalibrator(const std::string& year, const std::string& dataOrMC);
+    // Construtor: recebe o caminho para o JSON de correções
+    ElectronEnergyCalibrator(const std::string& path_json);
 
-    // Aplica calibração de pT
-    void applyElectronCalibration(
-        std::vector<float>& Electron_pt,
-        const std::vector<float>& Electron_eta,
-        const std::vector<float>& Electron_r9,
-        const std::vector<int>& Electron_seedGain,
-        unsigned int runNumber,
-        long long eventNumber,
-        bool isMC
+    // ========================
+    // Aplicar scale correction (DATA)
+    // ========================
+    // pts: vetor de pT dos elétrons (será modificado)
+    // etas: vetor de eta dos elétrons
+    // r9s: vetor de r9 dos elétrons
+    // gains: vetor de seedGain dos elétrons
+    // runNumber/eventNumber: usados para o JSON
+    void applyElectronScaleCorrection(
+        std::vector<float>& pts,
+        const std::vector<float>& etas,
+        const std::vector<float>& r9s,
+        const std::vector<int>& gains,
+        int runNumber,
+        int eventNumber
+    );
+
+    // ========================
+    // Obter smearing (MC)
+    // ========================
+    // pts, etas, r9s, gains: vetores de elétrons
+    // Retorna vetor de fatores de smearing nominais
+    std::vector<float> getElectronSmearing(
+        const std::vector<float>& pts,
+        const std::vector<float>& etas,
+        const std::vector<float>& r9s,
+        const std::vector<int>& gains
     );
 
 private:
-    std::unique_ptr<correction::CorrectionSet> cset; // Corrections carregadas
-    std::string _year;
-    std::string _dataOrMC;
-    mutable std::mt19937 rng; // Para smearing MC
-
-    std::string getElectronJSONPath() const;
-    std::string getCompoundName(bool isMC) const;
+    CorrectionSet correctionSet;  // objeto que carrega o JSON de correções
 };
