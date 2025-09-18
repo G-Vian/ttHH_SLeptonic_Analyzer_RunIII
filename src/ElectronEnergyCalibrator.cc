@@ -49,20 +49,20 @@ void ElectronEnergyCalibrator::calibrateElectrons(
     try {
         for (size_t i = 0; i < pts.size(); ++i) {
 
-            float absEta = std::abs(etas[i]);
             float pt = pts[i];
+            float eta = etas[i];
             float r9 = r9s[i];
             int gain = gains[i];
+            float absEta = std::abs(eta);
 
-            std::vector<std::variant<int, double, std::string>> args;
+            std::vector<std::variant<int,double,std::string>> args;
 
             if (_dataOrMC == "DATA") {
-                // DATA: aplicar scale correction
-                if (_year == "2024") {
-                    args = { runNumber, etas[i], r9, pt, gain };
-                } else {
-                    args = { runNumber, etas[i], r9, absEta, pt, gain };
-                }
+                // ========================
+                // DATA: Compound correction
+                // ========================
+                std::string syst = "nominal"; // sistemática padrão
+                args = { syst, runNumber, eta, r9, absEta, pt, gain };
 
                 auto scale_corr = cset->compound().at(
                     (_year=="2022") ? "EGMScale_Compound_Ele_2022preEE" :
@@ -75,7 +75,11 @@ void ElectronEnergyCalibrator::calibrateElectrons(
                 pts[i] *= static_cast<float>(scale);
 
             } else {
-                // MC: aplicar smearing
+                // ========================
+                // MC: Smearing + sistemática
+                // ========================
+                std::string syst = "nominal";
+
                 auto smear_corr = cset->at(
                     (_year=="2022") ? "EGMSmearAndSyst_ElePTsplit_2022preEE" :
                     (_year=="2023") ? "EGMSmearAndSyst_ElePTsplit_2023preBPIX" :
@@ -83,7 +87,10 @@ void ElectronEnergyCalibrator::calibrateElectrons(
                     "EGMSmearAndSyst_ElePTsplit_2024"
                 );
 
-                args = { pt, r9, absEta };
+                // ⚠️ Ajuste: verificar número de inputs do JSON de smearing
+                // Normalmente: pt, r9, absEta, syst
+                args = { pt, r9, absEta, syst };
+
                 double smear = smear_corr->evaluate(args);
 
                 std::normal_distribution<float> gauss(0.0, 1.0);
@@ -96,7 +103,7 @@ void ElectronEnergyCalibrator::calibrateElectrons(
 }
 
 // ------------------------
-// Limites (exemplo)
+// Limites de segurança
 // ------------------------
 float ElectronEnergyCalibrator::getMin(const std::string& var) const {
     if (var=="pt") return 5.0f;
@@ -113,3 +120,4 @@ float ElectronEnergyCalibrator::getMax(const std::string& var) const {
     if (var=="seedGain") return 12;
     return 1.0f;
 }
+
