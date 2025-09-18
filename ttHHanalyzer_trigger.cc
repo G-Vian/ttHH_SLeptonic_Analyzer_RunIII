@@ -801,10 +801,10 @@ void ttHHanalyzer::analyze(event *thisEvent) {
         }
 
         // Aplica calibração
-        calibrator.applyElectronCalibration(
-            Electron_pt, Electron_eta, Electron_r9, Electron_seedGain,
-            thisEvent->runNumber, thisEvent->eventNumber, isMC
-        );
+		calibrator.calibrateElectrons(
+		    pts, etas, r9s, gains,
+		    runNumber
+		);
 
         Electron_pt_after = Electron_pt;
 
