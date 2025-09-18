@@ -365,9 +365,12 @@ void ttHHanalyzer::createObjects(event * thisEvent, sysName sysType, bool up){
 	// ========================
 	std::vector<float> Electron_pt_before;
 	std::vector<float> Electron_pt_after;
-	
+	std::vector<objectLep*>* selectedElectrons = thisEvent->getSelElectrons();
+    std::vector<objectLep*>* selectedMuons     = thisEvent->getSelMuons();
+
 	bool isMC = (_DataOrMC == "MC");
-	
+	currentEvent->getSelElectrons()->size() << "\n";
+        (*sf_log_file) << "Number of selected muons: " << currentEvent->getSelMuons()->size() << "\n";
 	// ========================
 	// 2) Calibração dos elétrons
 	// ========================
