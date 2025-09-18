@@ -367,7 +367,6 @@ void ttHHanalyzer::createObjects(event * thisEvent, sysName sysType, bool up){
 	
 	std::vector<float> Electron_pt_before;
 	std::vector<float> Electron_pt_after;
-	
 	std::vector<size_t> valid_indices; // índices de elétrons que podem ser calibrados
 	
 	// Garantir que existam elétrons no evento
@@ -407,11 +406,9 @@ void ttHHanalyzer::createObjects(event * thisEvent, sysName sysType, bool up){
 	    // Aplicar calibração apenas se houver elétrons válidos
 	    if (!pts.empty()) {
 	        try {
-	            calibrator.applyElectronCalibration(
+	            calibrator.calibrateElectrons(
 	                pts, etas, r9s, gains,
-	                thisEvent->runNumber,
-	                thisEvent->eventNumber,
-	                (_DataOrMC == "MC")
+	                thisEvent->runNumber
 	            );
 	        } catch (const std::out_of_range& e) {
 	            std::cerr << "[ERROR] Calibração falhou: " << e.what() << std::endl;
@@ -457,16 +454,14 @@ void ttHHanalyzer::createObjects(event * thisEvent, sysName sysType, bool up){
 	            std::cout << "[DEBUG] Electron[0] Pt antes/depois: "
 	                      << Electron_pt_before[0] << " / " << Electron_pt_after[0] << std::endl;
 	        }
-	
+	    } else {
+	        std::cout << "[DEBUG] Nenhum elétron válido para calibração neste evento" << std::endl;
 	    }
+	
 	} else {
 	    std::cout << "[DEBUG] Nenhum elétron no evento" << std::endl;
 	}
 
-
-
-
-	
 
 
 ///////////////////////////////////////////	
