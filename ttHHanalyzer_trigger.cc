@@ -385,7 +385,7 @@ if (!ele.empty()) {
     int gain_max   = calibrator.getMax("seedGain");
 
     // DEBUG: tipo de calibrador
-    std::cout << "[DEBUG] Calibrator type: " << (_dataOrMC.empty() ? "EMPTY" : _dataOrMC) << std::endl;
+    std::cout << "[DEBUG] Calibrator type: " << (_DataOrMC.empty() ? "EMPTY" : _DataOrMC) << std::endl;
 
     for (size_t i = 0; i < ele.size(); i++) {
         float pt_clamped   = std::min(std::max(ele[i].pt, pt_min), pt_max);
