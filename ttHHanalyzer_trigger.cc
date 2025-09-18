@@ -774,9 +774,17 @@ void ttHHanalyzer::diMotherReco(const TLorentzVector & dPar1p4,const TLorentzVec
 } 
 
 void ttHHanalyzer::analyze(event *thisEvent) {
-    // Usa diretamente os vetores de leptons já selecionados pelo evento
-    std::vector<objectLep*> selectedElectrons = thisEvent->getSelElectrons();
-    std::vector<objectLep*> selectedMuons     = thisEvent->getSelMuons();
+    // ========================
+    // Pega vetores de leptons do evento
+    // ========================
+    std::vector<objectLep*>* selElePtr = thisEvent->getSelElectrons();
+    std::vector<objectLep*>* selMuPtr  = thisEvent->getSelMuons();
+
+    std::vector<objectLep*> selectedElectrons;
+    std::vector<objectLep*> selectedMuons;
+
+    if (selElePtr) selectedElectrons = *selElePtr;
+    if (selMuPtr)  selectedMuons     = *selMuPtr;
 
     // ========================
     // Prepara vetores de pT para log
@@ -874,6 +882,7 @@ void ttHHanalyzer::analyze(event *thisEvent) {
     }
 
     _entryInLoop++;
+
 
 
 ///////////////////////////////////////
