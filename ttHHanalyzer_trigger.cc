@@ -361,8 +361,7 @@ void ttHHanalyzer::createObjects(event * thisEvent, sysName sysType, bool up){
     }
     if(doLog) (*event_log_file) << "Boosted jets selecionados: " << nBoostedJets << ", Hadronic Higgs: " << nHadronicHiggs << std::endl;
 ///////////////////////////////////////////
-
-	////////////////////////////
+////////////////////////////
 // Electron Calibration + MET
 ////////////////////////////
 
@@ -386,6 +385,7 @@ if (!ele.empty()) {
 
     // DEBUG: tipo de calibrador
     std::cout << "[DEBUG] Calibrator type: " << (_DataOrMC.empty() ? "EMPTY" : _DataOrMC) << std::endl;
+    std::cout << "[DEBUG] Year: " << (_year.empty() ? "EMPTY" : _year) << std::endl;
 
     for (size_t i = 0; i < ele.size(); i++) {
         float pt_clamped   = std::min(std::max(ele[i].pt, pt_min), pt_max);
@@ -412,6 +412,53 @@ if (!ele.empty()) {
                   << " pt/eta/r9/gain: " << pt_clamped << "/" << eta_clamped
                   << "/" << r9_clamped << "/" << gain_clamped << std::endl;
     }
+
+    // Aplicar calibração somente se houver elétrons válidos
+    if (!pts.empty()) {
+        try {
+            calibrator.calibrateElectrons(pts, etas, r9s, gains, _runNumber);
+        } catch (const std::exception& e) {
+            std::cerr << "[ERROR] Calibração falhou: " << e.what() << std::endl;
+        }
+
+        Electron_pt_after = pts;
+
+        // Atualiza elétrons
+        for (size_t j = 0; j < valid_indices.size(); j++) {
+            size_t idx = valid_indices[j];
+            ele[idx].pt = pts[j];
+        }
+
+        // ========================
+        // Recalcula MET
+        // ========================
+        if (MET) {
+            float met_px = MET->getp4()->Px();
+            float met_py = MET->getp4()->Py();
+            float met_pz = MET->getp4()->Pz();
+
+            for (size_t j = 0; j < valid_indices.size(); j++) {
+                size_t idx = valid_indices[j];
+                float old_px = Electron_pt_before[j] * cos(ele[idx].phi);
+                float old_py = Electron_pt_before[j] * sin(ele[idx].phi);
+                float new_px = Electron_pt_after[j]  * cos(ele[idx].phi);
+                float new_py = Electron_pt_after[j]  * sin(ele[idx].phi);
+
+                met_px = met_px - old_px + new_px;
+                met_py = met_py - old_py + new_py;
+            }
+
+            float met_E = sqrt(met_px*met_px + met_py*met_py + met_pz*met_pz);
+            MET->getp4()->SetPxPyPzE(met_px, met_py, met_pz, met_E);
+        }
+
+        // DEBUG
+        std::cout << "[DEBUG] Electron[0] Pt antes/depois: "
+                  << Electron_pt_before[0] << " / " << Electron_pt_after[0] << std::endl;
+    }
+} else {
+    std::cout << "[DEBUG] Nenhum elétron no evento" << std::endl;
+}
 
     if (!pts.empty()) {
         try {
