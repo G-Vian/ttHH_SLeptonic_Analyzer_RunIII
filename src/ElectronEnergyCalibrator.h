@@ -2,29 +2,32 @@
 
 #include <vector>
 #include <string>
-#include <memory>
 #include <random>
+#include <memory>
 #include <correction.h>
 
 class ElectronEnergyCalibrator {
 public:
-    ElectronEnergyCalibrator(const std::string& DataOrMC, const std::string& year);
+    // Construtor: dataOrMC = "DATA" ou "MC"
+    ElectronEnergyCalibrator(const std::string& dataOrMC, const std::string& year);
 
-    void calibrateElectrons(std::vector<float>& pts,
-                            const std::vector<float>& etas,
-                            const std::vector<float>& r9s,
-                            const std::vector<int>& gains,
-                            int runNumber);
+    // Calibra energia de um elétron (pT, eta, isData)
+    float calibrateElectron(float pt, float eta, bool isData);
 
 private:
+    std::string _dataOrMC;
     std::string _year;
-    std::string _DataOrMC;
+
+    // CorrectionSet carregado a partir do JSON
     std::unique_ptr<correction::CorrectionSet> cset;
 
-    // Gerador para smearing gaussiano
+    // RNG para smearing
     std::mt19937 rng;
 
-    // Funções auxiliares para pegar limites de variáveis
-    float getMin(const std::string& var) const;
-    float getMax(const std::string& var) const;
+    // Caminho do JSON (privado)
+    std::string getElectronJSONPath() const;
+
+    // Funções auxiliares para limites de variáveis
+    float getMin(const correction::Variable& var) const;
+    float getMax(const correction::Variable& var) const;
 };
