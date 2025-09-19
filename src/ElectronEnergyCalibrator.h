@@ -24,8 +24,8 @@ public:
     );
 
     // Limites de segurança
-    float getMin(const correction::Variable& var) const;
-    float getMax(const correction::Variable& var) const;
+    float getMin(const std::string& varName) const;
+    float getMax(const std::string& varName) const;
 
 private:
     std::string _year;
