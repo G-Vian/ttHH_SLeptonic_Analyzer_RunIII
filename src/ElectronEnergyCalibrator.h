@@ -3,29 +3,34 @@
 #include <vector>
 #include <string>
 #include <memory>
-#include <correction.h>
+#include <random>
+#include <variant>
+#include <iostream>
+
+#include "correction.h"
 
 class ElectronEnergyCalibrator {
 public:
-    // Construtor
-    ElectronEnergyCalibrator(const std::string& year, const std::string& DataOrMC);
+    // Construtor com parâmetros
+    ElectronEnergyCalibrator(const std::string& year, const std::string& dataOrMC);
 
-    // Função de calibração de elétrons
+    // Função principal para aplicar a calibração
     void calibrateElectrons(
         std::vector<float>& pts,
         const std::vector<float>& etas,
         const std::vector<float>& r9s,
         const std::vector<int>& gains,
-        const std::vector<int>& runs
+        int runNumber
     );
+
+    float getMin(const std::string& var) const;
+    float getMax(const std::string& var) const;
 
 private:
     std::string _year;
     std::string _DataOrMC;
-
-    // CorrectionSet do correctionlib
     std::unique_ptr<correction::CorrectionSet> cset;
+    std::mt19937 rng;
 
-    // Retorna o caminho correto do JSON de acordo com ano e tipo
-    std::string getJSONPath() const;
+    std::string getElectronJSONPath() const;
 };
