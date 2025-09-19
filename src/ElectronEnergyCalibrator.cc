@@ -3,6 +3,7 @@
 #include <cmath>
 #include <iostream>
 #include <random>
+#include "ttHHanalyzer_trigger.h"   // <-- aqui está objectLep
 
 // ------------------------
 // Construtor
