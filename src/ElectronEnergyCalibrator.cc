@@ -137,20 +137,18 @@ void ElectronEnergyCalibrator::calibrateElectrons(
 // ------------------------
 // Limites de segurança
 // ------------------------
-float ElectronEnergyCalibrator::getMin(const correction::Variable& var) const {
-    std::string vname = var.name();
-    if (vname == "pt") return 5.0f;
-    if (vname == "ScEta") return -2.5f;
-    if (vname == "r9") return 0.0f;
-    if (vname == "seedGain") return 0;
+float ElectronEnergyCalibrator::getMin(const std::string& varName) const {
+    if (varName == "pt") return 5.0f;
+    if (varName == "ScEta") return -2.5f;
+    if (varName == "r9") return 0.0f;
+    if (varName == "seedGain") return 0;
     return 0.0f;
 }
 
-float ElectronEnergyCalibrator::getMax(const correction::Variable& var) const {
-    std::string vname = var.name();
-    if (vname == "pt") return 1000.0f;
-    if (vname == "ScEta") return 2.5f;
-    if (vname == "r9") return 1.5f;
-    if (vname == "seedGain") return 12;
+float ElectronEnergyCalibrator::getMax(const std::string& varName) const {
+    if (varName == "pt") return 1000.0f;
+    if (varName == "ScEta") return 2.5f;
+    if (varName == "r9") return 1.5f;
+    if (varName == "seedGain") return 12;
     return 1.0f;
 }
