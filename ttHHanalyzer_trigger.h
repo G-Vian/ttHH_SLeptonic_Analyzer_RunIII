@@ -375,10 +375,21 @@ public:
 
 class event{
  public:
-    event(){    }
+    event() : runNumber(0), eventNumber(0) {}
+
     // IDs do evento
-    unsigned int runNumber = 0;      // branch: Events/run
-    unsigned long long eventNumber = 0; // branch: Events/event
+    unsigned int runNumber;           // será preenchido do buffer
+    unsigned long long eventNumber;   // será preenchido do buffer
+
+    // Conecta o buffer às variáveis do evento
+    void connect(eventBuffer* input, const std::map<std::string,bool>& choose) {
+        if (choose.at("run")) {
+            input->select("Events/run", &runNumber);
+        }
+        if (choose.at("event")) {
+            input->select("Events/event", &eventNumber);
+        }
+    }
 
     struct evShapes{
 	float objectP;
@@ -1137,8 +1148,8 @@ ttHHanalyzer(const std::string & cl,
     float _weight;
     float _initialWeight;  //Trigger SF for electron (TSFel)
 ////////////
-    unsigned int _runNumber = 0;
-    long long _eventNumber = 0;
+    unsigned int _runNumber ;
+    unsigned long long  _eventNumber;
 
 
 
@@ -1235,7 +1246,7 @@ ttHHanalyzer(const std::string & cl,
 
 ///////////////////////////
 	// Electron calibrations
-	void applyElectronCalibration(event* thisEvent, unsigned int runNumber, long long eventNumber);
+	void applyElectronCalibration(event* thisEvent, unsigned int runNumber, unsigned long long eventNumber);
 
 //////////////////////////
 
