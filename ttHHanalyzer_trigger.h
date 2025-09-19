@@ -377,32 +377,25 @@ class event {
 public:
     event() {}
 
-    // IDs do evento (mantemos os tipos corretos)
-    unsigned int runNumber = 0;         // branch: Events/run
-    unsigned long long eventNumber = 0; // branch: Events/event
+    // IDs do evento
+    unsigned int runNumber = 0;          // branch: Events/run
+    unsigned long long eventNumber = 0;  // branch: Events/event
 
-    // Função para selecionar os branches no eventBuffer
-    template<typename Buffer>
-    void selectBranches(Buffer* input) {
+    // Função para associar branches e atualizar os valores do evento
+    void updateFromBuffer(eventBuffer* input) {
         if (!input) return;
 
-        // Cria variáveis temporárias compatíveis com eventBuffer::select(int)
+        // Variáveis temporárias compatíveis com select()
         int run_tmp   = static_cast<int>(runNumber);
-        int event_tmp = static_cast<int>(eventNumber);
+        int event_tmp = 0; // usar int temporário para a leitura
 
-        // Seleciona as branches
+        // Seleciona os branches
         input->select("Events/run", run_tmp);
         input->select("Events/event", event_tmp);
-    }
 
-    // Função para atualizar os valores do evento após leitura do buffer
-    template<typename Buffer>
-    void updateFromBuffer(Buffer* input) {
-        if (!input) return;
-
-        // Acessa os valores do buffer e salva nas variáveis corretas
-        runNumber   = static_cast<unsigned int>(input->get<int>("Events/run"));
-        eventNumber = static_cast<unsigned long long>(input->get<int>("Events/event"));
+        // Atualiza as variáveis do evento
+        runNumber   = static_cast<unsigned int>(run_tmp);
+        eventNumber = static_cast<unsigned long long>(event_tmp);
     }
 
     struct evShapes{
