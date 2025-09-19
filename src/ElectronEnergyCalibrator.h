@@ -2,32 +2,37 @@
 
 #include <vector>
 #include <string>
-#include <random>
 #include <memory>
-#include <correction.h>
+#include <random>
+#include <variant>
+#include <iostream>
+
+#include "correction.h"
 
 class ElectronEnergyCalibrator {
 public:
-    // Construtor: dataOrMC = "DATA" ou "MC"
-    ElectronEnergyCalibrator(const std::string& dataOrMC, const std::string& year);
+    // Construtor com parâmetros
+    ElectronEnergyCalibrator(const std::string& year, const std::string& DataOrMC);
 
-    // Calibra energia de um elétron (pT, eta, isData)
-    float calibrateElectron(float pt, float eta, bool isData);
+    // Função principal para aplicar a calibração
+    void calibrateElectrons(
+        std::vector<float>& pts,
+        const std::vector<float>& etas,
+        const std::vector<float>& r9s,
+        const std::vector<int>& gains,
+        int runNumber
+    );
 
-private:
-    std::string _dataOrMC;
-    std::string _year;
-
-    // CorrectionSet carregado a partir do JSON
-    std::unique_ptr<correction::CorrectionSet> cset;
-
-    // RNG para smearing
-    std::mt19937 rng;
-
-    // Caminho do JSON (privado)
-    std::string getElectronJSONPath() const;
-
-    // Funções auxiliares para limites de variáveis
+    // Limites de segurança
     float getMin(const correction::Variable& var) const;
     float getMax(const correction::Variable& var) const;
+
+private:
+    std::string _year;
+    std::string _DataOrMC;
+    std::unique_ptr<correction::CorrectionSet> cset;
+    std::mt19937 rng;
+
+    // Caminho do JSON
+    std::string getElectronJSONPath() const;
 };
