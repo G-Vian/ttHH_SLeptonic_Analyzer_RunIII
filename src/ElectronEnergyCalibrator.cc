@@ -1,50 +1,57 @@
 #include "ElectronEnergyCalibrator.h"
 #include <cmath>
 #include <iostream>
-#include <variant>
-#include <map>
+#include <algorithm>
+#include <stdexcept>
 
-ElectronEnergyCalibrator::ElectronEnergyCalibrator(const std::string& year,
-                                                   const std::string& dataOrMC)
-    : _year(year), _DataOrMC(dataOrMC), rng(std::random_device{}()) 
+ElectronEnergyCalibrator::ElectronEnergyCalibrator(const std::string& year, const std::string& dataOrMC)
+    : _year(year), _DataOrMC(dataOrMC), rng(std::random_device{}())
 {
+    // Caminho do JSON dependendo do ano e DATA/MC
     std::string jsonPath = getElectronJSONPath();
+
     try {
-        cset = std::make_unique<correction::CorrectionSet>(correction::CorrectionSet::from_file(jsonPath));
+        // Inicializa o CorrectionSet corretamente
+        cset = std::unique_ptr<correction::CorrectionSet>(
+            new correction::CorrectionSet(correction::CorrectionSet::from_file(jsonPath))
+        );
+        std::cout << "[INFO] Carregado ElectronEnergyCalibrator: " 
+                  << (_DataOrMC.empty() ? "UNKNOWN" : _DataOrMC)
+                  << ", ano: " << (_year.empty() ? "UNKNOWN" : _year)
+                  << std::endl;
     } catch (const std::exception& e) {
-        std::cerr << "[ERROR] Falha ao carregar JSON: " << jsonPath << " | " << e.what() << std::endl;
+        std::cerr << "[ERROR] Falha ao carregar JSON do ElectronEnergyCalibrator: "
+                  << e.what() << std::endl;
         cset = nullptr;
     }
 }
 
 std::string ElectronEnergyCalibrator::getElectronJSONPath() const {
-    std::string basePath = "data/ElectronSF/";
+    // Ajuste este caminho conforme sua organização de arquivos
+    std::string baseDir = "/eos/user/g/gvian/ElectronCalibrations/";
+    std::string type = (_DataOrMC == "DATA") ? "data" : "mc";
 
-    if (_DataOrMC.empty() || _year.empty()) {
-        std::cerr << "[WARNING] _DataOrMC ou _year vazio. Usando arquivo default." << std::endl;
-        return basePath + "ElectronSF_default.json";
-    }
+    if (_year == "2024") return baseDir + type + "_2024.json";
+    if (_year == "2023") return baseDir + type + "_2023.json";
+    if (_year == "2022") return baseDir + type + "_2022.json";
 
-    // Arquivo esperado: ElectronSF_<year>_<DataOrMC>.json
-    std::string fileName = "ElectronSF_" + _year + "_" + _DataOrMC + ".json";
-    return basePath + fileName;
+    throw std::runtime_error("Ano desconhecido para ElectronEnergyCalibrator: " + _year);
 }
 
 float ElectronEnergyCalibrator::getMin(const std::string& var) const {
-    // Ajuste conforme os limites desejados ou lidos do JSON
-    if (var == "pt") return 5.0f;
-    if (var == "ScEta") return -2.5f;
-    if (var == "r9") return 0.0f;
+    if (var == "pt") return 5.0;
+    if (var == "ScEta") return -2.5;
+    if (var == "r9") return 0.0;
     if (var == "seedGain") return 0;
-    return 0.0f;
+    throw std::runtime_error("getMin: variável desconhecida: " + var);
 }
 
 float ElectronEnergyCalibrator::getMax(const std::string& var) const {
-    if (var == "pt") return 200.0f;
-    if (var == "ScEta") return 2.5f;
-    if (var == "r9") return 1.0f;
+    if (var == "pt") return 2000.0;
+    if (var == "ScEta") return 2.5;
+    if (var == "r9") return 1.0;
     if (var == "seedGain") return 12;
-    return 0.0f;
+    throw std::runtime_error("getMax: variável desconhecida: " + var);
 }
 
 void ElectronEnergyCalibrator::calibrateElectrons(
@@ -55,30 +62,33 @@ void ElectronEnergyCalibrator::calibrateElectrons(
     int runNumber
 ) {
     if (!cset) {
-        std::cerr << "[ERROR] Calibrator não inicializado, pulando calibração." << std::endl;
+        std::cerr << "[ERROR] calibrateElectrons chamado sem JSON carregado!" << std::endl;
         return;
     }
 
-    auto eleCorr = cset->at("ElectronCalibration");
-    if (!eleCorr) {
-        std::cerr << "[ERROR] Não encontrou correção 'ElectronCalibration' no JSON" << std::endl;
-        return;
+    if (pts.size() != etas.size() || pts.size() != r9s.size() || pts.size() != gains.size()) {
+        throw std::runtime_error("Vetores de elétrons com tamanhos inconsistentes!");
     }
 
     for (size_t i = 0; i < pts.size(); i++) {
-        std::map<std::string, std::variant<std::string,double,int>> inputs;
+        // Preparar inputs para correctionlib
+        std::map<std::string, std::variant<std::string, double, int>> inputs;
+
+        // Correção de tipo: syst sempre string
+        inputs["syst"] = std::string("Nominal");
         inputs["pt"] = static_cast<double>(pts[i]);
         inputs["eta"] = static_cast<double>(etas[i]);
         inputs["r9"] = static_cast<double>(r9s[i]);
-        inputs["gain"] = gains[i];
-        inputs["syst"] = std::string("nominal"); // ⚠️ obrigatório ser string
+        inputs["gain"] = static_cast<int>(gains[i]);
+        inputs["run"] = runNumber;
 
         try {
+            auto eleCorr = cset->at("EleEnergyCorr");
             double corr = eleCorr->evaluate(inputs);
-            pts[i] *= static_cast<float>(corr);
+            pts[i] *= corr;
         } catch (const std::exception& e) {
-            std::cerr << "[ERROR] Falha ao avaliar correção do elétron " << i
-                      << ": " << e.what() << std::endl;
+            std::cerr << "[ERROR] Calibração do elétron " << i << " falhou: " 
+                      << e.what() << std::endl;
         }
     }
 }
