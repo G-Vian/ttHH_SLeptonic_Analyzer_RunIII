@@ -372,28 +372,27 @@ std::vector<int> gains;
 
 if (!ele.empty()) {
 
-    // Recuperar limites do calibrador
+    // Recuperar limites do calibrador usando strings compatíveis
     float pt_min   = calibrator.getMin("pt");
     float pt_max   = calibrator.getMax("pt");
     float eta_min  = calibrator.getMin("ScEta");
     float eta_max  = calibrator.getMax("ScEta");
     float r9_min   = calibrator.getMin("r9");
     float r9_max   = calibrator.getMax("r9");
-    int gain_min   = calibrator.getMin("seedGain");
-    int gain_max   = calibrator.getMax("seedGain");
+    int gain_min   = static_cast<int>(calibrator.getMin("seedGain"));
+    int gain_max   = static_cast<int>(calibrator.getMax("seedGain"));
 
-    // DEBUG: tipo de calibrador
+    // DEBUG: tipo de calibrador e ano
     std::cout << "[DEBUG] Calibrator type: " << (_DataOrMC.empty() ? "EMPTY" : _DataOrMC) << std::endl;
     std::cout << "[DEBUG] Year: " << (_year.empty() ? "EMPTY" : _year) << std::endl;
 
-    // Clamping e preenchimento dos vetores
-    for (size_t i = 0; i < ele.size(); i++) {
+    // Preenche vetores com clamping
+    for (size_t i = 0; i < ele.size(); ++i) {
         float pt_clamped   = std::min(std::max(ele[i].pt, pt_min), pt_max);
         float eta_clamped  = std::min(std::max(ele[i].eta, eta_min), eta_max);
         float r9_clamped   = std::min(std::max(ele[i].r9, r9_min), r9_max);
         int gain_clamped   = std::min(std::max(ele[i].seedGain, gain_min), gain_max);
 
-        // Filtrar valores inválidos
         if (!std::isfinite(pt_clamped) || !std::isfinite(eta_clamped) || !std::isfinite(r9_clamped)) {
             std::cerr << "[WARNING] Eletrón " << i << " possui valor inválido e será ignorado" << std::endl;
             continue;
@@ -407,15 +406,14 @@ if (!ele.empty()) {
         Electron_pt_before.push_back(ele[i].pt);
         valid_indices.push_back(i);
 
-        // DEBUG: valores enviados para calibração
         std::cout << "[DEBUG] Eletrón " << i
                   << " pt/eta/r9/gain: " << pt_clamped << "/" << eta_clamped
                   << "/" << r9_clamped << "/" << gain_clamped << std::endl;
     }
 
-    // Aplicar calibração somente se houver elétrons válidos
     if (!pts.empty()) {
         try {
+            // Calibração compatível com DATA/MC
             calibrator.calibrateElectrons(pts, etas, r9s, gains, _runNumber);
         } catch (const std::exception& e) {
             std::cerr << "[ERROR] Calibração falhou: " << e.what() << std::endl;
@@ -423,8 +421,8 @@ if (!ele.empty()) {
 
         Electron_pt_after = pts;
 
-        // Atualiza elétrons
-        for (size_t j = 0; j < valid_indices.size(); j++) {
+        // Atualiza pt dos elétrons
+        for (size_t j = 0; j < valid_indices.size(); ++j) {
             size_t idx = valid_indices[j];
             ele[idx].pt = pts[j];
         }
@@ -437,7 +435,7 @@ if (!ele.empty()) {
             float met_py = MET->getp4()->Py();
             float met_pz = MET->getp4()->Pz();
 
-            for (size_t j = 0; j < valid_indices.size(); j++) {
+            for (size_t j = 0; j < valid_indices.size(); ++j) {
                 size_t idx = valid_indices[j];
                 float old_px = Electron_pt_before[j] * cos(ele[idx].phi);
                 float old_py = Electron_pt_before[j] * sin(ele[idx].phi);
@@ -455,6 +453,7 @@ if (!ele.empty()) {
         // DEBUG final
         std::cout << "[DEBUG] Electron[0] Pt antes/depois: "
                   << Electron_pt_before[0] << " / " << Electron_pt_after[0] << std::endl;
+
     } else {
         std::cout << "[DEBUG] Nenhum elétron válido para calibração neste evento" << std::endl;
     }
