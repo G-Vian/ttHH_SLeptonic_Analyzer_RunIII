@@ -9,8 +9,15 @@ void ElectronEnergyCalibrator::calibrateElectrons(
     const std::vector<int>& gains,
     int nEle)
 {
+    if (!cset) {
+        std::cerr << "[ERROR] CorrectionSet não inicializado!" << std::endl;
+        return;
+    }
+
+    // Obter a correção a partir do CorrectionSet
+    auto eleCorr = cset->at("ElectronEnergyCorrection");
     if (!eleCorr) {
-        std::cerr << "[ERROR] Correção não inicializada!" << std::endl;
+        std::cerr << "[ERROR] Não foi possível encontrar 'ElectronEnergyCorrection' no JSON!" << std::endl;
         return;
     }
 
@@ -90,4 +97,3 @@ void ElectronEnergyCalibrator::calibrateElectrons(
         }
     }
 }
-
