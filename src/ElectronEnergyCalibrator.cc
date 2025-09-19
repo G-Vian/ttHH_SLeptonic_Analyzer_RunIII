@@ -2,24 +2,20 @@
 #include <algorithm>
 #include <cmath>
 #include <iostream>
+#include <random>
 
 // ------------------------
 // Construtor
 // ------------------------
-ElectronEnergyCalibrator::ElectronEnergyCalibrator(const std::string& DataOrMC, const std::string& year)
+ElectronEnergyCalibrator::ElectronEnergyCalibrator(const std::string& year, const std::string& DataOrMC)
     : _year(year), _DataOrMC(DataOrMC), rng(std::random_device{}())
 {
-    try {
-        std::cerr << "[DEBUG] Inicializando ElectronEnergyCalibrator para "
-                  << _DataOrMC << " / " << _year << std::endl;
+    std::cerr << "[DEBUG] Inicializando ElectronEnergyCalibrator: "
+              << _DataOrMC << " / " << _year << std::endl;
 
-        // ✅ usar diretamente o retorno de from_file
-        cset = correction::CorrectionSet::from_file(getElectronJSONPath());
-
-        std::cerr << "[DEBUG] CorrectionSet carregado com sucesso." << std::endl;
-    } catch (const std::exception& e) {
-        std::cerr << "[ERROR] Falha ao carregar CorrectionSet: " << e.what() << std::endl;
-    }
+    std::string jsonPath = getElectronJSONPath();
+    std::cerr << "[DEBUG] JSON path: " << jsonPath << std::endl;
+    cset = correction::CorrectionSet::from_file(jsonPath);
 }
 
 // ------------------------
@@ -53,30 +49,30 @@ void ElectronEnergyCalibrator::calibrateElectrons(
         const std::vector<int>& gains,
         int runNumber
 ) {
-    if (pts.empty()) return;
+    if (pts.empty()) {
+        std::cerr << "[DEBUG] Nenhum elétron para calibrar." << std::endl;
+        return;
+    }
 
     try {
         for (size_t i = 0; i < pts.size(); ++i) {
-            float pt   = pts[i];
-            float eta  = etas[i];
-            float r9   = r9s[i];
-            int gain   = gains[i];
+
+            float pt = pts[i];
+            float eta = etas[i];
+            float r9 = r9s[i];
+            int gain = gains[i];
             float absEta = std::abs(eta);
 
-            std::cerr << "[DEBUG] Eletrón " << i
-                      << " pt/eta/r9/gain: "
-                      << pt << " / " << eta << " / "
-                      << r9 << " / " << gain << std::endl;
+            std::cerr << "[DEBUG] Eletrón " << i << " pt/eta/r9/gain: "
+                      << pt << "/" << eta << "/" << r9 << "/" << gain << std::endl;
 
             std::vector<std::variant<int,double,std::string>> args;
-            double corr = 1.0;
 
             if (_DataOrMC == "DATA") {
                 // ========================
-                // DATA
+                // DATA: usar compound correction compatível com string
                 // ========================
                 std::string syst = "central";
-
                 args.emplace_back(syst);
                 args.emplace_back(runNumber);
                 args.emplace_back(eta);
@@ -85,67 +81,53 @@ void ElectronEnergyCalibrator::calibrateElectrons(
                 args.emplace_back(pt);
                 args.emplace_back(gain);
 
-                std::cerr << "[DEBUG][DATA] Args:";
+                std::cerr << "[DEBUG] Args DATA para evaluate: ";
                 for (auto& a : args) {
-                    if (std::holds_alternative<int>(a))
-                        std::cerr << " int=" << std::get<int>(a);
-                    else if (std::holds_alternative<double>(a))
-                        std::cerr << " double=" << std::get<double>(a);
-                    else
-                        std::cerr << " string=" << std::get<std::string>(a);
+                    std::visit([](auto&& val){ std::cerr << val << " "; }, a);
                 }
                 std::cerr << std::endl;
 
                 auto scale_corr = cset->compound().at(
-                    (_year=="2022")  ? "EGMScale_Compound_Ele_2022preEE" :
-                    (_year=="2022EE")? "EGMScale_Compound_Ele_2022postEE" :
-                    (_year=="2023")  ? "EGMScale_Compound_Ele_2023preBPIX" :
+                    (_year=="2022") ? "EGMScale_Compound_Ele_2022preEE" :
+                    (_year=="2022EE") ? "EGMScale_Compound_Ele_2022postEE" :
+                    (_year=="2023") ? "EGMScale_Compound_Ele_2023preBPIX" :
                     (_year=="2023B") ? "EGMScale_Compound_Ele_2023postBPIX" :
-                                       "EGMScale_Compound_Ele_2024"
+                    "EGMScale_Compound_Ele_2024"
                 );
 
-                corr = scale_corr->evaluate(args);
-                std::cerr << "[DEBUG][DATA] scale factor = " << corr << std::endl;
+                double scale = scale_corr->evaluate(args);
+                pts[i] *= static_cast<float>(scale);
 
             } else {
                 // ========================
-                // MC
+                // MC: Smearing + sistemática
                 // ========================
                 args.emplace_back(pt);
                 args.emplace_back(r9);
                 args.emplace_back(absEta);
+                std::string syst = "central";
+                args.emplace_back(syst); // necessário para o corr MC compatível
 
-                std::cerr << "[DEBUG][MC] Args:";
+                std::cerr << "[DEBUG] Args MC para evaluate: ";
                 for (auto& a : args) {
-                    if (std::holds_alternative<int>(a))
-                        std::cerr << " int=" << std::get<int>(a);
-                    else if (std::holds_alternative<double>(a))
-                        std::cerr << " double=" << std::get<double>(a);
-                    else
-                        std::cerr << " string=" << std::get<std::string>(a);
+                    std::visit([](auto&& val){ std::cerr << val << " "; }, a);
                 }
                 std::cerr << std::endl;
 
-                auto smear_corr = cset->at(
-                    (_year=="2022")  ? "EGMSmearAndSyst_ElePTsplit_2022preEE" :
-                    (_year=="2022EE")? "EGMSmearAndSyst_ElePTsplit_2022postEE" :
-                    (_year=="2023")  ? "EGMSmearAndSyst_ElePTsplit_2023preBPIX" :
-                    (_year=="2023B") ? "EGMSmearAndSyst_ElePTsplit_2023postBPIX" :
-                                       "EGMSmearAndSyst_ElePTsplit_2024"
-                );
-
-                double smear = smear_corr->evaluate(args);
                 std::normal_distribution<float> gauss(0.0, 1.0);
-                corr = 1.0 + smear * gauss(rng);
+                double smear = cset->at(
+                    (_year=="2022") ? "EGMSmearAndSyst_ElePTsplit_2022preEE" :
+                    (_year=="2022EE") ? "EGMSmearAndSyst_ElePTsplit_2022postEE" :
+                    (_year=="2023") ? "EGMSmearAndSyst_ElePTsplit_2023preBPIX" :
+                    (_year=="2023B") ? "EGMSmearAndSyst_ElePTsplit_2023postBPIX" :
+                    "EGMSmearAndSyst_ElePTsplit_2024"
+                )->evaluate(args);
 
-                std::cerr << "[DEBUG][MC] smear = " << smear
-                          << " → applied corr = " << corr << std::endl;
+                pts[i] *= 1.0f + smear * gauss(rng);
             }
 
-            float pt_before = pts[i];
-            pts[i] *= static_cast<float>(corr);
             std::cerr << "[DEBUG] Electron[" << i << "] Pt antes/depois: "
-                      << pt_before << " / " << pts[i] << std::endl;
+                      << pt << " / " << pts[i] << std::endl;
         }
     } catch (const std::out_of_range& e) {
         std::cerr << "[ERROR] Correção falhou: " << e.what() << std::endl;
@@ -155,18 +137,18 @@ void ElectronEnergyCalibrator::calibrateElectrons(
 // ------------------------
 // Limites de segurança
 // ------------------------
-float ElectronEnergyCalibrator::getMin(const std::string& var) const {
-    if (var=="pt") return 5.0f;
-    if (var=="ScEta") return -2.5f;
-    if (var=="r9") return 0.0f;
-    if (var=="seedGain") return 0;
+float ElectronEnergyCalibrator::getMin(const correction::Variable& var) const {
+    if (var.name == "pt") return 5.0f;
+    if (var.name == "ScEta") return -2.5f;
+    if (var.name == "r9") return 0.0f;
+    if (var.name == "seedGain") return 0;
     return 0.0f;
 }
 
-float ElectronEnergyCalibrator::getMax(const std::string& var) const {
-    if (var=="pt") return 1000.0f;
-    if (var=="ScEta") return 2.5f;
-    if (var=="r9") return 1.5f;
-    if (var=="seedGain") return 12;
+float ElectronEnergyCalibrator::getMax(const correction::Variable& var) const {
+    if (var.name == "pt") return 1000.0f;
+    if (var.name == "ScEta") return 2.5f;
+    if (var.name == "r9") return 1.5f;
+    if (var.name == "seedGain") return 12;
     return 1.0f;
 }
