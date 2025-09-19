@@ -1,88 +1,79 @@
 #include "ElectronEnergyCalibrator.h"
-#include <iostream>
-#include <cmath>
-#include <random>
-#include <map>
-#include <variant>
 #include <stdexcept>
-#include <string>
-#include <algorithm>
-#include <memory>
+#include <iostream>
 
-ElectronEnergyCalibrator::ElectronEnergyCalibrator(const std::string& year, const std::string& dataOrMC)
-    : _year(year), _DataOrMC(dataOrMC), rng(std::random_device{}())
+// Construtor
+ElectronEnergyCalibrator::ElectronEnergyCalibrator(const std::string& year, const std::string& DataOrMC)
+    : _year(year), _DataOrMC(DataOrMC)
 {
-    std::string jsonPath = getElectronJSONPath();
-
+    std::string jsonPath = getJSONPath();
     try {
-        // Carregar JSON diretamente como CorrectionSet
-        cset = correction::CorrectionSet::from_file(jsonPath);
-        std::cout << "[INFO] ElectronEnergyCalibrator carregado: "
-                  << (_DataOrMC.empty() ? "UNKNOWN" : _DataOrMC)
-                  << ", ano: " << (_year.empty() ? "UNKNOWN" : _year) << std::endl;
+        cset = std::make_unique<correction::CorrectionSet>(correction::CorrectionSet::from_file(jsonPath));
+        std::cout << "[ElectronEnergyCalibrator] Loaded JSON: " << jsonPath << std::endl;
     } catch (const std::exception& e) {
-        std::cerr << "[ERROR] Falha ao carregar JSON: " << e.what() << std::endl;
+        throw std::runtime_error(std::string("[ElectronEnergyCalibrator] Failed to load JSON: ") + e.what());
     }
 }
 
-// Função que retorna o caminho correto do JSON dependendo do ano e MC/DATA
-std::string ElectronEnergyCalibrator::getElectronJSONPath() const {
-    std::string basePath = "/eos/user/g/gvian/corrections/electron/";
-    std::string filename;
-
-    if (_DataOrMC == "MC") {
-        if (_year == "2022") filename = "ElectronEnergyCorrections_MC_2022.json";
-        else if (_year == "2023") filename = "ElectronEnergyCorrections_MC_2023.json";
-        else if (_year == "2024") filename = "ElectronEnergyCorrections_MC_2024.json";
-    } else if (_DataOrMC == "DATA") {
-        if (_year == "2022") filename = "ElectronEnergyCorrections_DATA_2022.json";
-        else if (_year == "2023") filename = "ElectronEnergyCorrections_DATA_2023.json";
-        else if (_year == "2024") filename = "ElectronEnergyCorrections_DATA_2024.json";
+// Função para retornar o caminho correto do JSON
+std::string ElectronEnergyCalibrator::getJSONPath() const {
+    if (_year == "2022") {
+        return "/eos/cms/store/group/phys_egamma/ScaleFactors/Data2022/ForRe-recoBCD/SS/electronSS_EtDependent.json.gz";
     }
-
-    if (filename.empty()) {
-        throw std::runtime_error("JSON para ElectronEnergyCalibrator não encontrado para "
-                                 + _DataOrMC + " " + _year);
+    if (_year == "2022EE") {
+        return "/eos/cms/store/group/phys_egamma/ScaleFactors/Data2022/ForRe-recoE+PromptFG/SS/electronSS_EtDependent.json.gz";
     }
-
-    return basePath + filename;
+    if (_year == "2023") {
+        return "/eos/cms/store/group/phys_egamma/ScaleFactors/Data2023/ForPrompt23C/SS/electronSS_EtDependent.json.gz";
+    }
+    if (_year == "2023B") {
+        return "/eos/cms/store/group/phys_egamma/ScaleFactors/Data2023/ForPrompt23D/SS/electronSS_EtDependent.json.gz";
+    }
+    if (_year == "2024") {
+        return "/eos/cms/store/group/phys_egamma/ScaleFactors/Data2024/SS/electronSS_EtDependent_v1.json.gz";
+    }
+    throw std::runtime_error("[ElectronEnergyCalibrator] Ano não reconhecido: " + _year);
 }
 
-// Função de calibração de elétrons
+// Função principal de calibração
 void ElectronEnergyCalibrator::calibrateElectrons(
     std::vector<float>& pts,
     const std::vector<float>& etas,
     const std::vector<float>& r9s,
     const std::vector<int>& gains,
-    int runNumber
+    const std::vector<int>& runs
 ) {
-    if (!cset) {
-        std::cerr << "[ERROR] calibrateElectrons chamado sem JSON carregado!" << std::endl;
-        return;
-    }
+    if (!cset) throw std::runtime_error("[ElectronEnergyCalibrator] CorrectionSet not initialized!");
 
-    if (pts.size() != etas.size() || pts.size() != r9s.size() || pts.size() != gains.size()) {
-        throw std::runtime_error("Vetores de elétrons com tamanhos inconsistentes!");
-    }
+    for (size_t i = 0; i < pts.size(); ++i) {
+        float pt_before = pts[i];
+        double Et = pt_before; // usamos pT como proxy de energia
 
-    for (size_t i = 0; i < pts.size(); i++) {
-        std::map<std::string, std::variant<std::string, double, int>> inputs;
+        const auto& eleCorr = cset->at("EGMScale_Compound_Ele_" + _year); // ajustável por JSON
+        std::string key;
+        if (_DataOrMC == "DATA") {
+            key = "scale";  // apenas escala para DATA
+        } else {
+            key = "escale"; // smearing / scale MC
+        }
 
-        // Correção de tipo: syst sempre string
-        inputs["syst"] = std::string("Nominal");
-        inputs["pt"] = static_cast<double>(pts[i]);
-        inputs["eta"] = static_cast<double>(etas[i]);
-        inputs["r9"] = static_cast<double>(r9s[i]);
-        inputs["gain"] = static_cast<int>(gains[i]);
-        inputs["run"] = runNumber;
+        // Monta vetor de inputs na ordem correta exigida pelo JSON
+        std::vector<correction::Variable::Type> inputs;
+        inputs.push_back(key);                   // "scale" ou "escale"
+        inputs.push_back(runs[i]);               // run
+        inputs.push_back(etas[i]);               // eta ou supercluster eta
+        inputs.push_back(r9s[i]);                // r9
+        inputs.push_back(Et);                    // Et
+        inputs.push_back(static_cast<double>(gains[i])); // seed crystal gain
 
         try {
-            const auto& eleCorr = cset->at("EleEnergyCorr");
-            double corr = eleCorr->evaluate(inputs);
+            double corr = eleCorr.evaluate(inputs);
             pts[i] *= corr;
+            std::cout << "[DEBUG] Electron[" << i << "] Pt antes/depois: "
+                      << pt_before << " / " << pts[i] << std::endl;
         } catch (const std::exception& e) {
-            std::cerr << "[ERROR] Calibração do elétron " << i << " falhou: "
-                      << e.what() << std::endl;
+            std::cerr << "[ERROR] Calibração falhou para o elétron " << i
+                      << ": " << e.what() << std::endl;
         }
     }
 }
