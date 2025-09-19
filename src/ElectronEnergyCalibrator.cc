@@ -54,18 +54,6 @@ void ElectronEnergyCalibrator::calibrateElectrons(
         return;
     }
 
-    auto checkArgTypes = [](const std::vector<std::variant<int,double,std::string>>& args) -> bool {
-        // Checa se todos os elementos estão no tipo esperado: int/double/string
-        for (auto& a : args) {
-            if (!std::holds_alternative<int>(a) &&
-                !std::holds_alternative<double>(a) &&
-                !std::holds_alternative<std::string>(a)) {
-                return false;
-            }
-        }
-        return true;
-    };
-
     try {
         for (size_t i = 0; i < pts.size(); ++i) {
 
@@ -75,32 +63,30 @@ void ElectronEnergyCalibrator::calibrateElectrons(
             int gain = gains[i];
             float absEta = std::abs(eta);
 
-            std::cerr << "[DEBUG] Eletrón " << i << " pt/eta/r9/gain: "
-                      << pt << "/" << eta << "/" << r9 << "/" << gain << std::endl;
+            std::cerr << "[DEBUG] Eletrón " << i
+                      << " pt/eta/r9/gain: " << pt << "/" << eta << "/" << r9 << "/" << gain
+                      << std::endl;
 
             std::vector<std::variant<int,double,std::string>> args;
 
             if (_DataOrMC == "DATA") {
+                // ========================
+                // DATA: compound correction precisa de string "syst"
+                // ========================
                 std::string syst = "central";
-                args = {syst, runNumber, eta, r9, absEta, pt, gain};
-            } else {
-                std::string syst = "central";
-                args = {syst, pt, r9, absEta};
-            }
+                args.emplace_back(syst);
+                args.emplace_back(runNumber);
+                args.emplace_back(eta);
+                args.emplace_back(r9);
+                args.emplace_back(absEta);
+                args.emplace_back(pt);
+                args.emplace_back(gain);
 
-            // ---------- Validação de tipos ----------
-            if (!checkArgTypes(args)) {
-                std::cerr << "[ERROR] Argumentos para evaluate() têm tipos inválidos!" << std::endl;
-                continue;
-            }
+                std::cerr << "[DEBUG] Args DATA para evaluate: ";
+                for (auto& a : args)
+                    std::visit([](auto&& val){ std::cerr << val << " "; }, a);
+                std::cerr << std::endl;
 
-            // ---------- Debug ----------
-            std::cerr << "[DEBUG] Args para evaluate: ";
-            for (auto& a : args) std::visit([](auto&& val){ std::cerr << val << " "; }, a);
-            std::cerr << std::endl;
-
-            // ---------- Calibração ----------
-            if (_DataOrMC == "DATA") {
                 auto scale_corr = cset->compound().at(
                     (_year=="2022") ? "EGMScale_Compound_Ele_2022preEE" :
                     (_year=="2022EE") ? "EGMScale_Compound_Ele_2022postEE" :
@@ -108,9 +94,23 @@ void ElectronEnergyCalibrator::calibrateElectrons(
                     (_year=="2023B") ? "EGMScale_Compound_Ele_2023postBPIX" :
                     "EGMScale_Compound_Ele_2024"
                 );
+
                 double scale = scale_corr->evaluate(args);
                 pts[i] *= static_cast<float>(scale);
-            } else {
+
+            } else { 
+                // ========================
+                // MC: apenas valores numéricos, sem string "syst"
+                // ========================
+                args.emplace_back(pt);
+                args.emplace_back(r9);
+                args.emplace_back(absEta);
+
+                std::cerr << "[DEBUG] Args MC para evaluate: ";
+                for (auto& a : args)
+                    std::visit([](auto&& val){ std::cerr << val << " "; }, a);
+                std::cerr << std::endl;
+
                 std::normal_distribution<float> gauss(0.0, 1.0);
                 double smear = cset->at(
                     (_year=="2022") ? "EGMSmearAndSyst_ElePTsplit_2022preEE" :
@@ -119,6 +119,7 @@ void ElectronEnergyCalibrator::calibrateElectrons(
                     (_year=="2023B") ? "EGMSmearAndSyst_ElePTsplit_2023postBPIX" :
                     "EGMSmearAndSyst_ElePTsplit_2024"
                 )->evaluate(args);
+
                 pts[i] *= 1.0f + smear * gauss(rng);
             }
 
@@ -127,6 +128,8 @@ void ElectronEnergyCalibrator::calibrateElectrons(
         }
     } catch (const std::out_of_range& e) {
         std::cerr << "[ERROR] Correção falhou: " << e.what() << std::endl;
+    } catch (const std::exception& e) {
+        std::cerr << "[ERROR] Exceção inesperada na calibração: " << e.what() << std::endl;
     }
 }
 
