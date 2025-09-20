@@ -1,33 +1,38 @@
 #pragma once
-#include "ttHHanalyzer_trigger.h"  // Para objectLep
 
 #include <vector>
 #include <string>
+#include <memory>
 #include <random>
+#include <variant>
 #include <iostream>
-#include "correction.h"             // correctionlib
+
+#include "correction.h"
 
 class ElectronEnergyCalibrator {
 public:
+    // Construtor com parâmetros
     ElectronEnergyCalibrator(const std::string& year, const std::string& DataOrMC);
 
-    // Função principal de calibração
-    void calibrateElectrons(std::vector<objectLep*>& electrons,
-                            unsigned int runNumber,
-                            const std::string& syst = "central");
+    // Função principal para aplicar a calibração
+    void calibrateElectrons(
+        std::vector<float>& pts,
+        const std::vector<float>& etas,
+        const std::vector<float>& r9s,
+        const std::vector<int>& gains,
+        int runNumber
+    );
+
+    // Limites de segurança
+    float getMin(const std::string& varName) const;
+    float getMax(const std::string& varName) const;
 
 private:
     std::string _year;
     std::string _DataOrMC;
-
-    // correctionlib objects
     std::unique_ptr<correction::CorrectionSet> cset;
-    std::shared_ptr<correction::Correction> _scaleEvaluator;
-    std::shared_ptr<correction::Correction> _smearEvaluator;
-
     std::mt19937 rng;
 
-    // Helpers
+    // Caminho do JSON
     std::string getElectronJSONPath() const;
-    float clamp(float val, float minVal, float maxVal) const;
 };
