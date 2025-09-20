@@ -361,19 +361,6 @@ void ttHHanalyzer::createObjects(event * thisEvent, sysName sysType, bool up){
     }
     if(doLog) (*event_log_file) << "Boosted jets selecionados: " << nBoostedJets << ", Hadronic Higgs: " << nHadronicHiggs << std::endl;
 
-/////////////////////////////////////////////////////////////////////////////
-// PARTE 1: CALIBRAÇÃO DE ELÉTRONS E ATUALIZAÇÃO DO MET (VERSÃO CORRIGIDA)
-/////////////////////////////////////////////////////////////////////////////
-
-Com certeza. Aqui estão as versões completas dos dois grandes blocos de código para o seu arquivo ttHHanalyzer_trigger.cc.
-
-Você pode simplesmente apagar os blocos correspondentes no seu arquivo e colar estes no lugar.
-
-Arquivo: ttHHanalyzer_trigger.cc
-Bloco 1: Calibração de Elétrons e MET
-Este bloco substitui tudo desde o comentário // Electron Calibration + MET até o final do recálculo do MET.
-
-C++
 
 /////////////////////////////////////////////////////////////////////////////
 // Bloco 1: CALIBRAÇÃO DE ELÉTRONS E ATUALIZAÇÃO DO MET
