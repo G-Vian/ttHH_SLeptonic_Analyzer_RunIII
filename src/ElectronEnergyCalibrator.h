@@ -5,6 +5,7 @@
 #include <memory>
 #include <iostream>
 #include <cmath>
+#include "ttHHanalyzer_trigger.h"
 
 // Precisamos declarar o objectLep antes de usar
 // Ele está definido em ttHHanalyzer_trigger.h
