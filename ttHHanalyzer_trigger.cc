@@ -361,68 +361,101 @@ void ttHHanalyzer::createObjects(event * thisEvent, sysName sysType, bool up){
     }
     if(doLog) (*event_log_file) << "Boosted jets selecionados: " << nBoostedJets << ", Hadronic Higgs: " << nHadronicHiggs << std::endl;
 ///////////////////////////////////////////
-// Electron Calibration + MET (Compatível)
+// Electron Calibration + MET
 ///////////////////////////////////////////
 
 std::vector<float> Electron_pt_before;
 std::vector<float> Electron_pt_after;
 std::vector<size_t> valid_indices;
-
-std::cout << "[INFO] Iniciando calibração de elétrons. Número de elétrons: " 
-          << ele.size() << std::endl;
+std::vector<float> pts, etas, r9s;
+std::vector<int> gains;
 
 if (!ele.empty()) {
-    // Guardar pt original para depois recalcular MET
+
+    // Recuperar limites do calibrador usando strings compatíveis
+    float pt_min   = calibrator.getMin("pt");
+    float pt_max   = calibrator.getMax("pt");
+    float eta_min  = calibrator.getMin("ScEta");
+    float eta_max  = calibrator.getMax("ScEta");
+    float r9_min   = calibrator.getMin("r9");
+    float r9_max   = calibrator.getMax("r9");
+    int gain_min   = static_cast<int>(calibrator.getMin("seedGain"));
+    int gain_max   = static_cast<int>(calibrator.getMax("seedGain"));
+
+    // DEBUG: tipo de calibrador e ano
+    std::cout << "[DEBUG] Calibrator type: " << (_DataOrMC.empty() ? "EMPTY" : _DataOrMC) << std::endl;
+    std::cout << "[DEBUG] Year: " << (_year.empty() ? "EMPTY" : _year) << std::endl;
+
+    // Preenche vetores com clamping
     for (size_t i = 0; i < ele.size(); ++i) {
-        Electron_pt_before.push_back(ele[i].pt);
-        valid_indices.push_back(i);
-    }
+        float pt_clamped   = std::min(std::max(ele[i].pt, pt_min), pt_max);
+        float eta_clamped  = std::min(std::max(ele[i].eta, eta_min), eta_max);
+        float r9_clamped   = std::min(std::max(ele[i].r9, r9_min), r9_max);
+        int gain_clamped   = std::min(std::max(ele[i].seedGain, gain_min), gain_max);
 
-    try {
-        std::cout << "[INFO] Chamando calibrator.calibrateElectrons()" << std::endl;
-        std::cout << "      _DataOrMC = " << _DataOrMC << std::endl;
-        std::cout << "      RunNumber = " << _runNumber << std::endl;
-
-        // Agora a calibração é feita diretamente nos objetos
-        calibrator.calibrateElectrons(ele, _runNumber, "central");
-
-    } catch (const std::exception& e) {
-        std::cerr << "[ERROR] Calibração falhou: " << e.what() << std::endl;
-    }
-
-    // Guardar valores após calibração
-    for (size_t j = 0; j < valid_indices.size(); ++j) {
-        size_t idx = valid_indices[j];
-        Electron_pt_after.push_back(ele[idx].pt);
-    }
-
-    // ========================
-    // Recalcula MET
-    // ========================
-    if (MET) {
-        float met_px = MET->getp4()->Px();
-        float met_py = MET->getp4()->Py();
-        float met_pz = MET->getp4()->Pz();
-
-        for (size_t j = 0; j < valid_indices.size(); ++j) {
-            size_t idx = valid_indices[j];
-            float old_px = Electron_pt_before[j] * cos(ele[idx].phi);
-            float old_py = Electron_pt_before[j] * sin(ele[idx].phi);
-            float new_px = Electron_pt_after[j]  * cos(ele[idx].phi);
-            float new_py = Electron_pt_after[j]  * sin(ele[idx].phi);
-
-            met_px = met_px - old_px + new_px;
-            met_py = met_py - old_py + new_py;
+        if (!std::isfinite(pt_clamped) || !std::isfinite(eta_clamped) || !std::isfinite(r9_clamped)) {
+            std::cerr << "[WARNING] Eletrón " << i << " possui valor inválido e será ignorado" << std::endl;
+            continue;
         }
 
-        float met_E = sqrt(met_px*met_px + met_py*met_py + met_pz*met_pz);
-        MET->getp4()->SetPxPyPzE(met_px, met_py, met_pz, met_E);
+        pts.push_back(pt_clamped);
+        etas.push_back(eta_clamped);
+        r9s.push_back(r9_clamped);
+        gains.push_back(gain_clamped);
+
+        Electron_pt_before.push_back(ele[i].pt);
+        valid_indices.push_back(i);
+
+        std::cout << "[DEBUG] Eletrón " << i
+                  << " pt/eta/r9/gain: " << pt_clamped << "/" << eta_clamped
+                  << "/" << r9_clamped << "/" << gain_clamped << std::endl;
     }
 
-    if (!Electron_pt_before.empty()) {
+    if (!pts.empty()) {
+        try {
+            // Calibração compatível com DATA/MC
+            calibrator.calibrateElectrons(pts, etas, r9s, gains, _runNumber);
+        } catch (const std::exception& e) {
+            std::cerr << "[ERROR] Calibração falhou: " << e.what() << std::endl;
+        }
+
+        Electron_pt_after = pts;
+
+        // Atualiza pt dos elétrons
+        for (size_t j = 0; j < valid_indices.size(); ++j) {
+            size_t idx = valid_indices[j];
+            ele[idx].pt = pts[j];
+        }
+
+        // ========================
+        // Recalcula MET
+        // ========================
+        if (MET) {
+            float met_px = MET->getp4()->Px();
+            float met_py = MET->getp4()->Py();
+            float met_pz = MET->getp4()->Pz();
+
+            for (size_t j = 0; j < valid_indices.size(); ++j) {
+                size_t idx = valid_indices[j];
+                float old_px = Electron_pt_before[j] * cos(ele[idx].phi);
+                float old_py = Electron_pt_before[j] * sin(ele[idx].phi);
+                float new_px = Electron_pt_after[j]  * cos(ele[idx].phi);
+                float new_py = Electron_pt_after[j]  * sin(ele[idx].phi);
+
+                met_px = met_px - old_px + new_px;
+                met_py = met_py - old_py + new_py;
+            }
+
+            float met_E = sqrt(met_px*met_px + met_py*met_py + met_pz*met_pz);
+            MET->getp4()->SetPxPyPzE(met_px, met_py, met_pz, met_E);
+        }
+
+        // DEBUG final
         std::cout << "[DEBUG] Electron[0] Pt antes/depois: "
-                  << Electron_pt_before[0] << " / " << Electron_pt_after[0] 
-                  << std::endl;
+                  << Electron_pt_before[0] << " / " << Electron_pt_after[0] << std::endl;
+
+    } else {
+        std::cout << "[DEBUG] Nenhum elétron válido para calibração neste evento" << std::endl;
     }
 
 } else {
