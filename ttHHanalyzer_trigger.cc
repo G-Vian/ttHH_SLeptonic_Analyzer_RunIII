@@ -365,69 +365,77 @@ void ttHHanalyzer::createObjects(event * thisEvent, sysName sysType, bool up){
 // PARTE 1: CALIBRAÇÃO DE ELÉTRONS E ATUALIZAÇÃO DO MET (VERSÃO CORRIGIDA)
 /////////////////////////////////////////////////////////////////////////////
 
+Com certeza. Aqui estão as versões completas dos dois grandes blocos de código para o seu arquivo ttHHanalyzer_trigger.cc.
+
+Você pode simplesmente apagar os blocos correspondentes no seu arquivo e colar estes no lugar.
+
+Arquivo: ttHHanalyzer_trigger.cc
+Bloco 1: Calibração de Elétrons e MET
+Este bloco substitui tudo desde o comentário // Electron Calibration + MET até o final do recálculo do MET.
+
+C++
+
+/////////////////////////////////////////////////////////////////////////////
+// Bloco 1: CALIBRAÇÃO DE ELÉTRONS E ATUALIZAÇÃO DO MET
+/////////////////////////////////////////////////////////////////////////////
+
 std::vector<float> Electron_pt_before;
 std::vector<float> Electron_pt_after;
 std::vector<size_t> valid_indices;
-std::vector<float> pts, etas_for_calib, r9s; // Renomeado para clareza
+std::vector<float> pts, etas_for_calib, r9s;
 std::vector<int> gains;
 
 if (!ele.empty()) {
 
-    // Recuperar limites do calibrador
+    // Recuperar limites de segurança do calibrador
     float pt_min   = calibrator.getMin("pt");
     float pt_max   = calibrator.getMax("pt");
     float eta_min  = calibrator.getMin("ScEta");
     float eta_max  = calibrator.getMax("ScEta");
-    // ... outros limites se necessário
-
-    // 1. FORÇAR RUN NUMBER PARA 1 NO MC (COMO SOLICITADO)
+    
+    // Garante que o run number é 1 para amostras MC
     int run_for_calibrator = _runNumber;
     if (calibrator.isMC()) {
         run_for_calibrator = 1;
         std::cout << "[INFO] Amostra MC detectada. Usando run number = 1 para calibração." << std::endl;
     }
 
-    // Prepara os vetores para o calibrador
+    // Prepara os vetores com as variáveis dos elétrons para a calibração
     for (size_t i = 0; i < ele.size(); ++i) {
         
-        // 2. USAR SUPERCLUSTER ETA (scEta) PARA CALIBRAÇÃO (COMO SOLICITADO)
+        // Usa supercluster eta (scEta) para a calibração, como recomendado
         float scEta = ele[i].deltaEtaSC + ele[i].eta;
 
-        // "Clamp" (prende) os valores dentro dos limites de segurança do calibrador
+        // "Prende" os valores dentro dos limites de segurança para evitar erros
         float pt_clamped   = std::min(std::max(ele[i].pt, pt_min), pt_max);
-        float scEta_clamped = std::min(std::max(scEta, eta_min), eta_max); // Usa scEta aqui
-        // ... clamp para r9 e gain ...
+        float scEta_clamped = std::min(std::max(scEta, eta_min), eta_max);
         
-        // Adiciona apenas elétrons válidos para a calibração
         if (std::isfinite(pt_clamped) && std::isfinite(scEta_clamped)) {
             pts.push_back(pt_clamped);
-            etas_for_calib.push_back(scEta_clamped); // Passa o scEta para o calibrador
+            etas_for_calib.push_back(scEta_clamped);
             r9s.push_back(ele[i].r9);
             gains.push_back(ele[i].seedGain);
-
-            Electron_pt_before.push_back(ele[i].pt); // Guarda o pt original
-            valid_indices.push_back(i); // Guarda o índice original
+            Electron_pt_before.push_back(ele[i].pt); 
+            valid_indices.push_back(i);
         }
     }
 
-    // Aplica a calibração se houver elétrons válidos
+    // Se existirem elétrons válidos, aplica a calibração
     if (!pts.empty()) {
-        // A função calibrateElectrons modifica o vetor 'pts'
         calibrator.calibrateElectrons(pts, etas_for_calib, r9s, gains, run_for_calibrator);
-        
         Electron_pt_after = pts;
 
-        // ATUALIZA A COLEÇÃO ORIGINAL 'ele' com os valores calibrados
+        // Atualiza a coleção original 'ele' com os pTs calibrados
         for (size_t j = 0; j < valid_indices.size(); ++j) {
             size_t original_idx = valid_indices[j];
             float calibrated_pt = pts[j];
             
-            // Atualiza o pt e o p4 do objeto elétron original
+            // A estrutura 'ele' não tem um membro 'p4', então atualizamos apenas 'pt'.
+            // O 'p4' será construído corretamente na seleção de léptons usando este 'pt' atualizado.
             ele[original_idx].pt = calibrated_pt;
-            ele[original_idx].p4.SetPtEtaPhiM(calibrated_pt, ele[original_idx].eta, ele[original_idx].phi, 0.000511);
         }
 
-        // Recalcula o MET com base na diferença do pt antes e depois
+        // Recalcula o MET com base na diferença do pt dos elétrons
         if (MET) {
             float met_px = MET->getp4()->Px();
             float met_py = MET->getp4()->Py();
@@ -445,11 +453,9 @@ if (!ele.empty()) {
         }
     }
 }
-// FIM DA CALIBRAÇÃO. A COLEÇÃO 'ele' ESTÁ ATUALIZADA.
 	
-
 ////////////////////////////////////////////////////////////////
-// PARTE 2: SELEÇÃO DE LÉPTONS (LENDO OS VALORES ATUALIZADOS)
+// Bloco 2: SELEÇÃO DE LÉPTONS E VERIFICAÇÃO FINAL
 ////////////////////////////////////////////////////////////////
 
 // ========================
@@ -459,7 +465,6 @@ bool thereIsALeadLepton = false;
 int nLeadingMuons = 0;
 int nLeadingElectrons = 0;
 
-// A coleção 'muonT' não foi alterada.
 for (size_t i = 0; i < muonT.size(); i++) {
     if (cut.count("muonEta") && cut.count("muonIso") && cut.count("leadMuonPt")) {
         if (fabs(muonT[i].eta) < cut["muonEta"] &&
@@ -474,13 +479,13 @@ for (size_t i = 0; i < muonT.size(); i++) {
     }
 }
 
-// Este laço agora usa a coleção 'ele' com os pTs JÁ CALIBRADOS.
 if (!thereIsALeadLepton) {
+    // Este laço agora usa a coleção 'ele' com os pTs JÁ CALIBRADOS.
     for (size_t i = 0; i < ele.size(); i++) {
         if (cut.count("eleEta") && cut.count("leadElePt")) {
             if ((fabs(ele[i].deltaEtaSC + ele[i].eta) < 1.4442 || fabs(ele[i].deltaEtaSC + ele[i].eta) > 1.5660) &&
                 fabs(ele[i].eta) < cut["eleEta"] && ele[i].mvaIso_WP90 &&
-                ele[i].pt > cut["leadElePt"]) // <--- LENDO O PT ATUALIZADO!
+                ele[i].pt > cut["leadElePt"]) // <-- LENDO O PT ATUALIZADO
             {
                 thereIsALeadLepton = true;
                 nLeadingElectrons++;
@@ -501,7 +506,6 @@ if (doLog) (*event_log_file) << "Lepton líder encontrado? "
 int nSubMuons = 0;
 int nSubEles = 0;
 if (thereIsALeadLepton) {
-    // Seleciona múons (pt não calibrado)
     for (size_t i = 0; i < muonT.size(); i++) {
         if (cut.count("muonEta") && cut.count("muonIso") && cut.count("subLeadMuonPt")) {
             if (fabs(muonT[i].eta) < cut["muonEta"] &&
@@ -511,23 +515,24 @@ if (thereIsALeadLepton) {
             {
                 currentMuon = new objectLep(muonT[i].pt, muonT[i].eta, muonT[i].phi, 0.);
                 currentMuon->charge = muonT[i].charge;
-                //... outras propriedades
+                currentMuon->miniPFRelIso = muonT[i].miniPFRelIso_all;
+                currentMuon->pfRelIso04 = muonT[i].pfRelIso04_all;
                 thisEvent->selectMuon(currentMuon);
                 nSubMuons++;
             }
         }
     }
 
-    // Seleciona elétrons (pt calibrado)
     for (size_t i = 0; i < ele.size(); i++) {
         if (cut.count("eleEta") && cut.count("subLeadElePt")) {
             if ((fabs(ele[i].deltaEtaSC + ele[i].eta) < 1.4442 || fabs(ele[i].deltaEtaSC + ele[i].eta) > 1.5660) &&
                 fabs(ele[i].eta) < cut["eleEta"] && ele[i].mvaIso_WP90 &&
-                ele[i].pt > cut["subLeadElePt"]) // <--- LENDO O PT ATUALIZADO!
+                ele[i].pt > cut["subLeadElePt"]) // <-- LENDO O PT ATUALIZADO
             {
                 currentEle = new objectLep(ele[i].pt, ele[i].eta, ele[i].phi, 0.);
                 currentEle->charge = ele[i].charge;
-                //... outras propriedades
+                currentEle->miniPFRelIso = ele[i].miniPFRelIso_all;
+                currentEle->pfRelIso03 = ele[i].pfRelIso03_all;
                 thisEvent->selectEle(currentEle);
                 nSubEles++;
             }
@@ -538,21 +543,35 @@ if (thereIsALeadLepton) {
 if (doLog) (*event_log_file) << "Sub-leading leptons: Muons: " << nSubMuons
                                << ", Electrons: " << nSubEles << std::endl;
 
+
 // ===================================================================
-//  VERIFICAÇÃO DO LÉPTON LÍDER FINAL (COMO SOLICITADO)
+//  VERIFICAÇÃO DO LÉPTON LÍDER FINAL (CORRIGIDO)
 // ===================================================================
 std::cout << "--- VERIFICACAO DO LEPTON LIDER NO FINAL DO EVENTO ---" << std::endl;
-objectLep* finalLepton = thisEvent->getLep(); // Supondo que getLep() retorna o lépton principal
 
-if (finalLepton && finalLepton->pt > 0) {
-    std::string lepType = (thisEvent->getLeadMuon()) ? "Muon" : "Electron";
-    std::cout << "Lepton Lider Selecionado (" << lepType << "): pt = " << finalLepton->pt
-              << ", eta = " << finalLepton->eta << std::endl;
+objectLep* finalLepton = nullptr;
+std::string lepType = "Nenhum";
+
+// Acessa o lépton líder a partir das coleções de objetos selecionados
+if (thisEvent->getnSelMuon() > 0) {
+    finalLepton = thisEvent->getSelMuon(0); // Pega o primeiro múon (maior pt)
+    lepType = "Muon";
+} else if (thisEvent->getnSelEle() > 0) {
+    finalLepton = thisEvent->getSelEle(0); // Pega o primeiro elétron (maior pt)
+    lepType = "Electron";
+}
+
+// Acessa a cinemática através do método getp4() da sua classe objectLep
+if (finalLepton) {
+    std::cout << "Lepton Lider Selecionado (" << lepType << "): pt = " << finalLepton->getp4()->Pt()
+              << ", eta = " << finalLep->getp4()->Eta() << std::endl;
 } else {
     std::cout << "Nenhum lepton valido foi selecionado e armazenado no thisEvent." << std::endl;
 }
-	
 
+
+
+	
     // === Jets ===
     int nJets = 0, nLightJets = 0, nLooseBJets = 0, nMediumBJets = 0;
     for (int i = 0; i < jet.size(); i++) {
