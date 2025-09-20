@@ -5,8 +5,8 @@
 #include <memory>
 #include <random>
 
-// Aqui você garante que objectLep está definido
-#include "ttHHanalyzer_trigger.h"
+// Só o forward declaration aqui
+class objectLep;
 
 class ElectronEnergyCalibrator {
 public:
