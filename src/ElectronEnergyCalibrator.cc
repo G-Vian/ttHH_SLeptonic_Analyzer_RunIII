@@ -44,98 +44,95 @@ std::string ElectronEnergyCalibrator::getElectronJSONPath() const {
 // Calibração principal
 // ------------------------
 void ElectronEnergyCalibrator::calibrateElectrons(
-    std::vector<objectLep*>& electrons, 
-    unsigned int runNumber, 
-    const std::string& syst // pode ser "central", "up", "down"
+        std::vector<float>& pts,
+        const std::vector<float>& etas,
+        const std::vector<float>& r9s,
+        const std::vector<int>& gains,
+        int runNumber
 ) {
+    if (pts.empty()) {
+        std::cerr << "[DEBUG] Nenhum elétron para calibrar." << std::endl;
+        return;
+    }
+
     try {
-        std::cout << "[INFO] Iniciando calibração de elétrons. Número de elétrons: " 
-                  << electrons.size() << std::endl;
-        std::cout << "      _DataOrMC = " << _DataOrMC 
-                  << " | Year = " << _year 
-                  << " | RunNumber = " << runNumber << std::endl;
+        for (size_t i = 0; i < pts.size(); ++i) {
 
-        for (size_t i = 0; i < electrons.size(); ++i) {
-            auto* ele = electrons[i];
+            float pt = pts[i];
+            float eta = etas[i];
+            float r9 = r9s[i];
+            int gain = gains[i];
+            float absEta = std::abs(eta);
 
-            float pt  = clamp(ele->pt(), 5.f, 1000.f);
-            float eta = clamp(ele->eta(), -2.5f, 2.5f);
-            float r9  = clamp(ele->r9(), 0.f, 1.5f);
-            float gain = clamp(ele->gain(), 0.f, 12.f);
+            std::cerr << "[DEBUG] Eletrón " << i
+                      << " pt/eta/r9/gain: " << pt << "/" << eta << "/" << r9 << "/" << gain
+                      << std::endl;
 
-            std::cout << "[DEBUG] Eletrón " << i 
-                      << " original: pt=" << ele->pt() 
-                      << " eta=" << ele->eta() 
-                      << " r9=" << ele->r9() 
-                      << " gain=" << ele->gain() 
-                      << ", clamped: pt=" << pt 
-                      << " eta=" << eta 
-                      << " r9=" << r9 
-                      << " gain=" << gain << std::endl;
+            std::vector<std::variant<int,double,std::string>> args;
 
-            float newPt = pt;
-
-            // ===== DATA =====
             if (_DataOrMC == "DATA") {
-                if (_year == "2024") {
-                    // 5 args: "scale", run, eta, r9, pt, gain
-                    std::cout << "[DEBUG] Args DATA 2024: "
-                              << runNumber << " " << eta << " " << r9 
-                              << " " << pt << " " << gain << std::endl;
+                // ========================
+                // DATA: compound correction precisa de string "syst"
+                // ========================
+                std::string syst = "central";
+                args.emplace_back(syst);
+                args.emplace_back(runNumber);
+                args.emplace_back(eta);
+                args.emplace_back(r9);
+                args.emplace_back(absEta);
+                args.emplace_back(pt);
+                args.emplace_back(gain);
 
-                    newPt = _scaleEvaluator->evaluate(
-                        "scale", runNumber, eta, r9, pt, gain
-                    );
+                std::cerr << "[DEBUG] Args DATA para evaluate: ";
+                for (auto& a : args)
+                    std::visit([](auto&& val){ std::cerr << val << " "; }, a);
+                std::cerr << std::endl;
 
-                } else {
-                    // 6 args: "scale", run, eta, r9, abs(eta), pt, gain
-                    std::cout << "[DEBUG] Args DATA <=2023: "
-                              << runNumber << " " << eta << " " << r9 
-                              << " " << std::abs(eta) << " " << pt << " " << gain << std::endl;
+                auto scale_corr = cset->compound().at(
+                    (_year=="2022") ? "EGMScale_Compound_Ele_2022preEE" :
+                    (_year=="2022EE") ? "EGMScale_Compound_Ele_2022postEE" :
+                    (_year=="2023") ? "EGMScale_Compound_Ele_2023preBPIX" :
+                    (_year=="2023B") ? "EGMScale_Compound_Ele_2023postBPIX" :
+                    "EGMScale_Compound_Ele_2024"
+                );
 
-                    newPt = _scaleEvaluator->evaluate(
-                        "scale", runNumber, eta, r9, std::abs(eta), pt, gain
-                    );
-                }
+                double scale = scale_corr->evaluate(args);
+                pts[i] *= static_cast<float>(scale);
+
+            } else { 
+                // ========================
+                // MC: apenas valores numéricos, sem string "syst"
+                // ========================
+                args.emplace_back(pt);
+                args.emplace_back(r9);
+                args.emplace_back(absEta);
+
+                std::cerr << "[DEBUG] Args MC para evaluate: ";
+                for (auto& a : args)
+                    std::visit([](auto&& val){ std::cerr << val << " "; }, a);
+                std::cerr << std::endl;
+
+                std::normal_distribution<float> gauss(0.0, 1.0);
+                double smear = cset->at(
+                    (_year=="2022") ? "EGMSmearAndSyst_ElePTsplit_2022preEE" :
+                    (_year=="2022EE") ? "EGMSmearAndSyst_ElePTsplit_2022postEE" :
+                    (_year=="2023") ? "EGMSmearAndSyst_ElePTsplit_2023preBPIX" :
+                    (_year=="2023B") ? "EGMSmearAndSyst_ElePTsplit_2023postBPIX" :
+                    "EGMSmearAndSyst_ElePTsplit_2024"
+                )->evaluate(args);
+
+                pts[i] *= 1.0f + smear * gauss(rng);
             }
 
-            // ===== MC =====
-            else if (_DataOrMC == "MC") {
-                // Sempre 4 args: "smear", pt, r9, abs(eta)
-                std::cout << "[DEBUG] Args MC: " 
-                          << pt << " " << r9 << " " << std::abs(eta) << std::endl;
-
-                newPt = _smearEvaluator->evaluate("smear", pt, r9, std::abs(eta));
-
-                // Se quiser aplicar incertezas:
-                if (syst == "up") {
-                    float unc = _smearEvaluator->evaluate("esmear", pt, r9, std::abs(eta));
-                    newPt += unc;
-                    std::cout << "[DEBUG] Aplicando sistemático UP: +" << unc << std::endl;
-                } else if (syst == "down") {
-                    float unc = _smearEvaluator->evaluate("esmear", pt, r9, std::abs(eta));
-                    newPt -= unc;
-                    std::cout << "[DEBUG] Aplicando sistemático DOWN: -" << unc << std::endl;
-                }
-            }
-
-            else {
-                std::cerr << "[ERROR] Tipo de calibração desconhecido: " << _DataOrMC << std::endl;
-            }
-
-            std::cout << "[DEBUG] Electron[" << i << "] Pt antes/depois: " 
-                      << ele->pt() << " / " << newPt << std::endl;
-
-            // Atualiza o valor calibrado no objeto
-            ele->setCalibratedPt(newPt);
+            std::cerr << "[DEBUG] Electron[" << i << "] Pt antes/depois: "
+                      << pt << " / " << pts[i] << std::endl;
         }
-    } 
-    catch (const std::exception& e) {
-        std::cerr << "[ERROR] Exceção inesperada na calibração: " 
-                  << e.what() << std::endl;
+    } catch (const std::out_of_range& e) {
+        std::cerr << "[ERROR] Correção falhou: " << e.what() << std::endl;
+    } catch (const std::exception& e) {
+        std::cerr << "[ERROR] Exceção inesperada na calibração: " << e.what() << std::endl;
     }
 }
-
 
 // ------------------------
 // Limites de segurança
