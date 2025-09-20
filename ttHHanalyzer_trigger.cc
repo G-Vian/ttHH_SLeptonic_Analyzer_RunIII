@@ -365,9 +365,6 @@ void ttHHanalyzer::createObjects(event * thisEvent, sysName sysType, bool up){
 // Bloco 1: CALIBRAÇÃO DE ELÉTRONS E ATUALIZAÇÃO DO MET
 /////////////////////////////////////////////////////////////////////////////
 
-// ===================================================================
-//  LOG DE DIAGNÓSTICO (GARANTE QUE SEMPRE APAREÇA)
-// ===================================================================
 std::cout << ">> Ponto de verificação ANTES da calibração: Tamanho da coleção 'ele' = " << ele.size() << std::endl;
 
 std::vector<float> Electron_pt_before;
@@ -378,22 +375,18 @@ std::vector<int> gains;
 
 if (!ele.empty()) {
 
-    // Recuperar limites de segurança do calibrador
     float pt_min   = calibrator.getMin("pt");
     float pt_max   = calibrator.getMax("pt");
     float eta_min  = calibrator.getMin("ScEta");
     float eta_max  = calibrator.getMax("ScEta");
 
-    // Garante que o run number é 1 para amostras MC
     int run_for_calibrator = _runNumber;
     if (calibrator.isMC()) {
         run_for_calibrator = 1;
         std::cout << "[INFO] Amostra MC detectada. Usando run number = 1 para calibração." << std::endl;
     }
 
-    // Prepara os vetores com as variáveis dos elétrons para a calibração
     for (size_t i = 0; i < ele.size(); ++i) {
-
         float scEta = ele[i].deltaEtaSC + ele[i].eta;
         float pt_clamped   = std::min(std::max(ele[i].pt, pt_min), pt_max);
         float scEta_clamped = std::min(std::max(scEta, eta_min), eta_max);
@@ -412,13 +405,20 @@ if (!ele.empty()) {
         calibrator.calibrateElectrons(pts, etas_for_calib, r9s, gains, run_for_calibrator);
         Electron_pt_after = pts;
 
-        // Atualiza a coleção original 'ele' com os pTs calibrados
         for (size_t j = 0; j < valid_indices.size(); ++j) {
             size_t original_idx = valid_indices[j];
+            
+            // ===================================================================
+            //  LOG ADICIONAL (PT ANTES E DEPOIS DA CALIBRAÇÃO)
+            // ===================================================================
+            if (j < 3) { // Imprime para os primeiros 3 elétrons para não poluir o log
+                std::cout << ">> CALIB LOG: Ele[" << original_idx << "] pt: " 
+                          << Electron_pt_before[j] << " -> " << pts[j] << std::endl;
+            }
+
             ele[original_idx].pt = pts[j];
         }
 
-        // Recalcula o MET com base na diferença do pt dos elétrons
         if (MET) {
             float met_px = MET->getp4()->Px();
             float met_py = MET->getp4()->Py();
@@ -438,66 +438,42 @@ if (!ele.empty()) {
 }
 
 
-	////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////
 // Bloco 2: SELEÇÃO DE LÉPTONS E VERIFICAÇÃO FINAL
 ////////////////////////////////////////////////////////////////
 
-// ========================
-//  Seleção de leading leptons
-// ========================
 bool thereIsALeadLepton = false;
 int nLeadingMuons = 0;
 int nLeadingElectrons = 0;
 
 for (size_t i = 0; i < muonT.size(); i++) {
     if (cut.count("muonEta") && cut.count("muonIso") && cut.count("leadMuonPt")) {
-        if (fabs(muonT[i].eta) < cut["muonEta"] &&
-            muonT[i].tightId &&
-            muonT[i].pfRelIso04_all < cut["muonIso"] &&
-            muonT[i].pt > cut["leadMuonPt"])
-        {
-            thereIsALeadLepton = true;
-            nLeadingMuons++;
-            break;
+        if (fabs(muonT[i].eta) < cut["muonEta"] && muonT[i].tightId && muonT[i].pfRelIso04_all < cut["muonIso"] && muonT[i].pt > cut["leadMuonPt"]) {
+            thereIsALeadLepton = true; nLeadingMuons++; break;
         }
     }
 }
-
 if (!thereIsALeadLepton) {
     for (size_t i = 0; i < ele.size(); i++) {
         if (cut.count("eleEta") && cut.count("leadElePt")) {
-            if ((fabs(ele[i].deltaEtaSC + ele[i].eta) < 1.4442 || fabs(ele[i].deltaEtaSC + ele[i].eta) > 1.5660) &&
-                fabs(ele[i].eta) < cut["eleEta"] && ele[i].mvaIso_WP90 &&
-                ele[i].pt > cut["leadElePt"])
-            {
-                thereIsALeadLepton = true;
-                nLeadingElectrons++;
-                break;
+            if ((fabs(ele[i].deltaEtaSC + ele[i].eta) < 1.4442 || fabs(ele[i].deltaEtaSC + ele[i].eta) > 1.5660) && fabs(ele[i].eta) < cut["eleEta"] && ele[i].mvaIso_WP90 && ele[i].pt > cut["leadElePt"]) {
+                thereIsALeadLepton = true; nLeadingElectrons++; break;
             }
         }
     }
 }
 
-if (doLog) (*event_log_file) << "Lepton líder encontrado? "
-                               << (thereIsALeadLepton ? "SIM" : "NÃO")
-                               << " | Muons líderes: " << nLeadingMuons
-                               << " | Elétrons líderes: " << nLeadingElectrons << std::endl;
+if (doLog) (*event_log_file) << "Lepton líder encontrado? " << (thereIsALeadLepton ? "SIM" : "NÃO") << " | Muons líderes: " << nLeadingMuons << " | Elétrons líderes: " << nLeadingElectrons << std::endl;
 
-// ========================
-//  Seleção de subleading leptons
-// ========================
 int nSubMuons = 0;
 int nSubEles = 0;
 if (thereIsALeadLepton) {
     for (size_t i = 0; i < muonT.size(); i++) {
         if (cut.count("muonEta") && cut.count("muonIso") && cut.count("subLeadMuonPt")) {
-            if (fabs(muonT[i].eta) < cut["muonEta"] &&
-                muonT[i].tightId &&
-                muonT[i].pfRelIso04_all < cut["muonIso"] &&
-                muonT[i].pt > cut["subLeadMuonPt"])
-            {
+            if (fabs(muonT[i].eta) < cut["muonEta"] && muonT[i].tightId && muonT[i].pfRelIso04_all < cut["muonIso"] && muonT[i].pt > cut["subLeadMuonPt"]) {
                 std::cout << ">> DIAGNOSTICO: Criando Muon objeto com pt=" << muonT[i].pt << std::endl;
                 currentMuon = new objectLep(muonT[i].pt, muonT[i].eta, muonT[i].phi, 0.);
+                std::cout << ">> DIAGNOSTICO: Objeto Muon RECEM-CRIADO tem pt=" << currentMuon->getp4()->Pt() << std::endl;
                 thisEvent->selectMuon(currentMuon);
                 nSubMuons++;
             }
@@ -506,12 +482,13 @@ if (thereIsALeadLepton) {
 
     for (size_t i = 0; i < ele.size(); i++) {
         if (cut.count("eleEta") && cut.count("subLeadElePt")) {
-            if ((fabs(ele[i].deltaEtaSC + ele[i].eta) < 1.4442 || fabs(ele[i].deltaEtaSC + ele[i].eta) > 1.5660) &&
-                fabs(ele[i].eta) < cut["eleEta"] && ele[i].mvaIso_WP90 &&
-                ele[i].pt > cut["subLeadElePt"])
-            {
+            if ((fabs(ele[i].deltaEtaSC + ele[i].eta) < 1.4442 || fabs(ele[i].deltaEtaSC + ele[i].eta) > 1.5660) && fabs(ele[i].eta) < cut["eleEta"] && ele[i].mvaIso_WP90 && ele[i].pt > cut["subLeadElePt"]) {
                 std::cout << ">> DIAGNOSTICO: Criando Electron objeto com pt=" << ele[i].pt << " (calibrado)" << std::endl;
                 currentEle = new objectLep(ele[i].pt, ele[i].eta, ele[i].phi, 0.);
+                // ===================================================================
+                //  NOVO LOG DE DIAGNÓSTICO FINAL
+                // ===================================================================
+                std::cout << ">> DIAGNOSTICO: Objeto Electron RECEM-CRIADO tem pt=" << currentEle->getp4()->Pt() << std::endl;
                 thisEvent->selectEle(currentEle);
                 nSubEles++;
             }
@@ -519,36 +496,28 @@ if (thereIsALeadLepton) {
     }
 }
 
-if (doLog) (*event_log_file) << "Sub-leading leptons: Muons: " << nSubMuons
-                               << ", Electrons: " << nSubEles << std::endl;
+if (doLog) (*event_log_file) << "Sub-leading leptons: Muons: " << nSubMuons << ", Electrons: " << nSubEles << std::endl;
 
-
-// ===================================================================
-//  VERIFICAÇÃO DO LÉPTON LÍDER FINAL
-// ===================================================================
 std::cout << "--- VERIFICACAO DO LEPTON LIDER NO FINAL DO EVENTO ---" << std::endl;
-
 objectLep* finalLepton = nullptr;
 std::string lepType = "Nenhum";
-
 std::vector<objectLep*>* selMuons = thisEvent->getSelMuons();
 std::vector<objectLep*>* selEles = thisEvent->getSelElectrons();
 
 if (nLeadingMuons > 0 && selMuons && !selMuons->empty()) {
-    finalLepton = selMuons->at(0);
-    lepType = "Muon";
+    finalLepton = selMuons->at(0); lepType = "Muon";
 } else if (nLeadingElectrons > 0 && selEles && !selEles->empty()) {
-    finalLepton = selEles->at(0);
-    lepType = "Electron";
+    finalLepton = selEles->at(0); lepType = "Electron";
 }
 
 if (finalLepton) {
-    std::cout << "Lepton Lider Selecionado (" << lepType << "): pt = " << finalLepton->getp4()->Pt()
-              << ", eta = " << finalLepton->getp4()->Eta() << std::endl;
+    std::cout << "Lepton Lider Selecionado (" << lepType << "): pt = " << finalLepton->getp4()->Pt() << ", eta = " << finalLepton->getp4()->Eta() << std::endl;
 } else {
     std::cout << "Nenhum lepton valido foi selecionado e armazenado no thisEvent." << std::endl;
 }
 
+
+	
 	
     // === Jets ===
     int nJets = 0, nLightJets = 0, nLooseBJets = 0, nMediumBJets = 0;
