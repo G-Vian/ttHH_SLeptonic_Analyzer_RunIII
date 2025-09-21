@@ -416,7 +416,12 @@ if (!ele.empty()) {
             ele[original_idx].pt = pts[j];
         }
 
-        // Recalcula o MET com base na diferença do pt dos elétrons
+        // Recalcula o MET com base na diferença do pt dos elétrons 
+		//futuramenbte adicionar a contribuição do PT CALIBRADO dos MUONS 
+		//e também adicionar a conbtribuição da calibração dos muons e eletrons para :
+	    //hleptonHT (Soma escalar do pT dos léptons): Se houver elétrons, esta soma mudará.
+		//hST (Soma escalar do pT de todos os objetos + MET): Esta variável é afetada por duas vias
+		
         if (MET) {
             float met_px = MET->getp4()->Px();
             float met_py = MET->getp4()->Py();
