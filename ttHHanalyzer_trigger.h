@@ -1125,6 +1125,10 @@ ttHHanalyzer(const std::string & cl,
 
     ElectronEnergyCalibrator calibrator;
 
+    // NOVAS VARIÁVEIS PARA GUARDAR OS PTS
+    std::vector<float> _final_electron_pts_before_calib;
+    std::vector<float> _final_electron_pts_after_calib;
+
     std::unique_ptr<std::ofstream> sf_summary_log_file;  // Log para summary SF
     std::unique_ptr<std::ofstream> event_log_file; // logs
     std::unique_ptr<std::ofstream> sf_log_file; // logs
