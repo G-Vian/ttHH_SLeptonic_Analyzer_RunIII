@@ -318,59 +318,38 @@ class objectLightJet:public objectPhysics {
     using objectPhysics::objectPhysics;
     };
 
+////////////////////
 ////added more quantities for the correction lib
 class objectLep : public objectPhysics {
 public:
+    // Esta linha herda o construtor da classe base 'objectPhysics'.
+    // É este construtor que vai inicializar corretamente o quadrivetor (_p4) do lépton.
     using objectPhysics::objectPhysics;
 
-    // Lepton properties
+    // PROPRIEDADES ESPECÍFICAS DE UM LÉPTON
+    // Estas são as variáveis que diferenciam um 'objectLep' de um 'objectPhysics' genérico.
     int charge = 0;
     float miniPFRelIso = 0.0;
     float pfRelIso03 = 0.0;
     float pfRelIso04 = 0.0;
     lFlavor flavor;
 
-    // Electron-specific calibration variables
+    // Variáveis específicas de elétrons para a calibração
     float r9 = 0.0;
     int seedGain = 0;
 
-private:
-    TLorentzVector _p4;
-
-public:
-    // Getters
-    TLorentzVector* getp4() { return &_p4; }
+    // Getters e Setters para as variáveis NOVAS desta classe
     float getR9() const { return r9; }
     int getGain() const { return seedGain; }
 
-    // Setters
     void setR9(float val) { r9 = val; }
     void setGain(int val) { seedGain = val; }
 
-    // Atualiza pT mantendo η, φ e massa
-    void setPt(float pT) { 
-        _p4.SetPtEtaPhiM(pT, _p4.Eta(), _p4.Phi(), _p4.M()); 
-    }
-
-    void setEta(float eta) { 
-        _p4.SetPtEtaPhiM(_p4.Pt(), eta, _p4.Phi(), _p4.M()); 
-    }
-
-    void setPhi(float phi) { 
-        _p4.SetPtEtaPhiM(_p4.Pt(), _p4.Eta(), phi, _p4.M()); 
-    }
-
-    void setMass(float mass) { 
-        _p4.SetPtEtaPhiM(_p4.Pt(), _p4.Eta(), _p4.Phi(), mass); 
-    }
-
-    // Inicializa o 4-vetor completo de uma vez
-    void setP4(float pT, float eta, float phi, float mass) {
-        _p4.SetPtEtaPhiM(pT, eta, phi, mass);
-    }
+    // O método getp4() agora é herdado automaticamente de objectPhysics.
+    // Não precisamos (e não devemos) declará-lo novamente aqui.
 };
 
-
+////////////////////
 
 
 class event {
