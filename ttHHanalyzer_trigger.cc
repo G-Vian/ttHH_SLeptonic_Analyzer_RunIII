@@ -365,27 +365,31 @@ void ttHHanalyzer::createObjects(event * thisEvent, sysName sysType, bool up){
 // Bloco 1: CALIBRAÇÃO DE ELÉTRONS E ATUALIZAÇÃO DO MET
 /////////////////////////////////////////////////////////////////////////////
 
-std::cout << ">> Ponto de verificação ANTES da calibração: Tamanho da coleção 'ele' = " << ele.size() << std::endl;
-
 std::vector<float> Electron_pt_before;
 std::vector<float> Electron_pt_after;
 std::vector<size_t> valid_indices;
 std::vector<float> pts, etas_for_calib, r9s;
 std::vector<int> gains;
 
+// Limpa os vetores membro no início de cada evento
+_final_electron_pts_before_calib.clear();
+_final_electron_pts_after_calib.clear();
+
 if (!ele.empty()) {
 
+    // Recuperar limites de segurança do calibrador
     float pt_min   = calibrator.getMin("pt");
     float pt_max   = calibrator.getMax("pt");
     float eta_min  = calibrator.getMin("ScEta");
     float eta_max  = calibrator.getMax("ScEta");
 
+    // Garante que o run number é 1 para amostras MC
     int run_for_calibrator = _runNumber;
     if (calibrator.isMC()) {
         run_for_calibrator = 1;
-        std::cout << "[INFO] Amostra MC detectada. Usando run number = 1 para calibração." << std::endl;
     }
 
+    // Prepara os vetores com as variáveis dos elétrons para a calibração
     for (size_t i = 0; i < ele.size(); ++i) {
         float scEta = ele[i].deltaEtaSC + ele[i].eta;
         float pt_clamped   = std::min(std::max(ele[i].pt, pt_min), pt_max);
@@ -401,28 +405,21 @@ if (!ele.empty()) {
         }
     }
 
+    // Se existirem elétrons válidos, aplica a calibração
     if (!pts.empty()) {
         calibrator.calibrateElectrons(pts, etas_for_calib, r9s, gains, run_for_calibrator);
         Electron_pt_after = pts;
 
+        // Atualiza a coleção original 'ele' com os pTs calibrados
         for (size_t j = 0; j < valid_indices.size(); ++j) {
             size_t original_idx = valid_indices[j];
-            
-            // ===================================================================
-            //  LOG ADICIONAL (PT ANTES E DEPOIS DA CALIBRAÇÃO)
-            // ===================================================================
-            if (j < 3) { // Imprime para os primeiros 3 elétrons para não poluir o log
-                std::cout << ">> CALIB LOG: Ele[" << original_idx << "] pt: " 
-                          << Electron_pt_before[j] << " -> " << pts[j] << std::endl;
-            }
-
             ele[original_idx].pt = pts[j];
         }
 
+        // Recalcula o MET com base na diferença do pt dos elétrons
         if (MET) {
             float met_px = MET->getp4()->Px();
             float met_py = MET->getp4()->Py();
-
             for (size_t j = 0; j < valid_indices.size(); ++j) {
                 size_t idx = valid_indices[j];
                 float old_px = Electron_pt_before[j] * cos(ele[idx].phi);
@@ -434,10 +431,14 @@ if (!ele.empty()) {
             }
             MET->getp4()->SetPxPyPzE(met_px, met_py, MET->getp4()->Pz(), sqrt(met_px*met_px + met_py*met_py));
         }
+
+        // ===================================================================
+        //  SALVA OS VETORES DE PT NAS VARIÁVEIS MEMBRO DA CLASSE
+        // ===================================================================
+        _final_electron_pts_before_calib = Electron_pt_before;
+        _final_electron_pts_after_calib  = Electron_pt_after;
     }
 }
-
-
 ////////////////////////////////////////////////////////////////
 // Bloco 2: SELEÇÃO DE LÉPTONS E VERIFICAÇÃO FINAL
 ////////////////////////////////////////////////////////////////
@@ -754,33 +755,12 @@ void ttHHanalyzer::analyze(event *thisEvent) {
     if (selElePtr) selectedElectrons = *selElePtr;
     if (selMuPtr)  selectedMuons     = *selMuPtr;
 
-    // ========================
-    // Prepara vetores de pT para log
-    // ========================
-    std::vector<float> Electron_pt_before;
-    std::vector<float> Electron_pt_after;
+    // As variáveis de pT "before" e "after" agora são lidas das variáveis membro
+    // que foram salvas no passo anterior. Não precisamos recriá-las aqui.
 
     bool isMC = (_DataOrMC == "MC");
-
-    // ========================
-    // Preenche vetores de pT dos elétrons selecionados (já calibrados antes)
-    // ========================
-    for (auto* ele : selectedElectrons) {
-        if (!ele) continue;
-        float pt = ele->getp4()->Pt();
-        Electron_pt_before.push_back(pt);
-        Electron_pt_after.push_back(pt); // Mantém pT igual (sem recalibração extra aqui)
-    }
-
-    // ========================
-    // Scale factors e incerteza
-    // ========================
     float weight_before_SFs = _weight;
-
-    float triggerSF = 1.0;
-    float recoSF    = 1.0;
-    float idSF      = 1.0;
-    float totalSFUnc = 0.0;
+    float triggerSF = 1.0, recoSF = 1.0, idSF = 1.0, totalSFUnc = 0.0;
     float trigSF_unc = 0.0, recoSF_unc = 0.0, idSF_unc = 0.0;
 
     if (!selectedElectrons.empty()) {
@@ -790,8 +770,7 @@ void ttHHanalyzer::analyze(event *thisEvent) {
         idSF      = getEleIDSF(ele->getp4()->Eta(), ele->getp4()->Phi(), ele->getp4()->Pt(), idSF_unc);
         totalSFUnc = std::sqrt(trigSF_unc*trigSF_unc + recoSF_unc*recoSF_unc + idSF_unc*idSF_unc);
         _weight *= (triggerSF * recoSF * idSF);
-    } 
-    else if (!selectedMuons.empty()) {
+    } else if (!selectedMuons.empty()) {
         objectLep* mu = selectedMuons[0];
         triggerSF = getMuonTrigSF(mu->getp4()->Eta(), mu->getp4()->Pt());
         totalSFUnc = 0.0;
@@ -799,10 +778,9 @@ void ttHHanalyzer::analyze(event *thisEvent) {
     }
 
     // ========================
-    // Log detalhado (versão segura)
+    // Log detalhado (versão corrigida)
     // ========================
     bool hasLeadLepton = (!selectedElectrons.empty() || !selectedMuons.empty());
-
     if (sf_log_file && sf_log_file->is_open() && (_entryInLoop % LOG_INTERVAL == 0 && hasLeadLepton)) {
         (*sf_log_file) << "=== Entry " << _entryInLoop << " ===\n";
         size_t nEle = selectedElectrons.size();
@@ -812,14 +790,15 @@ void ttHHanalyzer::analyze(event *thisEvent) {
         (*sf_log_file) << "Number of selected muons: "     << nMu << "\n";
 
         if (nEle > 0) {
-            size_t nLog = std::min(nEle, Electron_pt_before.size());
-            nLog = std::min(nLog, Electron_pt_after.size());
+            // Garante que não vamos ler além dos limites dos vetores
+            size_t nLog = std::min({nEle, _final_electron_pts_before_calib.size(), _final_electron_pts_after_calib.size()});
             for (size_t i = 0; i < nLog; ++i) {
                 objectLep* ele = selectedElectrons[i];
                 if (!ele) continue;
 
-                float pt_before = Electron_pt_before[i];
-                float pt_after  = Electron_pt_after[i];
+                // USA AS VARIÁVEIS MEMBRO CORRETAS PARA O LOG
+                float pt_before = _final_electron_pts_before_calib[i];
+                float pt_after  = _final_electron_pts_after_calib[i];
 
                 (*sf_log_file) << "Electron " << i
                                << " | η = " << ele->getp4()->Eta()
@@ -835,8 +814,7 @@ void ttHHanalyzer::analyze(event *thisEvent) {
                                << " | Total SF Uncertainty = " << totalSFUnc
                                << "\n";
             }
-        } 
-        else if (nMu > 0) {
+        } else if (nMu > 0) {
             objectLep* mu = selectedMuons[0];
             if (mu) {
                 (*sf_log_file) << "Muon | η = " << mu->getp4()->Eta()
@@ -850,7 +828,6 @@ void ttHHanalyzer::analyze(event *thisEvent) {
     }
 
     _entryInLoop++;
-
 
 
 ///////////////////////////////////////
