@@ -315,7 +315,7 @@ void ttHHanalyzer::createObjects(event * thisEvent, sysName sysType, bool up){
                              _ev->Flag_EcalDeadCellTriggerPrimitiveFilter && _ev->Flag_BadPFMuonFilter &&
                              _ev->Flag_BadPFMuonDzFilter && _ev->Flag_hfNoisyHitsFilter &&
                              _ev->Flag_eeBadScFilter && _ev->Flag_ecalBadCalibFilter);
-        thisEvent->setTrigger(_ev->HLT_Ele30_WPTight_Gsf || _ev->HLT_IsoMu24);
+        thisEvent->setTrigger(_ev->HLT_Ele30_WPTight_Gsf || _ev->HLT_IsoMu24 || _ev->HLT_Mu50);
     }
 
     // Primary vertex
