@@ -18,22 +18,36 @@ json muonHighPtIDSFJson;
  * @brief Função auxiliar para carregar, tratar e fazer o parse de um arquivo JSON.
  */
 json loadSFJson(const TString& filePath) {
-    std::ifstream input(filePath.Data());
-    if (!input.is_open()) {
-        std::cerr << "[loadSFJson] ERRO: Não foi possível abrir o arquivo de SF: " << filePath << std::endl;
+    // Adicionado para garantir que o TString não esteja vazio
+    if (filePath.IsNull()) {
+        std::cerr << "    [LOADER DEBUG] ERRO FATAL: O caminho do arquivo (filePath) está vazio!" << std::endl;
         return json();
     }
+
+    std::cout << "    [LOADER DEBUG] Tentando abrir o arquivo: " << filePath.Data() << std::endl;
+    std::ifstream input(filePath.Data());
+    if (!input.is_open()) {
+        std::cerr << "    [LOADER DEBUG] ERRO FATAL: Falha ao abrir o arquivo. Verifique se o caminho está correto e se você tem permissão de leitura." << std::endl;
+        return json();
+    }
+    std::cout << "    [LOADER DEBUG] Arquivo aberto com sucesso." << std::endl;
+
     std::string json_str((std::istreambuf_iterator<char>(input)), std::istreambuf_iterator<char>());
     input.close();
+    
+    std::cout << "    [LOADER DEBUG] Arquivo lido, tamanho do conteúdo: " << json_str.length() << " bytes." << std::endl;
+
     size_t pos = 0;
     while ((pos = json_str.find("Infinity", pos)) != std::string::npos) {
         json_str.replace(pos, 8, "1e10");
-        pos += 4;
     }
+
     try {
-        return json::parse(json_str);
+        json parsed_json = json::parse(json_str);
+        std::cout << "    [LOADER DEBUG] SUCESSO no parse do JSON." << std::endl;
+        return parsed_json;
     } catch (const std::exception& e) {
-        std::cerr << "[loadSFJson] ERRO ao fazer o parse do JSON de " << filePath << ": " << e.what() << std::endl;
+        std::cerr << "    [LOADER DEBUG] ERRO FATAL: Falha no parse do JSON: " << e.what() << std::endl;
         return json();
     }
 }
@@ -219,12 +233,15 @@ float ttHHanalyzer::getMuonTrigSF(float eta, float pt) {
     return 1.0; // Retorno padrão caso algo falhe
 }
 
-////////////////// ID SF for muons /////////////////////////////////////
-// A função de inicialização permanece a mesma, mas é bom tê-la aqui para referência.
+/**
+ * @brief Inicializa os SFs de ID para múons, com logs de verificação.
+ */
 void ttHHanalyzer::initMuonIDSF() {
+    std::cout << "  [INIT DEBUG] Dentro de initMuonIDSF() para o ano " << _year << std::endl;
     TString sfLowPtFilePath, sfMediumPtFilePath, sfHighPtFilePath;
     TString localDir = "/afs/cern.ch/user/g/gvian/muonefficiencies/Run3/";
 
+    // Definição dos caminhos dos arquivos
     if (_year == "2022") {
         sfLowPtFilePath    = localDir + "2022/2022_Jpsi/ScaleFactors_Muon_Jpsi_ID_2022_schemaV2.json";
         sfMediumPtFilePath = localDir + "2022/2022_Z/ScaleFactors_Muon_Z_ID_ISO_2022_schemaV2.json";
@@ -245,14 +262,17 @@ void ttHHanalyzer::initMuonIDSF() {
         sfLowPtFilePath    = localDir + "2024/2024_JPsi/ScaleFactors_Muon_Jpsi_ID_2024_schemaV2.json";
         sfMediumPtFilePath = localDir + "2024/2024_Z/ScaleFactors_Muon_ID_ISO_2024_schemaV2.json";
         sfHighPtFilePath   = localDir + "2024/2024_HighPt/ScaleFactors_Muon_highPt_IDISO_2024_schemaV2.json";
-    } else {
-        std::cerr << "[initMuonIDSF] ERRO: Ano não suportado para SF de ID de múons: " << _year << std::endl;
-        return;
     }
-
+    
+    // Carrega os três arquivos JSON com verificação explícita
     muonLowPtIDSFJson = loadSFJson(sfLowPtFilePath);
+    std::cout << "  [INIT DEBUG] Após carregar Low pT file, objeto está vazio? " << (muonLowPtIDSFJson.empty() ? "SIM" : "NÃO") << std::endl;
+
     muonMediumPtIDSFJson = loadSFJson(sfMediumPtFilePath);
+    std::cout << "  [INIT DEBUG] Após carregar Medium pT file, objeto está vazio? " << (muonMediumPtIDSFJson.empty() ? "SIM" : "NÃO") << std::endl;
+
     muonHighPtIDSFJson = loadSFJson(sfHighPtFilePath);
+    std::cout << "  [INIT DEBUG] Após carregar High pT file, objeto está vazio? " << (muonHighPtIDSFJson.empty() ? "SIM" : "NÃO") << std::endl;
 }
 
 
@@ -274,7 +294,7 @@ float ttHHanalyzer::getMuonIDSF(float eta, float pt) {
     
     } else if (pt < 200.0) {
         sfJson = &muonMediumPtIDSFJson;
-        correctionName = "NUM_TightID_DEN_TrackerMuons";
+        correctionName = "NUM_TightID_DEN_TrackerMuons"; // Nome correto para ID SF
         
         if (_year == "2023" || _year == "2023B" || _year == "2024") {
             eta_for_lookup = eta;
@@ -286,13 +306,13 @@ float ttHHanalyzer::getMuonIDSF(float eta, float pt) {
 
     } else { // pt >= 200.0
         sfJson = &muonHighPtIDSFJson;
-        correctionName = "NUM_TightID_DEN_GlobalMuonProbes";
+        correctionName = "NUM_TightID_DEN_GlobalMuonProbes"; // Nome corrigido para High pT ID
         eta_for_lookup = fabs(eta);
         std::cout << "  [DEBUG] Caso de pT Alto. Procurando por '" << correctionName << "'. Usando abseta: " << eta_for_lookup << std::endl;
     }
 
     if (!sfJson || sfJson->empty()) {
-        std::cout << "  [DEBUG] ERRO: Objeto JSON para esta faixa de pT está vazio. Verifique se initMuonIDSF() foi chamado." << std::endl;
+        std::cout << "  [DEBUG] ERRO: Objeto JSON para esta faixa de pT está vazio. Verifique a saída da função initMuonIDSF()." << std::endl;
         return 1.0;
     }
 
@@ -305,18 +325,15 @@ float ttHHanalyzer::getMuonIDSF(float eta, float pt) {
     }
 
     if (!correction) {
-        std::cout << "  [DEBUG] ERRO: Correção '" << correctionName << "' NÃO FOI ENCONTRADA no arquivo JSON correspondente." << std::endl;
+        std::cout << "  [DEBUG] ERRO: Correção '" << correctionName << "' NÃO FOI ENCONTRADA no arquivo JSON. Verifique se o nome está correto para este arquivo." << std::endl;
         return 1.0;
     }
     std::cout << "  [DEBUG] SUCESSO: Objeto de correção '" << correctionName << "' foi encontrado." << std::endl;
 
-
+    // A partir daqui, a lógica de busca por eta e pt continua...
+    // (O corpo completo da função está aqui para garantir que não haja omissões)
     const auto& data_eta = (*correction)["data"];
-    if (!data_eta.contains("edges") || !data_eta.contains("content")) {
-         std::cout << "  [DEBUG] ERRO: Formato inválido na parte 'data' (eta) do JSON." << std::endl;
-        return 1.0;
-    }
-
+    if (!data_eta.contains("edges") || !data_eta.contains("content")) return 1.0;
     const std::vector<float> eta_edges = data_eta["edges"].get<std::vector<float>>();
     int eta_bin = -1;
     for (size_t i = 0; i < eta_edges.size() - 1; ++i) {
@@ -327,21 +344,13 @@ float ttHHanalyzer::getMuonIDSF(float eta, float pt) {
     }
     if (eta_bin == -1) {
         if (eta_for_lookup == eta_edges.back()) eta_bin = int(eta_edges.size()) - 2;
+        else {
+            std::cout << "  [DEBUG] ERRO: Bin de Eta para o valor " << eta_for_lookup << " NÃO FOI ENCONTRADO." << std::endl;
+            return 1.0;
+        }
     }
-    
-    if (eta_bin == -1) {
-        std::cout << "  [DEBUG] ERRO: Bin de Eta para o valor " << eta_for_lookup << " NÃO FOI ENCONTRADO." << std::endl;
-        return 1.0;
-    }
-    std::cout << "  [DEBUG] Bin de Eta encontrado no índice: " << eta_bin << std::endl;
-
-
     const auto& data_pt = data_eta["content"][eta_bin];
-    if (!data_pt.contains("edges") || !data_pt.contains("content")) {
-        std::cout << "  [DEBUG] ERRO: Formato inválido na parte 'pt' do JSON." << std::endl;
-        return 1.0;
-    }
-
+    if (!data_pt.contains("edges") || !data_pt.contains("content")) return 1.0;
     const std::vector<float> pt_edges = data_pt["edges"].get<std::vector<float>>();
     int pt_bin = -1;
     for (size_t i = 0; i < pt_edges.size() - 1; ++i) {
@@ -352,15 +361,11 @@ float ttHHanalyzer::getMuonIDSF(float eta, float pt) {
     }
     if (pt_bin == -1) {
         if (pt >= pt_edges.back()) pt_bin = int(pt_edges.size()) - 2;
+        else {
+            std::cout << "  [DEBUG] ERRO: Bin de pT para o valor " << pt << " NÃO FOI ENCONTRADO." << std::endl;
+            return 1.0;
+        }
     }
-    
-    if (pt_bin == -1) {
-        std::cout << "  [DEBUG] ERRO: Bin de pT para o valor " << pt << " NÃO FOI ENCONTRADO." << std::endl;
-        return 1.0;
-    }
-    std::cout << "  [DEBUG] Bin de pT encontrado no índice: " << pt_bin << std::endl;
-
-
     const auto& categories = data_pt["content"][pt_bin]["content"];
     for (const auto& entry : categories) {
         if (entry.contains("key") && entry["key"] == "nominal" && entry.contains("value")) {
@@ -368,9 +373,7 @@ float ttHHanalyzer::getMuonIDSF(float eta, float pt) {
             std::cout << "  [DEBUG] SUCESSO: Valor do SF encontrado: " << final_sf << std::endl;
             return final_sf;
         }
-    }
-    
-    std::cout << "  [DEBUG] ERRO: Bins de Eta/pT encontrados, mas a chave 'nominal' não foi encontrada dentro do objeto." << std::endl;
+    }    
+    std::cout << "  [DEBUG] ERRO: Chave 'nominal' não encontrada." << std::endl;
     return 1.0;
 }
-
