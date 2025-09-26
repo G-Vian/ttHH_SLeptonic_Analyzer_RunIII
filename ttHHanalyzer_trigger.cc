@@ -1041,17 +1041,17 @@ void ttHHanalyzer::process(event* thisEvent, sysName sysType, bool up) {
     if (!eleSFInitialized) {
         initTriggerSF();  // Trigger SF
         initRecoSF();     // Reco SF
-        initEleIDSF();       // <-- ID SF (MVA ISO WP90)
+        initEleIDSF();      // ID SF (MVA ISO WP90)
         eleSFInitialized = true;
     }
 
-    // Inicializar SF de trigger - múons (TSFmu)
+    // Inicializar SFs de múons (Trigger e ID/ISO)
     static bool muonSFInitialized = false;
     if (!muonSFInitialized) {
-        initMuonHLTriggerSF();
+        initMuonHLTriggerSF(); // Carrega SFs de Trigger do Múon
+        initMuonIDSF();        // <-- NOVA LINHA: Carrega SFs de ID/ISO do Múon
         muonSFInitialized = true;
     }
-
     // Análise do evento: agora já aplica todos os SFs (Trigger * Reco * ID) e loga os valores
     analyze(thisEvent);
 
