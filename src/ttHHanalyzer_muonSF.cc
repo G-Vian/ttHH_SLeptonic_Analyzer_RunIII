@@ -286,8 +286,8 @@ float ttHHanalyzer::getMuonIDSF(float eta, float pt) {
     
     } else if (pt < 200.0) { // --- CASO DE PT MÉDIO ---
         sfJson = &muonMediumPtIDSFJson;
-        correctionName = "NUM_TightPFIso_DEN_TightID";
-        
+ //       correctionName = "NUM_TightPFIso_DEN_TightID";
+         correctionName = "NUM_TightID_DEN_TrackerMuons";
         // Lógica dependente do ano para pT médio, conforme sua verificação
         if (_year == "2023" || _year == "2023B" || _year == "2024") {
             eta_for_lookup = eta; // Anos recentes usam eta
