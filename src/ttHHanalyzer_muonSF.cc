@@ -236,12 +236,15 @@ float ttHHanalyzer::getMuonTrigSF(float eta, float pt) {
 /**
  * @brief Inicializa os SFs de ID para múons, com logs de verificação.
  */
-void ttHHanalyzer::initMuonIDSF() {
-    std::cout << "  [INIT DEBUG] Dentro de initMuonIDSF() para o ano " << _year << std::endl;
-    TString sfLowPtFilePath, sfMediumPtFilePath, sfHighPtFilePath;
-    TString localDir = "/afs/cern.ch/user/g/gvian/muonefficiencies/Run3/";
 
-    // Definição dos caminhos dos arquivos
+void ttHHanalyzer::initMuonIDSF() {
+    TString sfLowPtFilePath, sfMediumPtFilePath, sfHighPtFilePath;
+    // ===================================================================
+    // CORREÇÃO: Adicionado o diretório "muon_SF/" que estava faltando.
+    // ===================================================================
+    TString localDir = "/afs/cern.ch/user/g/gvian/muon_SF/muonefficiencies/Run3/";
+
+    // Define os caminhos dos arquivos para cada ano
     if (_year == "2022") {
         sfLowPtFilePath    = localDir + "2022/2022_Jpsi/ScaleFactors_Muon_Jpsi_ID_2022_schemaV2.json";
         sfMediumPtFilePath = localDir + "2022/2022_Z/ScaleFactors_Muon_Z_ID_ISO_2022_schemaV2.json";
@@ -262,20 +265,16 @@ void ttHHanalyzer::initMuonIDSF() {
         sfLowPtFilePath    = localDir + "2024/2024_JPsi/ScaleFactors_Muon_Jpsi_ID_2024_schemaV2.json";
         sfMediumPtFilePath = localDir + "2024/2024_Z/ScaleFactors_Muon_ID_ISO_2024_schemaV2.json";
         sfHighPtFilePath   = localDir + "2024/2024_HighPt/ScaleFactors_Muon_highPt_IDISO_2024_schemaV2.json";
+    } else {
+        std::cerr << "[initMuonIDSF] ERRO: Ano não suportado para SF de ID de múons: " << _year << std::endl;
+        return;
     }
-    
-    // Carrega os três arquivos JSON com verificação explícita
+
+    // Carrega os três arquivos JSON
     muonLowPtIDSFJson = loadSFJson(sfLowPtFilePath);
-    std::cout << "  [INIT DEBUG] Após carregar Low pT file, objeto está vazio? " << (muonLowPtIDSFJson.empty() ? "SIM" : "NÃO") << std::endl;
-
     muonMediumPtIDSFJson = loadSFJson(sfMediumPtFilePath);
-    std::cout << "  [INIT DEBUG] Após carregar Medium pT file, objeto está vazio? " << (muonMediumPtIDSFJson.empty() ? "SIM" : "NÃO") << std::endl;
-
     muonHighPtIDSFJson = loadSFJson(sfHighPtFilePath);
-    std::cout << "  [INIT DEBUG] Após carregar High pT file, objeto está vazio? " << (muonHighPtIDSFJson.empty() ? "SIM" : "NÃO") << std::endl;
 }
-
-
 /**
  * @brief Obtém o SF de ID para um múon, com mensagens de debug detalhadas.
  */
