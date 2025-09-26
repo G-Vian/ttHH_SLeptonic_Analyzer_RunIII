@@ -746,7 +746,6 @@ void ttHHanalyzer::diMotherReco(const TLorentzVector & dPar1p4,const TLorentzVec
 	_bpTHiggs2    = (dPar3p4+dPar4p4).Pt();
     }
 } 
-
 void ttHHanalyzer::analyze(event *thisEvent) {
     // ========================
     // Pega vetores de leptons do evento
@@ -777,9 +776,15 @@ void ttHHanalyzer::analyze(event *thisEvent) {
         _weight *= (triggerSF * recoSF * idSF);
     } else if (!selectedMuons.empty()) {
         objectLep* mu = selectedMuons[0];
+        
+        // Pega os SFs de Trigger e de ID para o múon
         triggerSF = getMuonTrigSF(mu->getp4()->Eta(), mu->getp4()->Pt());
-        totalSFUnc = 0.0;
-        _weight *= triggerSF;
+        idSF      = getMuonIDSF(mu->getp4()->Eta(), mu->getp4()->Pt()); // <-- NOVA LINHA
+
+        totalSFUnc = 0.0; // Incertezas para múons ainda não implementadas
+        
+        // Aplica ambos os SFs ao peso do evento
+        _weight *= (triggerSF * idSF); // <-- LINHA MODIFICADA
     }
 
     // ========================
@@ -824,7 +829,8 @@ void ttHHanalyzer::analyze(event *thisEvent) {
             if (mu) {
                 (*sf_log_file) << "Muon | η = " << mu->getp4()->Eta()
                                << ", pT = " << mu->getp4()->Pt()
-                               << " | Muon SF = " << triggerSF
+                               << " | Trigger SF = " << triggerSF      // <-- LOG MODIFICADO
+                               << " | ID SF = " << idSF                 // <-- NOVA LINHA NO LOG
                                << " | Weight before = " << weight_before_SFs
                                << " | Weight after = " << _weight
                                << "\n";
@@ -833,7 +839,6 @@ void ttHHanalyzer::analyze(event *thisEvent) {
     }
 
     _entryInLoop++;
-
 
 ///////////////////////////////////////
 
