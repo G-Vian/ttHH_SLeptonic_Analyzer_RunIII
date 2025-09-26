@@ -1079,7 +1079,6 @@ auto logEvent = [&](const char* type, float eta, float pt, int binX, int binY, f
 };
 
 // ======================== Elétrons ========================
-// ======================== Elétrons ========================
 auto electrons = thisEvent->getSelElectrons();
 if (electrons && !electrons->empty()) {
     std::vector<std::tuple<float,float,int,int,float,bool>> ele_log; // guardar info de log
@@ -1150,7 +1149,7 @@ if (muons && !muons->empty()) {
         float sf_val = getMuonTrigSF(eta, pt);
         int eta_bin = -1, pt_bin = -1;
 
-        // Encontrar bins do JSON
+        // Encontrar bins do JSON (ATENÇÃO muonTrigSFJson SÓ ESTÁ VERIFICANDO OS SFs dos muons de PT médio!)
         if (!muonTrigSFJson.empty()) {
             const json* correction = nullptr;
             for (const auto& corr : muonTrigSFJson["corrections"]) {
