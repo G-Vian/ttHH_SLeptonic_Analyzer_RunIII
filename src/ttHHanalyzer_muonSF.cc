@@ -1,4 +1,4 @@
-#include "ttHHanalyzer_trigger.h" // Inclua seu header principal
+#include "ttHHanalyzer.h" // Inclua seu header principal
 
 #include <fstream>
 #include <iostream>
@@ -8,6 +8,7 @@
 #include <cstdlib>
 
 // --- DEFINIÇÃO DAS VARIÁVEIS GLOBAIS DE SF ---
+// A definição real (alocação de memória) das variáveis acontece aqui.
 json muonTrigSFJson;
 json muonHighPtTrigSFJson;
 
@@ -125,23 +126,34 @@ void ttHHanalyzer::initMuonHLTriggerSF() {
 
 /**
  * @brief Obtém o fator de escala (SF) de trigger para um dado múon.
+ * A função seleciona a correção de médio/alto pT e trata o eta (normal/absoluto) internamente.
+ * @param eta O eta do múon (pode ser positivo ou negativo).
+ * @param pt O momento transverso (pT) do múon.
+ * @return O valor do fator de escala. Retorna 1.0 se não encontrado.
  */
 float ttHHanalyzer::getMuonTrigSF(float eta, float pt) {
     const json* sfJson = nullptr;
     std::string correctionName;
+    float eta_for_lookup; // Variável para guardar o eta a ser usado na busca
 
+    // --- Lógica de Seleção ---
     if (pt > 200.0) {
         sfJson = &muonHighPtTrigSFJson;
         correctionName = "NUM_HLT_DEN_TrkHighPtTightRelIsoProbes";
+        // Para o SF de alto pT, o JSON é binnado em 'abseta', então usamos o valor absoluto.
+        eta_for_lookup = fabs(eta);
     } else {
         sfJson = &muonTrigSFJson;
         correctionName = "NUM_IsoMu24_DEN_CutBasedIdTight_and_PFIsoTight";
+        // Para o SF de pT intermediário, usamos o valor original de eta.
+        eta_for_lookup = eta;
     }
 
     if (!sfJson || sfJson->empty()) {
         return 1.0;
     }
 
+    // Lógica para extrair o SF do JSON
     const json* correction = nullptr;
     for (const auto& corr : (*sfJson)["corrections"]) {
         if (corr.contains("name") && corr["name"] == correctionName) {
@@ -160,16 +172,17 @@ float ttHHanalyzer::getMuonTrigSF(float eta, float pt) {
         return 1.0;
     }
 
+    // Encontra o bin de eta usando a variável 'eta_for_lookup'
     const std::vector<float> eta_edges = data_eta["edges"].get<std::vector<float>>();
     int eta_bin = -1;
     for (size_t i = 0; i < eta_edges.size() - 1; ++i) {
-        if (eta >= eta_edges[i] && eta < eta_edges[i+1]) {
+        if (eta_for_lookup >= eta_edges[i] && eta_for_lookup < eta_edges[i+1]) {
             eta_bin = i;
             break;
         }
     }
-    if (eta_bin == -1) {
-        if (eta == eta_edges.back()) eta_bin = int(eta_edges.size()) - 2;
+    if (eta_bin == -1) { // Trata o caso de estar exatamente na borda superior
+        if (eta_for_lookup == eta_edges.back()) eta_bin = int(eta_edges.size()) - 2;
         else return 1.0;
     }
 
@@ -179,6 +192,7 @@ float ttHHanalyzer::getMuonTrigSF(float eta, float pt) {
         return 1.0;
     }
 
+    // Encontra o bin de pT
     const std::vector<float> pt_edges = data_pt["edges"].get<std::vector<float>>();
     int pt_bin = -1;
     for (size_t i = 0; i < pt_edges.size() - 1; ++i) {
@@ -187,11 +201,12 @@ float ttHHanalyzer::getMuonTrigSF(float eta, float pt) {
             break;
         }
     }
-    if (pt_bin == -1) {
+    if (pt_bin == -1) { // Trata o caso de estar na borda superior ou acima
         if (pt >= pt_edges.back()) pt_bin = int(pt_edges.size()) - 2;
         else return 1.0;
     }
 
+    // Extrai o valor nominal do SF
     const auto& categories = data_pt["content"][pt_bin]["content"];
     for (const auto& entry : categories) {
         if (entry.contains("key") && entry["key"] == "nominal" && entry.contains("value")) {
@@ -199,5 +214,5 @@ float ttHHanalyzer::getMuonTrigSF(float eta, float pt) {
         }
     }
 
-    return 1.0;
+    return 1.0; // Retorno padrão caso algo falhe
 }
