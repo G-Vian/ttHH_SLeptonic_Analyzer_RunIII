@@ -28,6 +28,9 @@
 using json = nlohmann::json;  /// this is for MUON trigger SF (TSFmu)
 extern json muonTrigSFJson;
 extern json muonHighPtTrigSFJson;
+extern json muonLowPtIDSFJson;
+extern json muonMediumPtIDSFJson;
+extern json muonHighPtIDSFJson;
 
 //using namespace ROOT::Math;
 using nlohmann::fifo_map;
@@ -1234,7 +1237,8 @@ ttHHanalyzer(const std::string & cl,
 	
 	void initMuonHLTriggerSF();
 	float getMuonTrigSF(float eta, float pt);
-
+    void initMuonIDSF();
+    float getMuonIDSF(float eta, float pt);
 ///////////////////////////
 	// Electron calibrations
 	void applyElectronCalibration(event* thisEvent, unsigned int runNumber, unsigned long long eventNumber);
