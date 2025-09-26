@@ -477,9 +477,9 @@ if (thereIsALeadLepton) {
     for (size_t i = 0; i < muonT.size(); i++) {
         if (cut.count("muonEta") && cut.count("muonIso") && cut.count("subLeadMuonPt")) {
             if (fabs(muonT[i].eta) < cut["muonEta"] && muonT[i].tightId && muonT[i].pfRelIso04_all < cut["muonIso"] && muonT[i].pt > cut["subLeadMuonPt"]) {
-                std::cout << ">> DIAGNOSTICO: Criando Muon objeto com pt=" << muonT[i].pt << std::endl;
+ //               std::cout << ">> DIAGNOSTICO: Criando Muon objeto com pt=" << muonT[i].pt << std::endl;
                 currentMuon = new objectLep(muonT[i].pt, muonT[i].eta, muonT[i].phi, 0.);
-                std::cout << ">> DIAGNOSTICO: Objeto Muon RECEM-CRIADO tem pt=" << currentMuon->getp4()->Pt() << std::endl;
+//                std::cout << ">> DIAGNOSTICO: Objeto Muon RECEM-CRIADO tem pt=" << currentMuon->getp4()->Pt() << std::endl;
                 thisEvent->selectMuon(currentMuon);
                 nSubMuons++;
             }
@@ -489,12 +489,12 @@ if (thereIsALeadLepton) {
     for (size_t i = 0; i < ele.size(); i++) {
         if (cut.count("eleEta") && cut.count("subLeadElePt")) {
             if ((fabs(ele[i].deltaEtaSC + ele[i].eta) < 1.4442 || fabs(ele[i].deltaEtaSC + ele[i].eta) > 1.5660) && fabs(ele[i].eta) < cut["eleEta"] && ele[i].mvaIso_WP90 && ele[i].pt > cut["subLeadElePt"]) {
-                std::cout << ">> DIAGNOSTICO: Criando Electron objeto com pt=" << ele[i].pt << " (calibrado)" << std::endl;
+  //              std::cout << ">> DIAGNOSTICO: Criando Electron objeto com pt=" << ele[i].pt << " (calibrado)" << std::endl;
                 currentEle = new objectLep(ele[i].pt, ele[i].eta, ele[i].phi, 0.);
                 // ===================================================================
                 //  NOVO LOG DE DIAGNÓSTICO FINAL
                 // ===================================================================
-                std::cout << ">> DIAGNOSTICO: Objeto Electron RECEM-CRIADO tem pt=" << currentEle->getp4()->Pt() << std::endl;
+  //              std::cout << ">> DIAGNOSTICO: Objeto Electron RECEM-CRIADO tem pt=" << currentEle->getp4()->Pt() << std::endl;
                 thisEvent->selectEle(currentEle);
                 nSubEles++;
             }
@@ -504,7 +504,7 @@ if (thereIsALeadLepton) {
 
 if (doLog) (*event_log_file) << "Sub-leading leptons: Muons: " << nSubMuons << ", Electrons: " << nSubEles << std::endl;
 
-std::cout << "--- VERIFICACAO DO LEPTON LIDER NO FINAL DO EVENTO ---" << std::endl;
+//std::cout << "--- VERIFICACAO DO LEPTON LIDER NO FINAL DO EVENTO ---" << std::endl;
 objectLep* finalLepton = nullptr;
 std::string lepType = "Nenhum";
 std::vector<objectLep*>* selMuons = thisEvent->getSelMuons();
@@ -515,13 +515,13 @@ if (nLeadingMuons > 0 && selMuons && !selMuons->empty()) {
 } else if (nLeadingElectrons > 0 && selEles && !selEles->empty()) {
     finalLepton = selEles->at(0); lepType = "Electron";
 }
-
+/*
 if (finalLepton) {
     std::cout << "Lepton Lider Selecionado (" << lepType << "): pt = " << finalLepton->getp4()->Pt() << ", eta = " << finalLepton->getp4()->Eta() << std::endl;
 } else {
     std::cout << "Nenhum lepton valido foi selecionado e armazenado no thisEvent." << std::endl;
 }
-
+*/
 
 	
 	
