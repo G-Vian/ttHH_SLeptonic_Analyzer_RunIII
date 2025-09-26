@@ -279,7 +279,7 @@ void ttHHanalyzer::initMuonIDSF() {
  * @brief Obtém o SF de ID para um múon, com mensagens de debug detalhadas.
  */
 float ttHHanalyzer::getMuonIDSF(float eta, float pt) {
-    std::cout << "\n--- [DEBUG] getMuonIDSF chamado com eta: " << eta << ", pt: " << pt << std::endl;
+//    std::cout << "\n--- [DEBUG] getMuonIDSF chamado com eta: " << eta << ", pt: " << pt << std::endl;
 
     const json* sfJson = nullptr;
     std::string correctionName;
@@ -289,7 +289,7 @@ float ttHHanalyzer::getMuonIDSF(float eta, float pt) {
         sfJson = &muonLowPtIDSFJson;
         correctionName = "NUM_TightID_DEN_TrackerMuons";
         eta_for_lookup = fabs(eta);
-        std::cout << "  [DEBUG] Caso de pT Baixo. Procurando por '" << correctionName << "'. Usando abseta: " << eta_for_lookup << std::endl;
+//        std::cout << "  [DEBUG] Caso de pT Baixo. Procurando por '" << correctionName << "'. Usando abseta: " << eta_for_lookup << std::endl;
     
     } else if (pt < 200.0) {
         sfJson = &muonMediumPtIDSFJson;
@@ -297,21 +297,21 @@ float ttHHanalyzer::getMuonIDSF(float eta, float pt) {
         
         if (_year == "2023" || _year == "2023B" || _year == "2024") {
             eta_for_lookup = eta;
-            std::cout << "  [DEBUG] Caso de pT Médio (" << _year << "). Procurando por '" << correctionName << "'. Usando eta: " << eta_for_lookup << std::endl;
+    //        std::cout << "  [DEBUG] Caso de pT Médio (" << _year << "). Procurando por '" << correctionName << "'. Usando eta: " << eta_for_lookup << std::endl;
         } else {
             eta_for_lookup = fabs(eta);
-            std::cout << "  [DEBUG] Caso de pT Médio (" << _year << "). Procurando por '" << correctionName << "'. Usando abseta: " << eta_for_lookup << std::endl;
+ //           std::cout << "  [DEBUG] Caso de pT Médio (" << _year << "). Procurando por '" << correctionName << "'. Usando abseta: " << eta_for_lookup << std::endl;
         }
 
     } else { // pt >= 200.0
         sfJson = &muonHighPtIDSFJson;
         correctionName = "NUM_TightID_DEN_GlobalMuonProbes"; // Nome corrigido para High pT ID
         eta_for_lookup = fabs(eta);
-        std::cout << "  [DEBUG] Caso de pT Alto. Procurando por '" << correctionName << "'. Usando abseta: " << eta_for_lookup << std::endl;
+   //     std::cout << "  [DEBUG] Caso de pT Alto. Procurando por '" << correctionName << "'. Usando abseta: " << eta_for_lookup << std::endl;
     }
 
     if (!sfJson || sfJson->empty()) {
-        std::cout << "  [DEBUG] ERRO: Objeto JSON para esta faixa de pT está vazio. Verifique a saída da função initMuonIDSF()." << std::endl;
+//        std::cout << "  [DEBUG] ERRO: Objeto JSON para esta faixa de pT está vazio. Verifique a saída da função initMuonIDSF()." << std::endl;
         return 1.0;
     }
 
@@ -324,10 +324,10 @@ float ttHHanalyzer::getMuonIDSF(float eta, float pt) {
     }
 
     if (!correction) {
-        std::cout << "  [DEBUG] ERRO: Correção '" << correctionName << "' NÃO FOI ENCONTRADA no arquivo JSON. Verifique se o nome está correto para este arquivo." << std::endl;
+//        std::cout << "  [DEBUG] ERRO: Correção '" << correctionName << "' NÃO FOI ENCONTRADA no arquivo JSON. Verifique se o nome está correto para este arquivo." << std::endl;
         return 1.0;
     }
-    std::cout << "  [DEBUG] SUCESSO: Objeto de correção '" << correctionName << "' foi encontrado." << std::endl;
+ //   std::cout << "  [DEBUG] SUCESSO: Objeto de correção '" << correctionName << "' foi encontrado." << std::endl;
 
     // A partir daqui, a lógica de busca por eta e pt continua...
     // (O corpo completo da função está aqui para garantir que não haja omissões)
@@ -344,7 +344,7 @@ float ttHHanalyzer::getMuonIDSF(float eta, float pt) {
     if (eta_bin == -1) {
         if (eta_for_lookup == eta_edges.back()) eta_bin = int(eta_edges.size()) - 2;
         else {
-            std::cout << "  [DEBUG] ERRO: Bin de Eta para o valor " << eta_for_lookup << " NÃO FOI ENCONTRADO." << std::endl;
+  //          std::cout << "  [DEBUG] ERRO: Bin de Eta para o valor " << eta_for_lookup << " NÃO FOI ENCONTRADO." << std::endl;
             return 1.0;
         }
     }
@@ -361,7 +361,7 @@ float ttHHanalyzer::getMuonIDSF(float eta, float pt) {
     if (pt_bin == -1) {
         if (pt >= pt_edges.back()) pt_bin = int(pt_edges.size()) - 2;
         else {
-            std::cout << "  [DEBUG] ERRO: Bin de pT para o valor " << pt << " NÃO FOI ENCONTRADO." << std::endl;
+//            std::cout << "  [DEBUG] ERRO: Bin de pT para o valor " << pt << " NÃO FOI ENCONTRADO." << std::endl;
             return 1.0;
         }
     }
@@ -369,10 +369,10 @@ float ttHHanalyzer::getMuonIDSF(float eta, float pt) {
     for (const auto& entry : categories) {
         if (entry.contains("key") && entry["key"] == "nominal" && entry.contains("value")) {
             float final_sf = entry["value"].get<float>();
-            std::cout << "  [DEBUG] SUCESSO: Valor do SF encontrado: " << final_sf << std::endl;
+//            std::cout << "  [DEBUG] SUCESSO: Valor do SF encontrado: " << final_sf << std::endl;
             return final_sf;
         }
     }    
-    std::cout << "  [DEBUG] ERRO: Chave 'nominal' não encontrada." << std::endl;
+//    std::cout << "  [DEBUG] ERRO: Chave 'nominal' não encontrada." << std::endl;
     return 1.0;
 }
