@@ -11,7 +11,9 @@
 // A definição real (alocação de memória) das variáveis acontece aqui.
 json muonTrigSFJson;
 json muonHighPtTrigSFJson;
-
+json muonLowPtIDSFJson;
+json muonMediumPtIDSFJson;
+json muonHighPtIDSFJson;
 /**
  * @brief Função auxiliar para carregar, tratar e fazer o parse de um arquivo JSON.
  */
@@ -215,4 +217,133 @@ float ttHHanalyzer::getMuonTrigSF(float eta, float pt) {
     }
 
     return 1.0; // Retorno padrão caso algo falhe
+}
+
+////////////////// ID SF for muons /////////////////////////////////////
+/**
+ * @brief Inicializa os SFs de ID para múons, carregando os arquivos JSON para
+ * as três faixas de pT (Low, Medium, High).
+ */
+void ttHHanalyzer::initMuonIDSF() {
+    TString sfLowPtFilePath, sfMediumPtFilePath, sfHighPtFilePath;
+    TString localDir = "/afs/cern.ch/user/g/gvian/muonefficiencies/Run3/";
+
+    // Define os caminhos dos arquivos para cada ano
+    if (_year == "2022") {
+        sfLowPtFilePath    = localDir + "2022/2022_Jpsi/ScaleFactors_Muon_Jpsi_ID_2022_schemaV2.json";
+        sfMediumPtFilePath = localDir + "2022/2022_Z/ScaleFactors_Muon_Z_ID_ISO_2022_schemaV2.json";
+        sfHighPtFilePath   = localDir + "2022/2022_HighPt/ScaleFactors_Muon_highPt_IDISO_2022_schemaV2.json";
+    } else if (_year == "2022EE") {
+        sfLowPtFilePath    = localDir + "2022_EE/2022_Jpsi/ScaleFactors_Muon_Jpsi_ID_2022_EE_schemaV2.json";
+        sfMediumPtFilePath = localDir + "2022_EE/2022_Z/ScaleFactors_Muon_Z_ID_ISO_2022_EE_schemaV2.json";
+        sfHighPtFilePath   = localDir + "2022_EE/2022_HighPt/ScaleFactors_Muon_highPt_IDISO_2022_EE_schemaV2.json";
+    } else if (_year == "2023") {
+        sfLowPtFilePath    = localDir + "2023/2023_JPsi/ScaleFactors_Muon_Jpsi_ID_2023_schemaV2.json";
+        sfMediumPtFilePath = localDir + "2023/2023_Z/ScaleFactors_Muon_Z_ID_ISO_2023_schemaV2.json";
+        sfHighPtFilePath   = localDir + "2023/2023_HighPt/ScaleFactors_Muon_highPt_IDISO_2023_schemaV2.json";
+    } else if (_year == "2023B") {
+        sfLowPtFilePath    = localDir + "2023_BPix/2023_JPsi/ScaleFactors_Muon_Jpsi_ID_2023_schemaV2.json";
+        sfMediumPtFilePath = localDir + "2023_BPix/2023_Z/ScaleFactors_Muon_Z_ID_ISO_2023_BPix_schemaV2.json";
+        sfHighPtFilePath   = localDir + "2023_BPix/2023_HighPt/ScaleFactors_Muon_highPt_IDISO_2023_BPix_schemaV2.json";
+    } else if (_year == "2024") {
+        sfLowPtFilePath    = localDir + "2024/2024_JPsi/ScaleFactors_Muon_Jpsi_ID_2024_schemaV2.json";
+        sfMediumPtFilePath = localDir + "2024/2024_Z/ScaleFactors_Muon_ID_ISO_2024_schemaV2.json";
+        sfHighPtFilePath   = localDir + "2024/2024_HighPt/ScaleFactors_Muon_highPt_IDISO_2024_schemaV2.json";
+    } else {
+        std::cerr << "[initMuonIDSF] ERRO: Ano não suportado para SF de ID de múons: " << _year << std::endl;
+        return;
+    }
+
+    // Carrega os três arquivos JSON
+    std::cout << "[INFO] Carregando SF de ID de Múon (Low pT): " << sfLowPtFilePath << std::endl;
+    muonLowPtIDSFJson = loadSFJson(sfLowPtFilePath);
+
+    std::cout << "[INFO] Carregando SF de ID de Múon (Medium pT): " << sfMediumPtFilePath << std::endl;
+    muonMediumPtIDSFJson = loadSFJson(sfMediumPtFilePath);
+
+    std::cout << "[INFO] Carregando SF de ID de Múon (High pT): " << sfHighPtFilePath << std::endl;
+    muonHighPtIDSFJson = loadSFJson(sfHighPtFilePath);
+}
+
+/**
+ * @brief Obtém o fator de escala (SF) de ID para um dado múon, selecionando
+ * automaticamente a correção de Low, Medium ou High pT.
+ * @param eta O eta do múon.
+ * @param pt O momento transverso (pT) do múon.
+ * @return O valor do fator de escala de ID. Retorna 1.0 se não encontrado.
+ */
+float ttHHanalyzer::getMuonIDSF(float eta, float pt) {
+    const json* sfJson = nullptr;
+    std::string correctionName;
+
+    // --- Lógica de Seleção por pT ---
+    if (pt < 30.0) {
+        sfJson = &muonLowPtIDSFJson;
+        correctionName = "NUM_TightID_DEN_TrackerMuons";
+    } else if (pt < 200.0) {
+        sfJson = &muonMediumPtIDSFJson;
+        correctionName = "NUM_TightPFIso_DEN_TightID";
+    } else { // pt >= 200.0
+        sfJson = &muonHighPtIDSFJson;
+        correctionName = "NUM_TightPFIso_DEN_TightID";
+    }
+
+    // Como todos os arquivos de ID/ISO usam 'abseta', podemos usar o valor absoluto em todos os casos.
+    float eta_for_lookup = fabs(eta);
+    
+    // O resto da função é a busca padrão no JSON, que é a mesma para todos os casos.
+    if (!sfJson || sfJson->empty()) return 1.0;
+
+    const json* correction = nullptr;
+    for (const auto& corr : (*sfJson)["corrections"]) {
+        if (corr.contains("name") && corr["name"] == correctionName) {
+            correction = &corr;
+            break;
+        }
+    }
+    if (!correction) {
+        std::cerr << "AVISO: Correção de ID '" << correctionName << "' não encontrada no JSON para pt=" << pt << "!" << std::endl;
+        return 1.0;
+    }
+
+    const auto& data_eta = (*correction)["data"];
+    if (!data_eta.contains("edges") || !data_eta.contains("content")) return 1.0;
+
+    const std::vector<float> eta_edges = data_eta["edges"].get<std::vector<float>>();
+    int eta_bin = -1;
+    for (size_t i = 0; i < eta_edges.size() - 1; ++i) {
+        if (eta_for_lookup >= eta_edges[i] && eta_for_lookup < eta_edges[i+1]) {
+            eta_bin = i;
+            break;
+        }
+    }
+    if (eta_bin == -1) {
+        if (eta_for_lookup == eta_edges.back()) eta_bin = int(eta_edges.size()) - 2;
+        else return 1.0;
+    }
+
+    const auto& data_pt = data_eta["content"][eta_bin];
+    if (!data_pt.contains("edges") || !data_pt.contains("content")) return 1.0;
+
+    const std::vector<float> pt_edges = data_pt["edges"].get<std::vector<float>>();
+    int pt_bin = -1;
+    for (size_t i = 0; i < pt_edges.size() - 1; ++i) {
+        if (pt >= pt_edges[i] && pt < pt_edges[i+1]) {
+            pt_bin = i;
+            break;
+        }
+    }
+    if (pt_bin == -1) {
+        if (pt >= pt_edges.back()) pt_bin = int(pt_edges.size()) - 2;
+        else return 1.0;
+    }
+
+    const auto& categories = data_pt["content"][pt_bin]["content"];
+    for (const auto& entry : categories) {
+        if (entry.contains("key") && entry["key"] == "nominal" && entry.contains("value")) {
+            return entry["value"].get<float>();
+        }
+    }
+
+    return 1.0;
 }
