@@ -27,6 +27,7 @@
 #include "json.hpp" // muon trigger SF (TSFmu)
 using json = nlohmann::json;  /// this is for MUON trigger SF (TSFmu)
 extern json muonTrigSFJson;
+extern json muonHighPtTrigSFJson;
 
 //using namespace ROOT::Math;
 using nlohmann::fifo_map;
