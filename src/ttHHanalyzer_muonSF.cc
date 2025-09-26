@@ -1,52 +1,49 @@
-// ttHHanalyzer_muonSF.cc
-#include "ttHHanalyzer_trigger.h"
+#include "ttHHanalyzer.h" // Inclua seu header principal
+
 #include <fstream>
 #include <iostream>
 #include <vector>
 #include <string>
-#include <cmath> // Para usar std::abs ou fabs
-
-using namespace std;
+#include <cmath>
 #include <cstdlib>
-#include "json.hpp"
-using json = nlohmann::json;
 
-// JSON objects para armazenar os SFs para diferentes faixas de pT
-json muonMediumPtTrigSFJson;
+// --- DEFINIÇÃO DAS VARIÁVEIS GLOBAIS DE SF ---
+json muonTrigSFJson;
 json muonHighPtTrigSFJson;
 
-// Função auxiliar para carregar um arquivo JSON
+/**
+ * @brief Função auxiliar para carregar, tratar e fazer o parse de um arquivo JSON.
+ */
 json loadSFJson(const TString& filePath) {
     std::ifstream input(filePath.Data());
     if (!input.is_open()) {
-        std::cerr << "[loadSFJson] Erro ao abrir arquivo de SF: " << filePath << std::endl;
+        std::cerr << "[loadSFJson] ERRO: Não foi possível abrir o arquivo de SF: " << filePath << std::endl;
         return json();
     }
-
     std::string json_str((std::istreambuf_iterator<char>(input)), std::istreambuf_iterator<char>());
     input.close();
-
-    // Substitui "Infinity" por um número grande que o parser entende
     size_t pos = 0;
     while ((pos = json_str.find("Infinity", pos)) != std::string::npos) {
         json_str.replace(pos, 8, "1e10");
         pos += 4;
     }
-
     try {
         return json::parse(json_str);
     } catch (const std::exception& e) {
-        std::cerr << "[loadSFJson] Erro ao ler JSON de " << filePath << ": " << e.what() << std::endl;
+        std::cerr << "[loadSFJson] ERRO ao fazer o parse do JSON de " << filePath << ": " << e.what() << std::endl;
         return json();
     }
 }
 
+/**
+ * @brief Inicializa os objetos JSON com os fatores de escala para múons e os histogramas.
+ */
 void ttHHanalyzer::initMuonHLTriggerSF() {
     TString sfMediumPtFilePath;
     TString sfHighPtFilePath;
     TString localDir = "/afs/cern.ch/user/g/gvian/muon_SF/muonefficiencies/Run3/";
 
-    // Define os caminhos dos arquivos JSON para médio e alto pT com base no ano
+    // Define os caminhos dos arquivos JSON
     if (_year == "2022") {
         sfMediumPtFilePath = localDir + "2022/2022_Z/HLT/json/ScaleFactors_Muon_Z_HLT_2022_eta_pt_schemaV2.json";
         sfHighPtFilePath = localDir + "2022/2022_HighPt/ScaleFactors_Muon_highPt_RECO_2022_schemaV2.json";
@@ -60,29 +57,29 @@ void ttHHanalyzer::initMuonHLTriggerSF() {
         sfMediumPtFilePath = localDir + "2023_BPix/2023_Z/HLT/json/ScaleFactors_Muon_Z_HLT_2023_BPix_eta_pt_schemaV2.json";
         sfHighPtFilePath = localDir + "2023_BPix/2023_HighPt/ScaleFactors_Muon_highPt_HLT_2023_BPix_schemaV2.json";
     } else if (_year == "2024") {
-        // ATENÇÃO: O caminho para 2024 não foi fornecido para médio pT, usando o de 2023B como placeholder. Ajuste se necessário.
         sfMediumPtFilePath = localDir + "2023_BPix/2023_Z/HLT/json/ScaleFactors_Muon_Z_HLT_2023_BPix_eta_pt_schemaV2.json";
         sfHighPtFilePath = localDir + "2024/2024_HighPt/ScaleFactors_Muon_highPt_HLT_2024_schemaV2.json";
     } else {
-        std::cerr << "[initMuonHLTriggerSF] Ano não suportado para SF de muons: " << _year << std::endl;
+        std::cerr << "[initMuonHLTriggerSF] ERRO: Ano não suportado para SF de múons: " << _year << std::endl;
         return;
     }
 
     // Carrega os arquivos JSON
-    std::cout << "[INFO] Carregando SF de Muon para pT Médio: " << sfMediumPtFilePath << std::endl;
-    muonMediumPtTrigSFJson = loadSFJson(sfMediumPtFilePath);
-    if (!muonMediumPtTrigSFJson.empty()) {
-        std::cout << "[INFO] SF de Muon para pT Médio carregado com sucesso." << std::endl;
+    std::cout << "[INFO] Carregando SF de Múon para pT Médio: " << sfMediumPtFilePath << std::endl;
+    muonTrigSFJson = loadSFJson(sfMediumPtFilePath);
+    if (!muonTrigSFJson.empty()) {
+        std::cout << "[INFO] SF de Múon para pT Médio carregado com sucesso." << std::endl;
     }
 
-    std::cout << "[INFO] Carregando SF de Muon para pT Alto: " << sfHighPtFilePath << std::endl;
+    std::cout << "[INFO] Carregando SF de Múon para pT Alto: " << sfHighPtFilePath << std::endl;
     muonHighPtTrigSFJson = loadSFJson(sfHighPtFilePath);
     if (!muonHighPtTrigSFJson.empty()) {
-        std::cout << "[INFO] SF de Muon para pT Alto carregado com sucesso." << std::endl;
+        std::cout << "[INFO] SF de Múon para pT Alto carregado com sucesso." << std::endl;
     }
 
     // ==========================================
     // Limpa histos antigos
+    // ==========================================
     if (h_sf_muon_vs_pt)       { delete h_sf_muon_vs_pt;       h_sf_muon_vs_pt = nullptr; }
     if (h_sf_muon_vs_eta)      { delete h_sf_muon_vs_eta;      h_sf_muon_vs_eta = nullptr; }
     if (h_sf_muon_vs_pt_sum)   { delete h_sf_muon_vs_pt_sum;   h_sf_muon_vs_pt_sum = nullptr; }
@@ -94,6 +91,7 @@ void ttHHanalyzer::initMuonHLTriggerSF() {
 
     // ==========================================
     // Cria histos novos
+    // ==========================================
     h_sf_muon_vs_pt       = new TH1F("h_sf_muon_vs_pt", "Muon SF vs pT;Muon pT [GeV];SF", 100, 0, 700);
     h_sf_muon_vs_eta      = new TH1F("h_sf_muon_vs_eta", "Muon SF vs Eta;Muon #eta;SF", 100, -5, 5);
     h_sf_muon_vs_pt_sum   = new TH1F("h_sf_muon_vs_pt_sum", "Sum SF vs pT", 100, 0, 700);
@@ -105,6 +103,7 @@ void ttHHanalyzer::initMuonHLTriggerSF() {
 
     // ==========================================
     // Sumw2 para incertezas
+    // ==========================================
     if (h_sf_muon_vs_pt_sum)   h_sf_muon_vs_pt_sum->Sumw2();
     if (h_sf_muon_vs_pt_count) h_sf_muon_vs_pt_count->Sumw2();
     if (h_sf_muon_vs_eta_sum)  h_sf_muon_vs_eta_sum->Sumw2();
@@ -112,6 +111,7 @@ void ttHHanalyzer::initMuonHLTriggerSF() {
 
     // ==========================================
     // Protege histos contra "auto-delete" do ROOT
+    // ==========================================
     std::vector<TH1*> hists = {
         h_sf_muon_vs_pt, h_sf_muon_vs_eta,
         h_sf_muon_vs_pt_sum, h_sf_muon_vs_pt_count,
@@ -123,29 +123,25 @@ void ttHHanalyzer::initMuonHLTriggerSF() {
     }
 }
 
-
+/**
+ * @brief Obtém o fator de escala (SF) de trigger para um dado múon.
+ */
 float ttHHanalyzer::getMuonTrigSF(float eta, float pt) {
-    // Determina qual JSON usar com base no pT do múon
     const json* sfJson = nullptr;
     std::string correctionName;
 
-    // IMPORTANTE: O JSON de alto pT usa "abseta".
-    // Certifique-se de chamar esta função com o valor absoluto de eta, ex:
-    // getMuonTrigSF(fabs(mu->getp4()->Eta()), mu->getp4()->Pt());
-    // O código abaixo assume que o 'eta' recebido já é positivo se for para o caso de alto pT.
-
     if (pt > 200.0) {
         sfJson = &muonHighPtTrigSFJson;
-        // Nome da correção para alto pT, extraído do seu arquivo JSON
         correctionName = "NUM_HLT_DEN_TrkHighPtTightRelIsoProbes";
     } else {
-        sfJson = &muonMediumPtTrigSFJson;
+        sfJson = &muonTrigSFJson;
         correctionName = "NUM_IsoMu24_DEN_CutBasedIdTight_and_PFIsoTight";
     }
 
-    if (!sfJson || sfJson->empty()) return 1.0;
+    if (!sfJson || sfJson->empty()) {
+        return 1.0;
+    }
 
-    // Lógica para extrair o SF do JSON (reutilizada para ambos os casos)
     const json* correction = nullptr;
     for (const auto& corr : (*sfJson)["corrections"]) {
         if (corr.contains("name") && corr["name"] == correctionName) {
@@ -154,17 +150,16 @@ float ttHHanalyzer::getMuonTrigSF(float eta, float pt) {
         }
     }
     if (!correction) {
-        std::cerr << "Correção '" << correctionName << "' não encontrada no JSON!" << std::endl;
+        std::cerr << "AVISO: Correção '" << correctionName << "' não encontrada no JSON para pt=" << pt << " e eta=" << eta << "!" << std::endl;
         return 1.0;
     }
 
     const auto& data_eta = (*correction)["data"];
     if (!data_eta.contains("edges") || !data_eta.contains("content")) {
-        std::cerr << "Formato inválido na parte 'data' do JSON." << std::endl;
+        std::cerr << "ERRO: Formato inválido na parte 'data' do JSON." << std::endl;
         return 1.0;
     }
 
-    // Encontra o bin de eta
     const std::vector<float> eta_edges = data_eta["edges"].get<std::vector<float>>();
     int eta_bin = -1;
     for (size_t i = 0; i < eta_edges.size() - 1; ++i) {
@@ -174,18 +169,16 @@ float ttHHanalyzer::getMuonTrigSF(float eta, float pt) {
         }
     }
     if (eta_bin == -1) {
-        // Trata o caso de estar exatamente na borda superior
         if (eta == eta_edges.back()) eta_bin = int(eta_edges.size()) - 2;
         else return 1.0;
     }
 
     const auto& data_pt = data_eta["content"][eta_bin];
     if (!data_pt.contains("edges") || !data_pt.contains("content")) {
-        std::cerr << "Formato inválido na parte 'pt' do JSON." << std::endl;
+        std::cerr << "ERRO: Formato inválido na parte 'pt' do JSON." << std::endl;
         return 1.0;
     }
 
-    // Encontra o bin de pT
     const std::vector<float> pt_edges = data_pt["edges"].get<std::vector<float>>();
     int pt_bin = -1;
     for (size_t i = 0; i < pt_edges.size() - 1; ++i) {
@@ -195,12 +188,10 @@ float ttHHanalyzer::getMuonTrigSF(float eta, float pt) {
         }
     }
     if (pt_bin == -1) {
-        // Trata o caso de estar exatamente na borda superior ou acima do último bin
         if (pt >= pt_edges.back()) pt_bin = int(pt_edges.size()) - 2;
         else return 1.0;
     }
 
-    // Extrai o valor nominal do SF
     const auto& categories = data_pt["content"][pt_bin]["content"];
     for (const auto& entry : categories) {
         if (entry.contains("key") && entry["key"] == "nominal" && entry.contains("value")) {
@@ -208,5 +199,5 @@ float ttHHanalyzer::getMuonTrigSF(float eta, float pt) {
         }
     }
 
-    return 1.0; // Retorno padrão caso algo falhe
+    return 1.0;
 }
