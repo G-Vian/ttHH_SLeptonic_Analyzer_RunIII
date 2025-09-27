@@ -127,6 +127,11 @@ float ttHHanalyzer::getEleTrigSF(float eta, float pt, float& sf_unc) {
 // ==========================
 // Electron Reco SF (sem histos auxiliares)
 // ==========================
+/**
+ * @brief Inicializa os SFs de Reconstrução (Reco) para elétrons.
+ * Carrega os histogramas TH2F dos arquivos ROOT fornecidos pelo EGamma POG.
+ * A função agora carrega corretamente os arquivos de médio e alto pT para 2024.
+ */
 void ttHHanalyzer::initRecoSF() {
     auto safeDelete = [](auto*& ptr) { if (ptr) { delete ptr; ptr = nullptr; } };
     safeDelete(h2_eleRecoSF_low);
@@ -153,11 +158,17 @@ void ttHHanalyzer::initRecoSF() {
         return h;
     };
 
-    // Carrega conforme ano
+    // Carrega os histogramas corretos conforme o ano
     if (_year == "2024") {
-        h2_eleRecoSF_mid = loadReco(
+        // CORREÇÃO: Carrega os arquivos de pT médio e alto para 2024.
+        h2_eleRecoSF_low  = nullptr; // Não há arquivo de pT baixo para 2024
+        h2_eleRecoSF_mid  = loadReco(
             "/eos/cms/store/group/phys_egamma/ScaleFactors/Data2024/EleReco/midPt/egammaEffi.txt_EGM2D.root",
             "eleRecoSF_mid_2024"
+        );
+        h2_eleRecoSF_high = loadReco(
+            "/eos/cms/store/group/phys_egamma/ScaleFactors/Data2024/EleReco/highPt/egammaEffi.txt_EGM2D.root",
+            "eleRecoSF_high_2024"
         );
     }
     else if (_year == "2023") {
@@ -223,19 +234,30 @@ void ttHHanalyzer::initRecoSF() {
     std::cout << "[initRecoSF] SF de Reco de elétrons carregado para ano " << _year << std::endl;
 }
 
+/**
+ * @brief Obtém o SF de Reconstrução para um dado elétron.
+ * A função agora seleciona o histograma correto para todas as faixas de pT de 2024.
+ */
 float ttHHanalyzer::getEleRecoSF(float eta, float pt, float& sf_unc) {
     TH2F* h = nullptr;
 
-    // Seleção de hist por pT conforme ano
+    // Lógica de seleção de histograma baseada no pT e no ano
     if (_year == "2024") {
-        // Disponível apenas midPt 20 < pT < 75 GeV
-        if (pt > 20.f && pt < 75.f) {
+        // CORREÇÃO: Lógica expandida para cobrir a faixa de pT alto em 2024
+        if (pt >= 20.f && pt < 75.f) {
             h = h2_eleRecoSF_mid;
+        } else if (pt >= 75.f) {
+            h = h2_eleRecoSF_high;
         }
     } else {
-        if (pt > 10.f && pt < 20.f)         h = h2_eleRecoSF_low;
-        else if (pt >= 20.f && pt < 75.f)   h = h2_eleRecoSF_mid;
-        else if (pt >= 75.f)                h = h2_eleRecoSF_high;
+        // Lógica para os outros anos que têm as 3 faixas de pT
+        if (pt > 10.f && pt < 20.f) {
+            h = h2_eleRecoSF_low;
+        } else if (pt >= 20.f && pt < 75.f) {
+            h = h2_eleRecoSF_mid;
+        } else if (pt >= 75.f) {
+            h = h2_eleRecoSF_high;
+        }
     }
 
     if (!h) {
@@ -245,15 +267,13 @@ float ttHHanalyzer::getEleRecoSF(float eta, float pt, float& sf_unc) {
         return 1.f;
     }
 
-    // Faz lookup no TH2
+    // Faz a busca no histograma TH2
     int binX = h->GetXaxis()->FindBin(eta);
     int binY = h->GetYaxis()->FindBin(pt);
 
     float sf = h->GetBinContent(binX, binY);
-    // Usa o erro do próprio hist como incerteza (usualmente contém estatística; syst pode não estar embutida)
     sf_unc   = h->GetBinError(binX, binY);
 
-    // Proteção contra bins vazios/zeros (opcional)
     if (sf <= 0.f) {
         std::cerr << "[getEleRecoSF] Bin vazio ou SF<=0 (eta=" << eta << ", pt=" << pt
                   << "). Retornando SF=1." << std::endl;
@@ -263,8 +283,6 @@ float ttHHanalyzer::getEleRecoSF(float eta, float pt, float& sf_unc) {
 
     return sf;
 }
-
-
 // ==========================
 // Electron ID SF (MVA ISO WP90)
 // ==========================
