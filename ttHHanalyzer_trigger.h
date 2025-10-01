@@ -1051,7 +1051,6 @@ public:
     TLorentzVector _sumJetp4, _sumSelJetp4, _sumSelbJetp4, _sumHadronicHiggsp4, _sumLightJetp4, _sumSelMuonp4, _sumSelElectronp4; 
 };////fim da classe evento
 
-
 class ttHHanalyzer {
 public:
     static const int LOG_INTERVAL = 100;
@@ -1065,7 +1064,7 @@ public:
                  std::string year = "nothing",
                  std::string DataOrMC = "nothing",
                  std::string sampleName = "nothing")
-        // --- LISTA DE INICIALIZAÇÃO REORDENADA (CORRIGE WARNINGS) ---
+        // --- LISTA DE INICIALIZAÇÃO CORRIGIDA E REORDENADA ---
         : calibrator(year, DataOrMC),
           _sys(systematics),
           _weight(weight),
@@ -1075,12 +1074,15 @@ public:
           _sampleName(sampleName),
           _cl(cl),
           _ev(ev),
-          _of(new outputFile(cl))
+          _of(new outputFile(cl)),
+          _pathJES("HL_YR_JEC.root"),
+          _nameJES("TOTAL_DIJET_AntiKt4EMTopo_YR2018"),
+          _namebJES("TOTAL_BJES_AntiKt4EMTopo_YR2018")
     {
         // Corpo do construtor
         initHistograms();
         initTree();
-        initSys();
+        initSys(); // Esta função agora é chamada com _pathJES já inicializado
 
         std::string dummy = "";
         HypoComb = new tthHypothesisCombinatorics(
@@ -1092,7 +1094,7 @@ public:
         SFTreeWriter::getInstance().setSampleName(_sampleName);
     }
     
-    // --- DESTRUTOR para limpar a memória alocada com 'new' ---
+    // Destrutor para limpar memória alocada com 'new'
     ~ttHHanalyzer() {
         if (_of) { delete _of; _of = nullptr; }
         if (HypoComb) { delete HypoComb; HypoComb = nullptr; }
@@ -1139,7 +1141,16 @@ public:
     fifo_map<std::string,int> cutflow_w;
 
 private:
+    // A ordem de declaração aqui deve corresponder à lista de inicialização do construtor
     ElectronEnergyCalibrator calibrator;
+    bool _sys;
+    float _weight;
+    float _initialWeight;
+    std::string _DataOrMC, _year, _sampleName;
+    std::string _cl;
+    eventBuffer * _ev;
+    outputFile * _of;
+
     std::vector<float> _final_electron_pts_before_calib;
     std::vector<float> _final_electron_pts_after_calib;
     std::unique_ptr<std::ofstream> sf_summary_log_file;
@@ -1147,12 +1158,8 @@ private:
     std::unique_ptr<std::ofstream> sf_log_file;
     long long total_electrons_processed = 0;
     long long total_muons_processed = 0;
-    bool _sys;
-    float _weight;
-    float _initialWeight;
     unsigned int _runNumber ;
     unsigned long long  _eventNumber;
-    std::string _DataOrMC, _year, _sampleName;
     TH1D * _hJES, * _hbJES, *_hbJetEff, *_hJetEff, *_hSysbTagM ;
     TString _pathJES;
     TString _nameJES;
@@ -1165,10 +1172,7 @@ private:
     event::maxObjects jbbMaxs, jjjMaxs;
     event::statObjects jetStat, bjetStat, bjStat, ljetStat, lbjetStat, genPbjetStat;
     event::foxWolframObjects jetFoxWolfMom, bjetFoxWolfMom;
-    std::string _cl;
-    eventBuffer * _ev;
     std::vector<event*> events;
-    outputFile * _of;
     float _bbMassMinSHiggsNotMatched, _bbMassMinSHiggsMatched, _minChi2SHiggsNotMatched = 999999999. , _minChi2SHiggsMatched = 999999999.;
     float _bbMassMinHH1NotMatched, _bbMassMinHH1Matched,_bbMassMinHH2NotMatched, _bbMassMinHH2Matched, _minChi2HHNotMatched = 999999999. , _minChi2HHMatched = 999999999.;
     float _bbMassMin1Higgs, _bbMassMin2Higgs, _minChi2Higgs = 999999999.;
@@ -1217,7 +1221,6 @@ private:
     void applyElectronCalibration(event* thisEvent, unsigned int runNumber, unsigned long long eventNumber);
     void diMotherReco(const TLorentzVector & dPar1p4,const TLorentzVector & dPar2p4,const TLorentzVector & dPar3p4,const TLorentzVector & dPar4p4, const float mother1mass, const float  mother2mass, float & _minChi2,float & _bbMassMin1, float & _bbMassMin2);
     void motherReco(const TLorentzVector & dPar1p4,const TLorentzVector & dPar2p4, const float mother1mass, float & _minChi2,float & _bbMassMin1);
-
 
     /*    std::vector<double> getJetCutFlow(event *thisevent){
 	int jetCounter = 0;
