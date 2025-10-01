@@ -16,6 +16,7 @@ using namespace std;
 //#include "json.hpp"// this is for MUON trigger SF (TSFmu)
 //using json = nlohmann::json;  /// this is for MUON trigger SF  (TSFmu)
 //json muonTrigSFJson; /// this is for MUON trigger SF  (TSFmu)
+#include "src/SFTreeWriter.h"
 
 
 ////Log of selection and SF///////////
