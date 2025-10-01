@@ -1137,6 +1137,8 @@ ttHHanalyzer(const std::string & cl,
     std::unique_ptr<std::ofstream> sf_summary_log_file;  // Log para summary SF
     std::unique_ptr<std::ofstream> event_log_file; // logs
     std::unique_ptr<std::ofstream> sf_log_file; // logs
+    std::unique_ptr<std::ofstream> _sf_data_csv_file; // Arquivo para salvar os dados dos SFs
+
     long long total_electrons_processed = 0;
     long long total_muons_processed = 0;
     bool _sys;
