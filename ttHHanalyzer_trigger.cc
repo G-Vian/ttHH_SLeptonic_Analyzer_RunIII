@@ -747,6 +747,7 @@ void ttHHanalyzer::diMotherReco(const TLorentzVector & dPar1p4,const TLorentzVec
     }
 } 
 
+
 void ttHHanalyzer::analyze(event *thisEvent) {
     // ========================
     // Pega vetores de leptons do evento
@@ -765,9 +766,6 @@ void ttHHanalyzer::analyze(event *thisEvent) {
     float triggerSF = 1.0, recoSF = 1.0, idSF = 1.0, isoSF = 1.0, totalSFUnc = 0.0;
     float trigSF_unc = 0.0, recoSF_unc = 0.0, idSF_unc = 0.0;
 
-    // Flag para saber se devemos preencher a TTree
-    bool hasLeptonForNtuple = false;
-
     if (!selectedElectrons.empty()) {
         objectLep* ele = selectedElectrons[0];
         triggerSF = getEleTrigSF(ele->getp4()->Eta(), ele->getp4()->Pt(), trigSF_unc);
@@ -776,15 +774,8 @@ void ttHHanalyzer::analyze(event *thisEvent) {
         totalSFUnc = std::sqrt(trigSF_unc*trigSF_unc + recoSF_unc*recoSF_unc + idSF_unc*idSF_unc);
         _weight *= (triggerSF * recoSF * idSF);
 
-        // Preenche variáveis para o TTree (Elétron)
-        hasLeptonForNtuple = true;
-        _lep_pt = ele->getp4()->Pt();
-        _lep_eta = ele->getp4()->Eta();
-        _sf_trigger = triggerSF;
-        _sf_reco = recoSF;
-        _sf_id = idSF;
-        _sf_iso = 1.0; // Não há SF de ISO separado para elétrons neste código
-        _lep_is_ele = 1;
+        // --- SALVA OS DADOS DO ELÉTRON USANDO O GERENCIADOR ---
+        SFTreeWriter::getInstance().fill(ele->getp4()->Pt(), ele->getp4()->Eta(), triggerSF, recoSF, idSF, 1.0, 1);
 
     } else if (!selectedMuons.empty()) {
         objectLep* mu = selectedMuons[0];
@@ -797,24 +788,12 @@ void ttHHanalyzer::analyze(event *thisEvent) {
         
         _weight *= (triggerSF * idSF * isoSF);
 
-        // Preenche variáveis para o TTree (Múon)
-        hasLeptonForNtuple = true;
-        _lep_pt = mu->getp4()->Pt();
-        _lep_eta = mu->getp4()->Eta();
-        _sf_trigger = triggerSF;
-        _sf_reco = 1.0; // Não há SF de Reco separado para múons neste código
-        _sf_id = idSF;
-        _sf_iso = isoSF;
-        _lep_is_ele = 0;
-    }
-
-    // Preenche a TTree se um lépton foi processado neste evento
-    if (hasLeptonForNtuple) {
-        _sf_tree->Fill();
+        // --- SALVA OS DADOS DO MÚON USANDO O GERENCIADOR ---
+        SFTreeWriter::getInstance().fill(mu->getp4()->Pt(), mu->getp4()->Eta(), triggerSF, 1.0, idSF, isoSF, 0);
     }
 
     // ========================
-    // Log detalhado (versão corrigida)
+    // Log detalhado (a lógica de log permanece a mesma)
     // ========================
     bool hasLeadLepton = (!selectedElectrons.empty() || !selectedMuons.empty());
     if (sf_log_file && sf_log_file->is_open() && (_entryInLoop % LOG_INTERVAL == 0 && hasLeadLepton)) {
