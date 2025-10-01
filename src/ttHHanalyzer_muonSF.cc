@@ -415,13 +415,21 @@ void ttHHanalyzer::initMuonIsoSF() {
  * Usa o arquivo de pT médio para todas as faixas e retorna 1.0 se fora da validade.
  * Inclui um log para mostrar o valor do SF encontrado.
  */
+/**
+ * @brief Obtém o SF de Isolação (ISO) para um dado múon.
+ * Usa o arquivo de pT médio para todas as faixas e retorna 1.0 se fora da validade.
+ */
 float ttHHanalyzer::getMuonIsoSF(float eta, float pt) {
-    const json* sfJson = &muonIsoSF-Json;
+    // ===================================================================
+    // CORREÇÃO: O nome da variável foi corrigido para "muonIsoSFJson".
+    // ===================================================================
+    const json* sfJson = &muonIsoSFJson;
+    
     std::string correctionName = "NUM_TightPFIso_DEN_TightID";
     float eta_for_lookup = fabs(eta); // Usa abseta como solicitado
 
     if (!sfJson || sfJson->empty()) {
-        return 1.0;
+        return 1.0; // Retorna 1 se o arquivo não foi carregado
     }
 
     const json* correction = nullptr;
@@ -473,14 +481,9 @@ float ttHHanalyzer::getMuonIsoSF(float eta, float pt) {
     const auto& categories = data_pt["content"][pt_bin]["content"];
     for (const auto& entry : categories) {
         if (entry.contains("key") && entry["key"] == "nominal" && entry.contains("value")) {
-            float final_sf = entry["value"].get<float>();
-            // --- NOVO LOG DE DEBUG ---
-            std::cout << "[getMuonIsoSF] Para eta=" << eta << ", pt=" << pt << " -> SF Encontrado = " << final_sf << std::endl;
-            return final_sf;
+            return entry["value"].get<float>();
         }
     }
     
-    // Se não encontrar o SF, loga e retorna 1.0
-    std::cout << "[getMuonIsoSF] AVISO: SF não encontrado para eta=" << eta << ", pt=" << pt << ". Retornando 1.0" << std::endl;
     return 1.0;
 }
