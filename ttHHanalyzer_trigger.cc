@@ -315,7 +315,7 @@ void ttHHanalyzer::createObjects(event * thisEvent, sysName sysType, bool up){
                              _ev->Flag_EcalDeadCellTriggerPrimitiveFilter && _ev->Flag_BadPFMuonFilter &&
                              _ev->Flag_BadPFMuonDzFilter && _ev->Flag_hfNoisyHitsFilter &&
                              _ev->Flag_eeBadScFilter && _ev->Flag_ecalBadCalibFilter);
-        thisEvent->setTrigger(_ev->HLT_Ele30_WPTight_Gsf || _ev->HLT_IsoMu24 || _ev->HLT_Mu50);
+        thisEvent->setTrigger(_ev->HLT_Ele30_WPTight_Gsf || _ev->HLT_IsoMu24);
     }
 
     // Primary vertex
@@ -746,6 +746,7 @@ void ttHHanalyzer::diMotherReco(const TLorentzVector & dPar1p4,const TLorentzVec
 	_bpTHiggs2    = (dPar3p4+dPar4p4).Pt();
     }
 } 
+
 void ttHHanalyzer::analyze(event *thisEvent) {
     // ========================
     // Pega vetores de leptons do evento
@@ -759,12 +760,10 @@ void ttHHanalyzer::analyze(event *thisEvent) {
     if (selElePtr) selectedElectrons = *selElePtr;
     if (selMuPtr)  selectedMuons     = *selMuPtr;
 
-    // As variáveis de pT "before" e "after" agora são lidas das variáveis membro
-    // que foram salvas no passo anterior. Não precisamos recriá-las aqui.
-
     bool isMC = (_DataOrMC == "MC");
     float weight_before_SFs = _weight;
-    float triggerSF = 1.0, recoSF = 1.0, idSF = 1.0, totalSFUnc = 0.0;
+    // Adicionada variável para IsoSF
+    float triggerSF = 1.0, recoSF = 1.0, idSF = 1.0, isoSF = 1.0, totalSFUnc = 0.0;
     float trigSF_unc = 0.0, recoSF_unc = 0.0, idSF_unc = 0.0;
 
     if (!selectedElectrons.empty()) {
@@ -777,14 +776,15 @@ void ttHHanalyzer::analyze(event *thisEvent) {
     } else if (!selectedMuons.empty()) {
         objectLep* mu = selectedMuons[0];
         
-        // Pega os SFs de Trigger e de ID para o múon
+        // Pega os SFs de Trigger, ID e Isolação para o múon
         triggerSF = getMuonTrigSF(mu->getp4()->Eta(), mu->getp4()->Pt());
-        idSF      = getMuonIDSF(mu->getp4()->Eta(), mu->getp4()->Pt()); // <-- NOVA LINHA
+        idSF      = getMuonIDSF(mu->getp4()->Eta(), mu->getp4()->Pt());
+        isoSF     = getMuonIsoSF(mu->getp4()->Eta(), mu->getp4()->Pt()); // <-- NOVA LINHA
 
         totalSFUnc = 0.0; // Incertezas para múons ainda não implementadas
         
-        // Aplica ambos os SFs ao peso do evento
-        _weight *= (triggerSF * idSF); // <-- LINHA MODIFICADA
+        // Aplica todos os SFs de múon ao peso do evento
+        _weight *= (triggerSF * idSF * isoSF); // <-- LINHA MODIFICADA
     }
 
     // ========================
@@ -800,13 +800,11 @@ void ttHHanalyzer::analyze(event *thisEvent) {
         (*sf_log_file) << "Number of selected muons: "     << nMu << "\n";
 
         if (nEle > 0) {
-            // Garante que não vamos ler além dos limites dos vetores
             size_t nLog = std::min({nEle, _final_electron_pts_before_calib.size(), _final_electron_pts_after_calib.size()});
             for (size_t i = 0; i < nLog; ++i) {
                 objectLep* ele = selectedElectrons[i];
                 if (!ele) continue;
 
-                // USA AS VARIÁVEIS MEMBRO CORRETAS PARA O LOG
                 float pt_before = _final_electron_pts_before_calib[i];
                 float pt_after  = _final_electron_pts_after_calib[i];
 
@@ -829,8 +827,9 @@ void ttHHanalyzer::analyze(event *thisEvent) {
             if (mu) {
                 (*sf_log_file) << "Muon | η = " << mu->getp4()->Eta()
                                << ", pT = " << mu->getp4()->Pt()
-                               << " | Trigger SF = " << triggerSF      // <-- LOG MODIFICADO
-                               << " | ID SF = " << idSF                 // <-- NOVA LINHA NO LOG
+                               << " | Trigger SF = " << triggerSF
+                               << " | ID SF = " << idSF
+                               << " | Iso SF = " << isoSF      // <-- NOVA LINHA NO LOG
                                << " | Weight before = " << weight_before_SFs
                                << " | Weight after = " << _weight
                                << "\n";
@@ -839,6 +838,7 @@ void ttHHanalyzer::analyze(event *thisEvent) {
     }
 
     _entryInLoop++;
+
 
 ///////////////////////////////////////
 
@@ -1041,18 +1041,26 @@ void ttHHanalyzer::process(event* thisEvent, sysName sysType, bool up) {
     if (!eleSFInitialized) {
         initTriggerSF();  // Trigger SF
         initRecoSF();     // Reco SF
-        initEleIDSF();      // ID SF (MVA ISO WP90)
+        initEleIDSF();    // ID SF (MVA ISO WP90)
         eleSFInitialized = true;
     }
 
-    // Inicializar SFs de múons (Trigger e ID/ISO)
+    // Inicializar SFs de múons (Trigger e ID)
     static bool muonSFInitialized = false;
     if (!muonSFInitialized) {
         initMuonHLTriggerSF(); // Carrega SFs de Trigger do Múon
-        initMuonIDSF();        // <-- NOVA LINHA: Carrega SFs de ID/ISO do Múon
+        initMuonIDSF();        // Carrega SFs de ID do Múon
         muonSFInitialized = true;
     }
-    // Análise do evento: agora já aplica todos os SFs (Trigger * Reco * ID) e loga os valores
+    
+    // --- NOVO BLOCO DE INICIALIZAÇÃO PARA ISO SF ---
+    static bool muonIsoSFInitialized = false;
+    if (!muonIsoSFInitialized) {
+        initMuonIsoSF(); // Carrega SFs de Isolação do Múon
+        muonIsoSFInitialized = true;
+    }
+
+    // Análise do evento: agora já aplica todos os SFs e loga os valores
     analyze(thisEvent);
 
     // Preenchimento de histogramas e árvore
