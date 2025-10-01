@@ -13,6 +13,10 @@
 #include <string>  
 #include "ElectronEnergyCalibrator.h" //pt correction& smearing
 
+#include "TTree.h" /// <<<
+
+
+
 //#include "EventShape/Class/src/EventShape.cc"
 #include "EventShape/Class/interface/EventShape.h"
 #include <TLorentzVector.h>
@@ -1042,41 +1046,69 @@ public:
     TLorentzVector _sumJetp4, _sumSelJetp4, _sumSelbJetp4, _sumHadronicHiggsp4, _sumLightJetp4, _sumSelMuonp4, _sumSelElectronp4; 
 };////fim da classe evento
 
+
 class ttHHanalyzer {
 public:
     static const int LOG_INTERVAL = 100;
     enum sysName { kJES, kJER, kbTag, noSys };
 
     // Construtor
-ttHHanalyzer(const std::string & cl,
-             eventBuffer * ev,
-             float weight = 1.,
-             bool systematics = false,
-             std::string year = "nothing",
-             std::string DataOrMC = "nothing",
-             std::string sampleName = "nothing")
-    : calibrator(year, DataOrMC),   // ✅ constrói corretamente o calibrador
-      _weight(weight),                 // ✅ inicializa diretamente
-      _initialWeight(weight),          // se tiver esse membro
-      _ev(ev),
-      _cl(cl),
-      _sys(systematics),
-      _of(new outputFile(cl)),         // já cria direto
-      _year(year),
-      _DataOrMC(DataOrMC),
-      _sampleName(sampleName)
-{
-    // Corpo do construtor (apenas lógica, sem atribuições de membros)
-    initHistograms();
-    initTree();
-    initSys();
+    ttHHanalyzer(const std::string & cl,
+                 eventBuffer * ev,
+                 float weight = 1.,
+                 bool systematics = false,
+                 std::string year = "nothing",
+                 std::string DataOrMC = "nothing",
+                 std::string sampleName = "nothing")
+        : calibrator(year, DataOrMC),
+          _weight(weight),
+          _initialWeight(weight),
+          _ev(ev),
+          _cl(cl),
+          _sys(systematics),
+          _of(new outputFile(cl)),
+          _year(year),
+          _DataOrMC(DataOrMC),
+          _sampleName(sampleName)
+    {
+        // Corpo do construtor
+        initHistograms();
+        initTree();
+        initSys();
 
-    std::string dummy = "";
-    HypoComb = new tthHypothesisCombinatorics(
-        "data/blrbdtweights_80X_V4/weights_64.xml",
-        ""
-    );
-}
+        std::string dummy = "";
+        HypoComb = new tthHypothesisCombinatorics(
+            "data/blrbdtweights_80X_V4/weights_64.xml",
+            ""
+        );
+
+        // --- INICIALIZAÇÃO DO ARQUIVO E TTREE PARA SFs ---
+        _sf_output_file = new TFile("sf_ntuple.root", "RECREATE");
+        _sf_tree = new TTree("sf_tree", "TTree with lepton SFs");
+
+        // Cria os "branches" (colunas) na TTree
+        _sf_tree->Branch("lep_pt", &_lep_pt);
+        _sf_tree->Branch("lep_eta", &_lep_eta);
+        _sf_tree->Branch("sf_trigger", &_sf_trigger);
+        _sf_tree->Branch("sf_reco", &_sf_reco);
+        _sf_tree->Branch("sf_id", &_sf_id);
+        _sf_tree->Branch("sf_iso", &_sf_iso);
+        _sf_tree->Branch("lep_is_ele", &_lep_is_ele);
+    }
+
+    // --- DESTRUTOR ---
+    ~ttHHanalyzer() {
+        // Salva e fecha o arquivo de SFs
+        if (_sf_output_file) {
+            _sf_output_file->cd();
+            _sf_tree->Write();
+            _sf_output_file->Close();
+            delete _sf_output_file;
+            _sf_output_file = nullptr;
+        }
+        // ... (qualquer outra limpeza que você precise fazer, como deletar 'HypoComb', etc.)
+    }
+
     // Métodos públicos
     void createObjects(event*, sysName, bool);
     bool selectObjects(event*);
@@ -1089,8 +1121,8 @@ ttHHanalyzer(const std::string & cl,
     void fillTree(event*);
     void writeTree();
 
-    // Histogramas
-    TH1F * hmet,* hmetPhi, *hmetEta, *hAvgDeltaRjj, *hAvgDeltaRbb, *hAvgDeltaRbj,
+    // ... (sua lista de histogramas TH1F continua aqui, sem alterações) ...
+    TH1F * hmet, *hmetPhi, *hmetEta, *hAvgDeltaRjj, *hAvgDeltaRbb, *hAvgDeltaRbj,
          *hAvgDeltaEtajj, *hAvgDeltaEtabb, *hAvgDeltaEtabj, *hminDeltaRjj, *hminDeltaRbb,
          *hminDeltaRbj,  *hminDeltaRpTjj, *hminDeltaRpTbb, *hminDeltaRpTbj, *hminDeltaRMassjj,
          *hminDeltaRMassbb,*hminDeltaRMassbj, *hmaxDeltaEtajj, *hmaxDeltaEtabb, *hmaxDeltaEtabj,
@@ -1114,44 +1146,27 @@ ttHHanalyzer(const std::string & cl,
 
     tthHypothesisCombinatorics * HypoComb;
 
-    fifo_map<std::string,int> cutflow{
-        {"noCut", 0}, {"nHLTrigger", 0}, {"Muon_Trigger", 0}, {"Elec_Trigger", 0},
-        {"nFilter", 0}, {"nPV", 0}, {"njets>5", 0}, {"nbjets>4", 0}, {"nlepton==1", 0}, {"MET>20", 0}
-    };
-    fifo_map<std::string,int> cutflow_w{
-        {"noCut", 0}, {"nHLTrigger", 0}, {"Muon_Trigger", 0}, {"Elec_Trigger", 0},
-        {"nFilter", 0}, {"nPV", 0}, {"njets>5", 0}, {"nbjets>4", 0}, {"nlepton==1", 0}, {"MET>20", 0}
-    };
+    fifo_map<std::string,int> cutflow;
+    fifo_map<std::string,int> cutflow_w;
 
-
-    //    std::unordered_map<std::string, int> cutflow {{"noCut", 0}, {"njets>3", 0}, {"nbjets>2", 0}, {"nlepton==2", 0}, {"nOpositeChargedLep", 0}, {"nMassCut", 0}, {"nTotal", 0}};
-
- private: 
-
+private:
     ElectronEnergyCalibrator calibrator;
-
-    // NOVAS VARIÁVEIS PARA GUARDAR OS PTS
     std::vector<float> _final_electron_pts_before_calib;
     std::vector<float> _final_electron_pts_after_calib;
-
-    std::unique_ptr<std::ofstream> sf_summary_log_file;  // Log para summary SF
-    std::unique_ptr<std::ofstream> event_log_file; // logs
-    std::unique_ptr<std::ofstream> sf_log_file; // logs
+    std::unique_ptr<std::ofstream> sf_summary_log_file;
+    std::unique_ptr<std::ofstream> event_log_file;
+    std::unique_ptr<std::ofstream> sf_log_file;
     long long total_electrons_processed = 0;
     long long total_muons_processed = 0;
     bool _sys;
     float _weight;
-    float _initialWeight;  //Trigger SF for electron (TSFel)
-////////////
+    float _initialWeight;
     unsigned int _runNumber ;
     unsigned long long  _eventNumber;
-
-
-
-    std::string _DataOrMC, _year, _sampleName; 
+    std::string _DataOrMC, _year, _sampleName;
     TH1D * _hJES, * _hbJES, *_hbJetEff, *_hJetEff, *_hSysbTagM ;
     TString _pathJES = "HL_YR_JEC.root";
-    TString _nameJES = "TOTAL_DIJET_AntiKt4EMTopo_YR2018";   ///here are the jets corrections histograms 
+    TString _nameJES = "TOTAL_DIJET_AntiKt4EMTopo_YR2018";
     TString _namebJES = "TOTAL_BJES_AntiKt4EMTopo_YR2018";
     static const int nHistsJets = 8;
     static const int nHistsbJets = 6;
@@ -1159,98 +1174,71 @@ ttHHanalyzer(const std::string & cl,
     std::vector<TH1F*> hjetsPTs, hjetsEtas, hbjetsPTs, hbjetsEtas, hLightJetsPTs, hLightJetsEtas, hjetsBTagDisc, hbjetsBTagDisc, hLightJetsBTagDisc;
     event::evShapes jlepCent, jbjetCent;
     event::maxObjects jbbMaxs, jjjMaxs;
-    event::statObjects jetStat, bjetStat, bjStat, ljetStat, lbjetStat, genPbjetStat; 
+    event::statObjects jetStat, bjetStat, bjStat, ljetStat, lbjetStat, genPbjetStat;
     event::foxWolframObjects jetFoxWolfMom, bjetFoxWolfMom;
     std::string _cl;
     eventBuffer * _ev;
     std::vector<event*> events;
     outputFile * _of;
-    float _bbMassMinSHiggsNotMatched, _bbMassMinSHiggsMatched, _minChi2SHiggsNotMatched = 999999999. , _minChi2SHiggsMatched = 999999999.; 
-    float _bbMassMinHH1NotMatched, _bbMassMinHH1Matched,_bbMassMinHH2NotMatched, _bbMassMinHH2Matched, _minChi2HHNotMatched = 999999999. , _minChi2HHMatched = 999999999.; 
-
+    float _bbMassMinSHiggsNotMatched, _bbMassMinSHiggsMatched, _minChi2SHiggsNotMatched = 999999999. , _minChi2SHiggsMatched = 999999999.;
+    float _bbMassMinHH1NotMatched, _bbMassMinHH1Matched,_bbMassMinHH2NotMatched, _bbMassMinHH2Matched, _minChi2HHNotMatched = 999999999. , _minChi2HHMatched = 999999999.;
     float _bbMassMin1Higgs, _bbMassMin2Higgs, _minChi2Higgs = 999999999.;
     float _bpTHiggs1, _bpTHiggs2;
     float _bbMassMin1HiggsZ, _bbMassMin2HiggsZ, _minChi2HiggsZ = 999999999.;
     float _bbMassMin1Z, _bbMassMin2Z, _minChi2Z = 999999999.;
     TRandom3 _rand;
 
-	///////////////////////Electron ID (MVA ISO WP90) (IDSFel)
-	void initEleIDSF();
-	float getEleIDSF(float eta, float phi, float pt, float &unc);
-	
-	TH2F *h2_eleIDSF_others = nullptr;
-	TH2F *h2_eleIDSF_2023B_Hole = nullptr;
-	TH2F *h2_eleIDSF_2023B_NoHole = nullptr;
-	
-	float eleIDSFUncertainty = 0.0;
+    // --- VARIÁVEIS PARA A TTREE DE SFs ---
+    TFile* _sf_output_file;
+    TTree* _sf_tree;
+    float _lep_pt;
+    float _lep_eta;
+    float _sf_trigger;
+    float _sf_reco;
+    float _sf_id;
+    float _sf_iso;
+    int   _lep_is_ele;
 
-	///////////////////////Reco electron (RSFel)
-    float getEleRecoSF(float eta, float pt, float &unc);
+    // Funções de SF de Elétrons
+    void initEleIDSF();
+    float getEleIDSF(float eta, float phi, float pt, float &unc);
+    TH2F *h2_eleIDSF_others, *h2_eleIDSF_2023B_Hole, *h2_eleIDSF_2023B_NoHole;
+    float eleIDSFUncertainty = 0.0;
     void initRecoSF();
-
-    TH2F *h2_eleRecoSF_low  = nullptr;
-    TH2F *h2_eleRecoSF_mid  = nullptr;
-    TH2F *h2_eleRecoSF_high = nullptr;
-
+    float getEleRecoSF(float eta, float pt, float &unc);
+    TH2F *h2_eleRecoSF_low, *h2_eleRecoSF_mid, *h2_eleRecoSF_high;
     float recoSFUncertainty = 0.0;
+    void initTriggerSF();
+    float getEleTrigSF(float eta, float pt, float& sf_unc);
+    TFile* eleTrigSFFile;
+    TH2F *h2_eleTrigSF, *h2_eleTrigSF_unc, *h2_effMC;
+    float triggerSFUncertainty = 0.0;
+    float eleTriggerSF = 1.0;
+    int _entryInLoop = 0;
 
-	///////////////////////Trigger electron (TSFel)
-	// Eletron trigger SF
-	TFile* eleTrigSFFile = nullptr;
-	TH2F* h2_eleTrigSF = nullptr;
-	TH2F* h2_eleTrigSF_unc = nullptr;
-	TH2F* h2_effMC = nullptr;
-	
-	void initTriggerSF();
-	float getEleTrigSF(float eta, float pt, float& sf_unc);
-	float triggerSFUncertainty = 0.0;
-	float eleTriggerSF = 1.0;  // para armazenar o SF do evento atual
-	int _entryInLoop = 0;
-	
-	// Histogramas para elétrons
-	TH1F* h_sf_vs_pt         = nullptr;
-	TH1F* h_sf_vs_eta        = nullptr;
-	TH1F* h_effMC_vs_pt      = nullptr;
-	TH1F* h_effMC_vs_eta     = nullptr;
-	TH1F* h_sf_vs_pt_sum     = nullptr;
-	TH1F* h_sf_vs_pt_count   = nullptr;
-	TH1F* h_sf_vs_eta_sum    = nullptr;
-	TH1F* h_sf_vs_eta_count  = nullptr;
-	TH1F* h_effMC_vs_pt_sum  = nullptr;
-	TH1F* h_effMC_vs_pt_count= nullptr;
-	TH1F* h_effMC_vs_eta_sum = nullptr;
-	TH1F* h_effMC_vs_eta_count = nullptr;
-	
-	TH1F* h_sf_vs_pt_avg     = nullptr;
-	TH1F* h_sf_vs_eta_avg    = nullptr;
-	TH1F* h_effMC_vs_pt_avg  = nullptr;
-	TH1F* h_effMC_vs_eta_avg = nullptr;
-	
-	// Muon trigger SF
-	TH1F* h_sf_muon_vs_pt         = nullptr;
-	TH1F* h_sf_muon_vs_eta        = nullptr;
-	TH1F* h_sf_muon_vs_pt_sum     = nullptr;
-	TH1F* h_sf_muon_vs_pt_count   = nullptr;
-	TH1F* h_sf_muon_vs_eta_sum    = nullptr;
-	TH1F* h_sf_muon_vs_eta_count  = nullptr;
-	TH1F* h_sf_muon_vs_pt_avg     = nullptr;
-	TH1F* h_sf_muon_vs_eta_avg    = nullptr;
-	
-	void initMuonHLTriggerSF();
-	float getMuonTrigSF(float eta, float pt);
+    // Histogramas para SFs (pode reorganizar se preferir)
+    TH1F* h_sf_vs_pt, *h_sf_vs_eta, *h_effMC_vs_pt, *h_effMC_vs_eta,
+          *h_sf_vs_pt_sum, *h_sf_vs_pt_count, *h_sf_vs_eta_sum, *h_sf_vs_eta_count,
+          *h_effMC_vs_pt_sum, *h_effMC_vs_pt_count, *h_effMC_vs_eta_sum, *h_effMC_vs_eta_count,
+          *h_sf_vs_pt_avg, *h_sf_vs_eta_avg, *h_effMC_vs_pt_avg, *h_effMC_vs_eta_avg;
+    
+    TH1F* h_sf_muon_vs_pt, *h_sf_muon_vs_eta, *h_sf_muon_vs_pt_sum, *h_sf_muon_vs_pt_count,
+          *h_sf_muon_vs_eta_sum, *h_sf_muon_vs_eta_count, *h_sf_muon_vs_pt_avg, *h_sf_muon_vs_eta_avg;
+
+    // Funções de SF de Múons
+    void initMuonHLTriggerSF();
+    float getMuonTrigSF(float eta, float pt);
     void initMuonIDSF();
     float getMuonIDSF(float eta, float pt);
-    // --- NOVAS FUNÇÕES PARA ISO SF ---
     void initMuonIsoSF();
     float getMuonIsoSF(float eta, float pt);
-///////////////////////////
-	// Electron calibrations
-	void applyElectronCalibration(event* thisEvent, unsigned int runNumber, unsigned long long eventNumber);
 
-//////////////////////////
-
+    // Funções de Calibração/Helpers
+    void applyElectronCalibration(event* thisEvent, unsigned int runNumber, unsigned long long eventNumber);
     void diMotherReco(const TLorentzVector & dPar1p4,const TLorentzVector & dPar2p4,const TLorentzVector & dPar3p4,const TLorentzVector & dPar4p4, const float mother1mass, const float  mother2mass, float & _minChi2,float & _bbMassMin1, float & _bbMassMin2);
     void motherReco(const TLorentzVector & dPar1p4,const TLorentzVector & dPar2p4, const float mother1mass, float & _minChi2,float & _bbMassMin1);
+
+
 
     /*    std::vector<double> getJetCutFlow(event *thisevent){
 	int jetCounter = 0;
