@@ -1082,8 +1082,13 @@ public:
             ""
         );
 
-        // --- INICIALIZAÇÃO DO ARQUIVO E TTREE PARA SFs ---
-        _sf_output_file = new TFile("sf_ntuple.root", "RECREATE");
+        // =======================================================
+        // --- MODIFICAÇÃO: INICIALIZAÇÃO DO ARQUIVO COM NOME DINÂMICO ---
+        // =======================================================
+        // Cria um nome de arquivo usando o _sampleName (ex: ttHH_analysis_sf_ntuple.root)
+        std::string sf_output_filename = _sampleName + "_sf_ntuple.root";
+        
+        _sf_output_file = new TFile(sf_output_filename.c_str(), "RECREATE");
         _sf_tree = new TTree("sf_tree", "TTree with lepton SFs");
 
         // Cria os "branches" (colunas) na TTree
@@ -1094,6 +1099,7 @@ public:
         _sf_tree->Branch("sf_id", &_sf_id);
         _sf_tree->Branch("sf_iso", &_sf_iso);
         _sf_tree->Branch("lep_is_ele", &_lep_is_ele);
+        // =======================================================
     }
 
     // --- DESTRUTOR ---
