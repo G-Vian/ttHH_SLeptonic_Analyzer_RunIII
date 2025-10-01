@@ -31,6 +31,7 @@ extern json muonHighPtTrigSFJson;
 extern json muonLowPtIDSFJson;
 extern json muonMediumPtIDSFJson;
 extern json muonHighPtIDSFJson;
+extern json muonIsoSFJson;
 
 //using namespace ROOT::Math;
 using nlohmann::fifo_map;
@@ -1239,6 +1240,9 @@ ttHHanalyzer(const std::string & cl,
 	float getMuonTrigSF(float eta, float pt);
     void initMuonIDSF();
     float getMuonIDSF(float eta, float pt);
+    // --- NOVAS FUNÇÕES PARA ISO SF ---
+    void initMuonIsoSF();
+    float getMuonIsoSF(float eta, float pt);
 ///////////////////////////
 	// Electron calibrations
 	void applyElectronCalibration(event* thisEvent, unsigned int runNumber, unsigned long long eventNumber);
