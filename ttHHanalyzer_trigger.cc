@@ -762,9 +762,11 @@ void ttHHanalyzer::analyze(event *thisEvent) {
 
     bool isMC = (_DataOrMC == "MC");
     float weight_before_SFs = _weight;
-    // Adicionada variável para IsoSF
     float triggerSF = 1.0, recoSF = 1.0, idSF = 1.0, isoSF = 1.0, totalSFUnc = 0.0;
     float trigSF_unc = 0.0, recoSF_unc = 0.0, idSF_unc = 0.0;
+
+    // Flag para saber se devemos preencher a TTree
+    bool hasLeptonForNtuple = false;
 
     if (!selectedElectrons.empty()) {
         objectLep* ele = selectedElectrons[0];
@@ -773,18 +775,42 @@ void ttHHanalyzer::analyze(event *thisEvent) {
         idSF      = getEleIDSF(ele->getp4()->Eta(), ele->getp4()->Phi(), ele->getp4()->Pt(), idSF_unc);
         totalSFUnc = std::sqrt(trigSF_unc*trigSF_unc + recoSF_unc*recoSF_unc + idSF_unc*idSF_unc);
         _weight *= (triggerSF * recoSF * idSF);
+
+        // Preenche variáveis para o TTree (Elétron)
+        hasLeptonForNtuple = true;
+        _lep_pt = ele->getp4()->Pt();
+        _lep_eta = ele->getp4()->Eta();
+        _sf_trigger = triggerSF;
+        _sf_reco = recoSF;
+        _sf_id = idSF;
+        _sf_iso = 1.0; // Não há SF de ISO separado para elétrons neste código
+        _lep_is_ele = 1;
+
     } else if (!selectedMuons.empty()) {
         objectLep* mu = selectedMuons[0];
         
-        // Pega os SFs de Trigger, ID e Isolação para o múon
         triggerSF = getMuonTrigSF(mu->getp4()->Eta(), mu->getp4()->Pt());
         idSF      = getMuonIDSF(mu->getp4()->Eta(), mu->getp4()->Pt());
-        isoSF     = getMuonIsoSF(mu->getp4()->Eta(), mu->getp4()->Pt()); // <-- NOVA LINHA
+        isoSF     = getMuonIsoSF(mu->getp4()->Eta(), mu->getp4()->Pt());
 
-        totalSFUnc = 0.0; // Incertezas para múons ainda não implementadas
+        totalSFUnc = 0.0;
         
-        // Aplica todos os SFs de múon ao peso do evento
-        _weight *= (triggerSF * idSF * isoSF); // <-- LINHA MODIFICADA
+        _weight *= (triggerSF * idSF * isoSF);
+
+        // Preenche variáveis para o TTree (Múon)
+        hasLeptonForNtuple = true;
+        _lep_pt = mu->getp4()->Pt();
+        _lep_eta = mu->getp4()->Eta();
+        _sf_trigger = triggerSF;
+        _sf_reco = 1.0; // Não há SF de Reco separado para múons neste código
+        _sf_id = idSF;
+        _sf_iso = isoSF;
+        _lep_is_ele = 0;
+    }
+
+    // Preenche a TTree se um lépton foi processado neste evento
+    if (hasLeptonForNtuple) {
+        _sf_tree->Fill();
     }
 
     // ========================
@@ -829,7 +855,7 @@ void ttHHanalyzer::analyze(event *thisEvent) {
                                << ", pT = " << mu->getp4()->Pt()
                                << " | Trigger SF = " << triggerSF
                                << " | ID SF = " << idSF
-                               << " | Iso SF = " << isoSF      // <-- NOVA LINHA NO LOG
+                               << " | Iso SF = " << isoSF
                                << " | Weight before = " << weight_before_SFs
                                << " | Weight after = " << _weight
                                << "\n";
@@ -838,6 +864,7 @@ void ttHHanalyzer::analyze(event *thisEvent) {
     }
 
     _entryInLoop++;
+
 
 
 ///////////////////////////////////////
