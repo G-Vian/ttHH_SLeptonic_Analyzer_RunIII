@@ -1,37 +1,34 @@
 #ifndef ttHHanalyzer_h
 #define ttHHanalyzer_h
-
-// --- BIBLIOTECAS PADRÃO C++ ---
-#include <cmath>
-#include <string>
-#include <vector>
-#include <iostream> // Para std::cout, std::cerr
-#include <fstream>  // Para std::ofstream (usado no seu std::unique_ptr)
-#include <memory>   // Para std::unique_ptr
-#include <iterator>
+#include "tnm.h"
+#include <cmath> 
 #include <algorithm>
-#include <unordered_map>
-
-// --- BIBLIOTECAS DO ROOT ---
-#include "TFile.h"
-#include "TTree.h"
-#include "TString.h"
+#include <TString.h>
+#include <vector>
 #include "TVector3.h"
 #include "TH1F.h"
-#include "TH2.h"
-#include "TLorentzVector.h"
-#include "TRandom3.h"
+#include "TH2.h"//Trigger SF for electron (TSFel)
+#include "TFile.h"
+#include <iterator>
+#include <string>  
+#include "ElectronEnergyCalibrator.h" //pt correction& smearing
 
-// --- BIBLIOTECAS ESPECÍFICAS DA ANÁLISE ---
-#include "tnm.h"
-#include "ElectronEnergyCalibrator.h"
+#include "TTree.h" /// <<<
+
+
+
+//#include "EventShape/Class/src/EventShape.cc"
 #include "EventShape/Class/interface/EventShape.h"
+#include <TLorentzVector.h>
+#include "TRandom3.h"
+#include <unordered_map>
+//#include "thhHypothesisCombinatorics.h"
+//#include "HypothesisCombinatorics.h"
 #include "include/tthHypothesisCombinatorics.h"
 #include "include/HypothesisCombinatorics.h"
 #include "fifo_map.hpp"
-#include "json.hpp"
 
-
+#include "json.hpp" // muon trigger SF (TSFmu)
 using json = nlohmann::json;  /// this is for MUON trigger SF (TSFmu)
 extern json muonTrigSFJson;
 extern json muonHighPtTrigSFJson;
@@ -1049,6 +1046,7 @@ public:
     TLorentzVector _sumJetp4, _sumSelJetp4, _sumSelbJetp4, _sumHadronicHiggsp4, _sumLightJetp4, _sumSelMuonp4, _sumSelElectronp4; 
 };////fim da classe evento
 
+
 class ttHHanalyzer {
 public:
     static const int LOG_INTERVAL = 100;
@@ -1062,21 +1060,16 @@ public:
                  std::string year = "nothing",
                  std::string DataOrMC = "nothing",
                  std::string sampleName = "nothing")
-        // =======================================================
-        // --- LISTA DE INICIALIZAÇÃO REORDENADA PARA CORRIGIR OS AVISOS ---
-        // =======================================================
         : calibrator(year, DataOrMC),
-          _sys(systematics),
           _weight(weight),
           _initialWeight(weight),
-          _runNumber(0), // Inicialização padrão
-          _eventNumber(0), // Inicialização padrão
-          _DataOrMC(DataOrMC),
-          _year(year),
-          _sampleName(sampleName),
-          _cl(cl),
           _ev(ev),
-          _of(new outputFile(cl))
+          _cl(cl),
+          _sys(systematics),
+          _of(new outputFile(cl)),
+          _year(year),
+          _DataOrMC(DataOrMC),
+          _sampleName(sampleName)
     {
         // Corpo do construtor
         initHistograms();
@@ -1089,15 +1082,8 @@ public:
             ""
         );
 
-        // =======================================================
-        // --- INICIALIZAÇÃO DA TTREE DE SFs NO ARQUIVO PRINCIPAL ---
-        // =======================================================
-        // Obtém o arquivo já criado pela classe outputFile
-        TFile* mainOutputFile = _of->getTFile(); 
-        
-        // Garante que estamos no arquivo correto antes de criar a TTree
-        mainOutputFile->cd(); 
-
+        // --- INICIALIZAÇÃO DO ARQUIVO E TTREE PARA SFs ---
+        _sf_output_file = new TFile("sf_ntuple.root", "RECREATE");
         _sf_tree = new TTree("sf_tree", "TTree with lepton SFs");
 
         // Cria os "branches" (colunas) na TTree
@@ -1108,6 +1094,19 @@ public:
         _sf_tree->Branch("sf_id", &_sf_id);
         _sf_tree->Branch("sf_iso", &_sf_iso);
         _sf_tree->Branch("lep_is_ele", &_lep_is_ele);
+    }
+
+    // --- DESTRUTOR ---
+    ~ttHHanalyzer() {
+        // Salva e fecha o arquivo de SFs
+        if (_sf_output_file) {
+            _sf_output_file->cd();
+            _sf_tree->Write();
+            _sf_output_file->Close();
+            delete _sf_output_file;
+            _sf_output_file = nullptr;
+        }
+        // ... (qualquer outra limpeza que você precise fazer, como deletar 'HypoComb', etc.)
     }
 
     // Métodos públicos
@@ -1122,7 +1121,7 @@ public:
     void fillTree(event*);
     void writeTree();
 
-    // ... (Sua lista de histogramas TH1F continua aqui) ...
+    // ... (sua lista de histogramas TH1F continua aqui, sem alterações) ...
     TH1F * hmet, *hmetPhi, *hmetEta, *hAvgDeltaRjj, *hAvgDeltaRbb, *hAvgDeltaRbj,
          *hAvgDeltaEtajj, *hAvgDeltaEtabb, *hAvgDeltaEtabj, *hminDeltaRjj, *hminDeltaRbb,
          *hminDeltaRbj,  *hminDeltaRpTjj, *hminDeltaRpTbb, *hminDeltaRpTbj, *hminDeltaRMassjj,
@@ -1146,6 +1145,7 @@ public:
          *hChi2HHNotMatched, *hChi2HHMatched;
 
     tthHypothesisCombinatorics * HypoComb;
+
     fifo_map<std::string,int> cutflow;
     fifo_map<std::string,int> cutflow_w;
 
@@ -1165,9 +1165,9 @@ private:
     unsigned long long  _eventNumber;
     std::string _DataOrMC, _year, _sampleName;
     TH1D * _hJES, * _hbJES, *_hbJetEff, *_hJetEff, *_hSysbTagM ;
-    TString _pathJES;
-    TString _nameJES;
-    TString _namebJES;
+    TString _pathJES = "HL_YR_JEC.root";
+    TString _nameJES = "TOTAL_DIJET_AntiKt4EMTopo_YR2018";
+    TString _namebJES = "TOTAL_BJES_AntiKt4EMTopo_YR2018";
     static const int nHistsJets = 8;
     static const int nHistsbJets = 6;
     static const int nHistsLightJets = 6;
@@ -1189,6 +1189,7 @@ private:
     TRandom3 _rand;
 
     // --- VARIÁVEIS PARA A TTREE DE SFs ---
+    TFile* _sf_output_file;
     TTree* _sf_tree;
     float _lep_pt;
     float _lep_eta;
@@ -1215,7 +1216,7 @@ private:
     float eleTriggerSF = 1.0;
     int _entryInLoop = 0;
 
-    // Histogramas para SFs
+    // Histogramas para SFs (pode reorganizar se preferir)
     TH1F* h_sf_vs_pt, *h_sf_vs_eta, *h_effMC_vs_pt, *h_effMC_vs_eta,
           *h_sf_vs_pt_sum, *h_sf_vs_pt_count, *h_sf_vs_eta_sum, *h_sf_vs_eta_count,
           *h_effMC_vs_pt_sum, *h_effMC_vs_pt_count, *h_effMC_vs_eta_sum, *h_effMC_vs_eta_count,
