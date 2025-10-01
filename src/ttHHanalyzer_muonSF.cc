@@ -14,6 +14,7 @@ json muonHighPtTrigSFJson;
 json muonLowPtIDSFJson;
 json muonMediumPtIDSFJson;
 json muonHighPtIDSFJson;
+json muonIsoSFJson;
 /**
  * @brief Função auxiliar para carregar, tratar e fazer o parse de um arquivo JSON.
  */
@@ -374,5 +375,112 @@ float ttHHanalyzer::getMuonIDSF(float eta, float pt) {
         }
     }    
 //    std::cout << "  [DEBUG] ERRO: Chave 'nominal' não encontrada." << std::endl;
+    return 1.0;
+}
+
+
+
+/**
+ * @brief Inicializa o SF de Isolação (ISO) para múons.
+ * Carrega apenas o arquivo de pT médio para o ano correspondente.
+ */
+void ttHHanalyzer::initMuonIsoSF() {
+    TString sfFilePath;
+    TString baseDir = "/afs/cern.ch/user/g/gvian/muon_SF/muonefficiencies/Run3/";
+
+    if (_year == "2022") {
+        sfFilePath = baseDir + "2022/2022_Z/ScaleFactors_Muon_Z_ID_ISO_2022_schemaV2.json";
+    } else if (_year == "2022EE") {
+        sfFilePath = baseDir + "2022_EE/2022_Z/ScaleFactors_Muon_Z_ID_ISO_2022_EE_schemaV2.json";
+    } else if (_year == "2023") {
+        sfFilePath = baseDir + "2023/2023_Z/ScaleFactors_Muon_Z_ID_ISO_2023_schemaV2.json";
+    } else if (_year == "2023B") {
+        sfFilePath = baseDir + "2023_BPix/2023_Z/ScaleFactors_Muon_Z_ID_ISO_2023_BPix_schemaV2.json";
+    } else if (_year == "2024") {
+        sfFilePath = baseDir + "2024/2024_Z/ScaleFactors_Muon_ID_ISO_2024_schemaV2.json";
+    } else {
+        std::cerr << "[initMuonIsoSF] ERRO: Ano não suportado para SF de ISO de múons: " << _year << std::endl;
+        return;
+    }
+
+    std::cout << "[INFO] Carregando SF de Isolação de Múon: " << sfFilePath << std::endl;
+    muonIsoSFJson = loadSFJson(sfFilePath);
+    if (!muonIsoSFJson.empty()) {
+        std::cout << "[INFO] SF de Isolação de Múon carregado com sucesso." << std::endl;
+    }
+}
+
+/**
+ * @brief Obtém o SF de Isolação (ISO) para um dado múon.
+ * Usa o arquivo de pT médio para todas as faixas e retorna 1.0 se fora da validade.
+ * Inclui um log para mostrar o valor do SF encontrado.
+ */
+float ttHHanalyzer::getMuonIsoSF(float eta, float pt) {
+    const json* sfJson = &muonIsoSF-Json;
+    std::string correctionName = "NUM_TightPFIso_DEN_TightID";
+    float eta_for_lookup = fabs(eta); // Usa abseta como solicitado
+
+    if (!sfJson || sfJson->empty()) {
+        return 1.0;
+    }
+
+    const json* correction = nullptr;
+    for (const auto& corr : (*sfJson)["corrections"]) {
+        if (corr.contains("name") && corr["name"] == correctionName) {
+            correction = &corr;
+            break;
+        }
+    }
+    if (!correction) {
+        return 1.0;
+    }
+
+    const auto& data_eta = (*correction)["data"];
+    if (!data_eta.contains("edges") || !data_eta.contains("content")) return 1.0;
+
+    const std::vector<float> eta_edges = data_eta["edges"].get<std::vector<float>>();
+    int eta_bin = -1;
+    for (size_t i = 0; i < eta_edges.size() - 1; ++i) {
+        if (eta_for_lookup >= eta_edges[i] && eta_for_lookup < eta_edges[i+1]) {
+            eta_bin = i;
+            break;
+        }
+    }
+    if (eta_bin == -1) {
+        if (eta_for_lookup == eta_edges.back()) eta_bin = int(eta_edges.size()) - 2;
+        else return 1.0;
+    }
+
+    const auto& data_pt = data_eta["content"][eta_bin];
+    if (!data_pt.contains("edges") || !data_pt.contains("content")) return 1.0;
+
+    const std::vector<float> pt_edges = data_pt["edges"].get<std::vector<float>>();
+    int pt_bin = -1;
+    for (size_t i = 0; i < pt_edges.size() - 1; ++i) {
+        if (pt >= pt_edges[i] && pt < pt_edges[i+1]) {
+            pt_bin = i;
+            break;
+        }
+    }
+    if (pt_bin == -1) {
+        if (pt >= pt_edges.back()) {
+            pt_bin = int(pt_edges.size()) - 2;
+        } else {
+            return 1.0;
+        }
+    }
+
+    const auto& categories = data_pt["content"][pt_bin]["content"];
+    for (const auto& entry : categories) {
+        if (entry.contains("key") && entry["key"] == "nominal" && entry.contains("value")) {
+            float final_sf = entry["value"].get<float>();
+            // --- NOVO LOG DE DEBUG ---
+            std::cout << "[getMuonIsoSF] Para eta=" << eta << ", pt=" << pt << " -> SF Encontrado = " << final_sf << std::endl;
+            return final_sf;
+        }
+    }
+    
+    // Se não encontrar o SF, loga e retorna 1.0
+    std::cout << "[getMuonIsoSF] AVISO: SF não encontrado para eta=" << eta << ", pt=" << pt << ". Retornando 1.0" << std::endl;
     return 1.0;
 }
