@@ -5,9 +5,9 @@
 #include <cmath>
 #include <string>
 #include <vector>
-#include <iostream> // Para std::cout, std::cerr
-#include <fstream>  // Para std::ofstream (usado no seu std::unique_ptr)
-#include <memory>   // Para std::unique_ptr
+#include <iostream>
+#include <fstream>
+#include <memory>
 #include <iterator>
 #include <algorithm>
 #include <unordered_map>
@@ -18,6 +18,7 @@
 #include "TString.h"
 #include "TVector3.h"
 #include "TH1F.h"
+#include "TH1D.h"
 #include "TH2.h"
 #include "TLorentzVector.h"
 #include "TRandom3.h"
@@ -30,6 +31,7 @@
 #include "include/HypothesisCombinatorics.h"
 #include "fifo_map.hpp"
 #include "json.hpp"
+#include "src/SFTreeWriter.h" // <-- Inclusão do novo gerenciador de TTree
 
 
 using json = nlohmann::json;  /// this is for MUON trigger SF (TSFmu)
@@ -1049,6 +1051,7 @@ public:
     TLorentzVector _sumJetp4, _sumSelJetp4, _sumSelbJetp4, _sumHadronicHiggsp4, _sumLightJetp4, _sumSelMuonp4, _sumSelElectronp4; 
 };////fim da classe evento
 
+
 class ttHHanalyzer {
 public:
     static const int LOG_INTERVAL = 100;
@@ -1062,15 +1065,11 @@ public:
                  std::string year = "nothing",
                  std::string DataOrMC = "nothing",
                  std::string sampleName = "nothing")
-        // =======================================================
-        // --- LISTA DE INICIALIZAÇÃO REORDENADA PARA CORRIGIR OS AVISOS ---
-        // =======================================================
+        // --- LISTA DE INICIALIZAÇÃO REORDENADA (CORRIGE WARNINGS) ---
         : calibrator(year, DataOrMC),
           _sys(systematics),
           _weight(weight),
           _initialWeight(weight),
-          _runNumber(0), // Inicialização padrão
-          _eventNumber(0), // Inicialização padrão
           _DataOrMC(DataOrMC),
           _year(year),
           _sampleName(sampleName),
@@ -1089,25 +1088,14 @@ public:
             ""
         );
 
-        // =======================================================
-        // --- INICIALIZAÇÃO DA TTREE DE SFs NO ARQUIVO PRINCIPAL ---
-        // =======================================================
-        // Obtém o arquivo já criado pela classe outputFile
-        TFile* mainOutputFile = _of->getTFile(); 
-        
-        // Garante que estamos no arquivo correto antes de criar a TTree
-        mainOutputFile->cd(); 
-
-        _sf_tree = new TTree("sf_tree", "TTree with lepton SFs");
-
-        // Cria os "branches" (colunas) na TTree
-        _sf_tree->Branch("lep_pt", &_lep_pt);
-        _sf_tree->Branch("lep_eta", &_lep_eta);
-        _sf_tree->Branch("sf_trigger", &_sf_trigger);
-        _sf_tree->Branch("sf_reco", &_sf_reco);
-        _sf_tree->Branch("sf_id", &_sf_id);
-        _sf_tree->Branch("sf_iso", &_sf_iso);
-        _sf_tree->Branch("lep_is_ele", &_lep_is_ele);
+        // Informa ao gerenciador SFTreeWriter qual o nome da amostra atual
+        SFTreeWriter::getInstance().setSampleName(_sampleName);
+    }
+    
+    // --- DESTRUTOR para limpar a memória alocada com 'new' ---
+    ~ttHHanalyzer() {
+        if (_of) { delete _of; _of = nullptr; }
+        if (HypoComb) { delete HypoComb; HypoComb = nullptr; }
     }
 
     // Métodos públicos
@@ -1122,8 +1110,8 @@ public:
     void fillTree(event*);
     void writeTree();
 
-    // ... (Sua lista de histogramas TH1F continua aqui) ...
-    TH1F * hmet, *hmetPhi, *hmetEta, *hAvgDeltaRjj, *hAvgDeltaRbb, *hAvgDeltaRbj,
+    // Histogramas
+    TH1F * hmet,* hmetPhi, *hmetEta, *hAvgDeltaRjj, *hAvgDeltaRbb, *hAvgDeltaRbj,
          *hAvgDeltaEtajj, *hAvgDeltaEtabb, *hAvgDeltaEtabj, *hminDeltaRjj, *hminDeltaRbb,
          *hminDeltaRbj,  *hminDeltaRpTjj, *hminDeltaRpTbb, *hminDeltaRpTbj, *hminDeltaRMassjj,
          *hminDeltaRMassbb,*hminDeltaRMassbj, *hmaxDeltaEtajj, *hmaxDeltaEtabb, *hmaxDeltaEtabj,
@@ -1146,6 +1134,7 @@ public:
          *hChi2HHNotMatched, *hChi2HHMatched;
 
     tthHypothesisCombinatorics * HypoComb;
+
     fifo_map<std::string,int> cutflow;
     fifo_map<std::string,int> cutflow_w;
 
@@ -1188,15 +1177,7 @@ private:
     float _bbMassMin1Z, _bbMassMin2Z, _minChi2Z = 999999999.;
     TRandom3 _rand;
 
-    // --- VARIÁVEIS PARA A TTREE DE SFs ---
-    TTree* _sf_tree;
-    float _lep_pt;
-    float _lep_eta;
-    float _sf_trigger;
-    float _sf_reco;
-    float _sf_id;
-    float _sf_iso;
-    int   _lep_is_ele;
+    // As variáveis da TTree de SF foram movidas para a classe SFTreeWriter
 
     // Funções de SF de Elétrons
     void initEleIDSF();
@@ -1236,7 +1217,6 @@ private:
     void applyElectronCalibration(event* thisEvent, unsigned int runNumber, unsigned long long eventNumber);
     void diMotherReco(const TLorentzVector & dPar1p4,const TLorentzVector & dPar2p4,const TLorentzVector & dPar3p4,const TLorentzVector & dPar4p4, const float mother1mass, const float  mother2mass, float & _minChi2,float & _bbMassMin1, float & _bbMassMin2);
     void motherReco(const TLorentzVector & dPar1p4,const TLorentzVector & dPar2p4, const float mother1mass, float & _minChi2,float & _bbMassMin1);
-
 
 
     /*    std::vector<double> getJetCutFlow(event *thisevent){
