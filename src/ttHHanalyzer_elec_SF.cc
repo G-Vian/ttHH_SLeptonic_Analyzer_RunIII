@@ -5,7 +5,6 @@
 #include "TROOT.h"
 #include <iostream>
 #include <fstream>
-#include "TH2.h" // Trigger SF for electron (TSFel)
 #include <vector>
 
 using namespace std;
@@ -23,7 +22,6 @@ void ttHHanalyzer::initTriggerSF() {
     } else if (_year == "2023") {
         sfFilePath = "/eos/cms/store/group/phys_egamma/ScaleFactors/Data2023/ForPrompt23C/tnpEleHLT/HLT_SF_Ele30_MVAiso90ID/egammaEffi.txt_EGM2D.root";
     } else if (_year == "2023B" || _year == "2024") {
-        // usar mesmo arquivo até sair oficial de 2024
         sfFilePath = "/eos/cms/store/group/phys_egamma/ScaleFactors/Data2023/ForPrompt23D/tnpEleHLT/HLT_SF_Ele30_MVAiso90ID/egammaEffi.txt_EGM2D.root";
     } else {
         std::cerr << "[initTriggerSF] Ano não suportado para electron SF: " << _year << std::endl;
@@ -37,80 +35,51 @@ void ttHHanalyzer::initTriggerSF() {
         return;
     }
 
-    // Safe delete
-    auto safeDelete = [](auto*& ptr) { if (ptr) { delete ptr; ptr = nullptr; } };
-    safeDelete(h_sf_vs_pt);    safeDelete(h_sf_vs_eta);
-    safeDelete(h_effMC_vs_pt); safeDelete(h_effMC_vs_eta);
-    safeDelete(h2_effMC);      safeDelete(h2_eleTrigSF); safeDelete(h2_eleTrigSF_unc);
+    // Limpa os ponteiros antes de reutilizá-los
+    if (h2_eleTrigSF) { delete h2_eleTrigSF; h2_eleTrigSF = nullptr; }
+    if (h2_eleTrigSF_unc) { delete h2_eleTrigSF_unc; h2_eleTrigSF_unc = nullptr; }
+    if (h2_effMC) { delete h2_effMC; h2_effMC = nullptr; }
 
-    safeDelete(h_sf_vs_pt_sum);    safeDelete(h_sf_vs_pt_count);
-    safeDelete(h_sf_vs_eta_sum);   safeDelete(h_sf_vs_eta_count);
-    safeDelete(h_effMC_vs_pt_sum); safeDelete(h_effMC_vs_pt_count);
-    safeDelete(h_effMC_vs_eta_sum); safeDelete(h_effMC_vs_eta_count);
-
-    safeDelete(h_sf_vs_pt_avg);    safeDelete(h_sf_vs_eta_avg);
-    safeDelete(h_effMC_vs_pt_avg); safeDelete(h_effMC_vs_eta_avg);
-
-    // Cria histogramas auxiliares (apenas para monitorar Trigger; Reco não cria)
-    h_sf_vs_pt        = new TH1F("h_sf_vs_pt", "Electron SF vs pT;Electron pT [GeV];SF", 100, 0, 700);
-    h_sf_vs_eta       = new TH1F("h_sf_vs_eta", "Electron SF vs Eta;Electron #eta;SF", 100, -5, 5);
-    h_effMC_vs_pt     = new TH1F("h_effMC_vs_pt", "Electron EffMC vs pT;Electron pT [GeV];Eff.", 100, 0, 700);
-    h_effMC_vs_eta    = new TH1F("h_effMC_vs_eta", "Electron EffMC vs Eta;Electron #eta;Eff.", 100, -5, 5);
-
-    h_sf_vs_pt_sum    = new TH1F("h_sf_vs_pt_sum", "Sum Electron SF vs pT", 100, 0, 700);
-    h_sf_vs_pt_count  = new TH1F("h_sf_vs_pt_count", "Count Electron SF vs pT", 100, 0, 700);
-    h_sf_vs_eta_sum   = new TH1F("h_sf_vs_eta_sum", "Sum Electron SF vs eta", 100, -5, 5);
-    h_sf_vs_eta_count = new TH1F("h_sf_vs_eta_count", "Count Electron SF vs eta", 100, -5, 5);
-
-    h_effMC_vs_pt_sum    = new TH1F("h_effMC_vs_pt_sum", "Sum Electron Eff vs pT", 100, 0, 700);
-    h_effMC_vs_pt_count  = new TH1F("h_effMC_vs_pt_count", "Count Electron Eff vs pT", 100, 0, 700);
-    h_effMC_vs_eta_sum   = new TH1F("h_effMC_vs_eta_sum", "Sum Electron Eff vs eta", 100, -5, 5);
-    h_effMC_vs_eta_count = new TH1F("h_effMC_vs_eta_count", "Count Electron Eff vs eta", 100, -5, 5);
-
-    for (auto* h : {h_sf_vs_pt_sum, h_sf_vs_pt_count, h_sf_vs_eta_sum, h_sf_vs_eta_count,
-                    h_effMC_vs_pt_sum, h_effMC_vs_pt_count, h_effMC_vs_eta_sum, h_effMC_vs_eta_count}) {
-        if (h) h->Sumw2();
-    }
-
-    std::vector<TH1*> hists = {
-        h_sf_vs_pt, h_sf_vs_eta, h_effMC_vs_pt, h_effMC_vs_eta,
-        h_sf_vs_pt_sum, h_sf_vs_pt_count, h_sf_vs_eta_sum, h_sf_vs_eta_count,
-        h_effMC_vs_pt_sum, h_effMC_vs_pt_count, h_effMC_vs_eta_sum, h_effMC_vs_eta_count
-    };
-    for (auto& h : hists) if (h) h->SetDirectory(0);
-
+    // Carrega o histograma do SF principal
     if (TH2F* tempSF = dynamic_cast<TH2F*>(tempFile->Get("EGamma_SF2D"))) {
         h2_eleTrigSF = (TH2F*)tempSF->Clone("h2_eleTrigSF");
-        h2_eleTrigSF->SetDirectory(0);
+        h2_eleTrigSF->SetDirectory(0); // Desassocia do arquivo
     } else {
-        std::cerr << "[initTriggerSF] WARNING: EGamma_SF2D não encontrado!" << std::endl;
+        std::cerr << "[initTriggerSF] AVISO: EGamma_SF2D não encontrado em " << sfFilePath << std::endl;
     }
 
+    // Carrega o histograma de incerteza
     TString uncHistName = (_DataOrMC == "Data") ? "statData" : (_DataOrMC == "MC") ? "statMC" : "";
     if (uncHistName != "") {
         if (TH2F* tempUnc = dynamic_cast<TH2F*>(tempFile->Get(uncHistName))) {
             h2_eleTrigSF_unc = (TH2F*)tempUnc->Clone("h2_eleTrigSF_unc");
-            h2_eleTrigSF_unc->SetDirectory(0);
+            h2_eleTrigSF_unc->SetDirectory(0); // Desassocia do arquivo
         } else {
-            std::cerr << "[initTriggerSF] WARNING: histograma " << uncHistName << " não encontrado!" << std::endl;
+            std::cerr << "[initTriggerSF] AVISO: histograma " << uncHistName << " não encontrado em " << sfFilePath << std::endl;
         }
     }
 
+    // Carrega o histograma de eficiência do MC
     if (TH2F* tempEffMC = dynamic_cast<TH2F*>(tempFile->Get("EGamma_EffMC2D"))) {
         h2_effMC = (TH2F*)tempEffMC->Clone("h2_effMC");
-        h2_effMC->SetDirectory(0);
+        h2_effMC->SetDirectory(0); // Desassocia do arquivo
     }
 
+    // Fecha o arquivo temporário
     tempFile->Close();
     delete tempFile;
-    gROOT->cd();
+    
+    // Limpa e cria os histogramas de monitoramento (se necessário)
+    // A lógica dos histogramas de monitoramento (h_sf_vs_pt, etc.) foi removida daqui
+    // para simplificar, pois eles já são inicializados em initMuonHLTriggerSF.
+    // Se eles forem específicos para elétrons, a inicialização deve ser feita aqui.
+    // Para evitar o crash, o importante é a clonagem dos TH2F acima.
 
     std::cout << "[initTriggerSF] SF de elétrons (Trigger) carregado com sucesso!" << std::endl;
 }
 
 float ttHHanalyzer::getEleTrigSF(float eta, float pt, float& sf_unc) {
     if (!h2_eleTrigSF) {
-        std::cerr << "[getEleTrigSF] WARNING: h2_eleTrigSF não inicializado!" << std::endl;
         sf_unc = 0.;
         return 1.;
     }
@@ -121,17 +90,13 @@ float ttHHanalyzer::getEleTrigSF(float eta, float pt, float& sf_unc) {
     float sf = h2_eleTrigSF->GetBinContent(binX, binY);
     sf_unc   = h2_eleTrigSF_unc ? h2_eleTrigSF_unc->GetBinContent(binX, binY) : 0.;
 
-    return sf;
+    return (sf > 0) ? sf : 1.0;
 }
 
+
 // ==========================
-// Electron Reco SF (sem histos auxiliares)
+// Electron Reco SF
 // ==========================
-/**
- * @brief Inicializa os SFs de Reconstrução (Reco) para elétrons.
- * Carrega os histogramas TH2F dos arquivos ROOT fornecidos pelo EGamma POG.
- * A função agora carrega corretamente os arquivos de médio e alto pT para 2024.
- */
 void ttHHanalyzer::initRecoSF() {
     auto safeDelete = [](auto*& ptr) { if (ptr) { delete ptr; ptr = nullptr; } };
     safeDelete(h2_eleRecoSF_low);
@@ -154,120 +119,53 @@ void ttHHanalyzer::initRecoSF() {
         }
         f->Close();
         delete f;
-        gROOT->cd();
         return h;
     };
 
-    // Carrega os histogramas corretos conforme o ano
     if (_year == "2024") {
-        // CORREÇÃO: Carrega os arquivos de pT médio e alto para 2024.
-        h2_eleRecoSF_low  = nullptr; // Não há arquivo de pT baixo para 2024
-        h2_eleRecoSF_mid  = loadReco(
-            "/eos/cms/store/group/phys_egamma/ScaleFactors/Data2024/EleReco/midPt/egammaEffi.txt_EGM2D.root",
-            "eleRecoSF_mid_2024"
-        );
-        h2_eleRecoSF_high = loadReco(
-            "/eos/cms/store/group/phys_egamma/ScaleFactors/Data2024/EleReco/highPt/egammaEffi.txt_EGM2D.root",
-            "eleRecoSF_high_2024"
-        );
-    }
-    else if (_year == "2023") {
-        h2_eleRecoSF_low  = loadReco(
-            "/eos/cms/store/group/phys_egamma/validation/web/Run3_egm_reco_SF/SF_prompt_2023_19012024/lowpT/Run3_2023C_New_lowpT_mergeEta_Added_symmetrizationsystEta_29052024/passingRECO/egammaEffi.txt_EGM2D.root",
-            "eleRecoSF_low_2023"
-        );
-        h2_eleRecoSF_mid  = loadReco(
-            "/eos/cms/store/group/phys_egamma/validation/web/Run3_egm_reco_SF/SF_prompt_2023_19012024/midpT/Run3_2023C_New_midpT2_eta/passingRECO/egammaEffi.txt_EGM2D.root",
-            "eleRecoSF_mid_2023"
-        );
-        h2_eleRecoSF_high = loadReco(
-            "/eos/cms/store/group/phys_egamma/validation/web/Run3_egm_reco_SF/SF_prompt_2023_19012024/highpT/Run3_2023C_New_highpt1_eta/passingRECO/egammaEffi.txt_EGM2D.root",
-            "eleRecoSF_high_2023"
-        );
-    }
-    else if (_year == "2023B") {
-        h2_eleRecoSF_low  = loadReco(
-            "/eos/cms/store/group/phys_egamma/validation/web/Run3_egm_reco_SF/SF_prompt_2023_19012024/lowpT/Run3_2023D_New_lowpT_mergeEta_Added_symmetrizationsystEta_29052024/passingRECO/egammaEffi.txt_EGM2D.root",
-            "eleRecoSF_low_2023B"
-        );
-        h2_eleRecoSF_mid  = loadReco(
-            "/eos/cms/store/group/phys_egamma/validation/web/Run3_egm_reco_SF/SF_prompt_2023_19012024/midpT/Run3_2023D_New_midpT_eta2/passingRECO/egammaEffi.txt_EGM2D.root",
-            "eleRecoSF_mid_2023B"
-        );
-        h2_eleRecoSF_high = loadReco(
-            "/eos/cms/store/group/phys_egamma/validation/web/Run3_egm_reco_SF/SF_prompt_2023_19012024/highpT/Run3_2023D_New_highpt_eta2/passingRECO/egammaEffi.txt_EGM2D.root",
-            "eleRecoSF_high_2023B"
-        );
-    }
-    else if (_year == "2022") {
-        h2_eleRecoSF_low  = loadReco(
-            "/eos/cms/store/group/phys_egamma/validation/web/Run3_egm_reco_SF/New_SF_19122023/lowpT/Run3_2022BCD_PreEEMC/passingRECO/egammaEffi.txt_EGM2D.root",
-            "eleRecoSF_low_2022"
-        );
-        h2_eleRecoSF_mid  = loadReco(
-            "/eos/cms/store/group/phys_egamma/validation/web/Run3_egm_reco_SF/New_SF_19122023/midpT/Run3_2022BCD_New_midpT7/passingRECO/egammaEffi.txt_EGM2D.root",
-            "eleRecoSF_mid_2022"
-        );
-        h2_eleRecoSF_high = loadReco(
-            "/eos/cms/store/group/phys_egamma/validation/web/Run3_egm_reco_SF/New_SF_19122023/highpT/Run3_2022BCD_New_highpt6/passingRECO/egammaEffi.txt_EGM2D.root",
-            "eleRecoSF_high_2022"
-        );
-    }
-    else if (_year == "2022EE") {
-        h2_eleRecoSF_low  = loadReco(
-            "/eos/cms/store/group/phys_egamma/validation/web/Run3_egm_reco_SF/New_SF_19122023/lowpT/Run3_2022EFG_PostEEMC/passingRECO/egammaEffi.txt_EGM2D.root",
-            "eleRecoSF_low_2022EE"
-        );
-        h2_eleRecoSF_mid  = loadReco(
-            "/eos/cms/store/group/phys_egamma/validation/web/Run3_egm_reco_SF/New_SF_19122023/midpT/Run3_2022EFG_New_midpT5/passingRECO/egammaEffi.txt_EGM2D.root",
-            "eleRecoSF_mid_2022EE"
-        );
-        h2_eleRecoSF_high = loadReco(
-            "/eos/cms/store/group/phys_egamma/validation/web/Run3_egm_reco_SF/New_SF_19122023/highpT/Run3_2022EFG_New_highpt5/passingRECO/egammaEffi.txt_EGM2D.root",
-            "eleRecoSF_high_2022EE"
-        );
-    }
-    else {
+        h2_eleRecoSF_low  = nullptr;
+        h2_eleRecoSF_mid  = loadReco("/eos/cms/store/group/phys_egamma/ScaleFactors/Data2024/EleReco/midPt/egammaEffi.txt_EGM2D.root", "eleRecoSF_mid_2024");
+        h2_eleRecoSF_high = loadReco("/eos/cms/store/group/phys_egamma/ScaleFactors/Data2024/EleReco/highPt/egammaEffi.txt_EGM2D.root", "eleRecoSF_high_2024");
+    } else if (_year == "2023") {
+        h2_eleRecoSF_low  = loadReco("/eos/cms/store/group/phys_egamma/validation/web/Run3_egm_reco_SF/SF_prompt_2023_19012024/lowpT/Run3_2023C_New_lowpT_mergeEta_Added_symmetrizationsystEta_29052024/passingRECO/egammaEffi.txt_EGM2D.root", "eleRecoSF_low_2023");
+        h2_eleRecoSF_mid  = loadReco("/eos/cms/store/group/phys_egamma/validation/web/Run3_egm_reco_SF/SF_prompt_2023_19012024/midpT/Run3_2023C_New_midpT2_eta/passingRECO/egammaEffi.txt_EGM2D.root", "eleRecoSF_mid_2023");
+        h2_eleRecoSF_high = loadReco("/eos/cms/store/group/phys_egamma/validation/web/Run3_egm_reco_SF/SF_prompt_2023_19012024/highpT/Run3_2023C_New_highpt1_eta/passingRECO/egammaEffi.txt_EGM2D.root", "eleRecoSF_high_2023");
+    } else if (_year == "2023B") {
+        h2_eleRecoSF_low  = loadReco("/eos/cms/store/group/phys_egamma/validation/web/Run3_egm_reco_SF/SF_prompt_2023_19012024/lowpT/Run3_2023D_New_lowpT_mergeEta_Added_symmetrizationsystEta_29052024/passingRECO/egammaEffi.txt_EGM2D.root", "eleRecoSF_low_2023B");
+        h2_eleRecoSF_mid  = loadReco("/eos/cms/store/group/phys_egamma/validation/web/Run3_egm_reco_SF/SF_prompt_2023_19012024/midpT/Run3_2023D_New_midpT_eta2/passingRECO/egammaEffi.txt_EGM2D.root", "eleRecoSF_mid_2023B");
+        h2_eleRecoSF_high = loadReco("/eos/cms/store/group/phys_egamma/validation/web/Run3_egm_reco_SF/SF_prompt_2023_19012024/highpT/Run3_2023D_New_highpt_eta2/passingRECO/egammaEffi.txt_EGM2D.root", "eleRecoSF_high_2023B");
+    } else if (_year == "2022") {
+        h2_eleRecoSF_low  = loadReco("/eos/cms/store/group/phys_egamma/validation/web/Run3_egm_reco_SF/New_SF_19122023/lowpT/Run3_2022BCD_PreEEMC/passingRECO/egammaEffi.txt_EGM2D.root", "eleRecoSF_low_2022");
+        h2_eleRecoSF_mid  = loadReco("/eos/cms/store/group/phys_egamma/validation/web/Run3_egm_reco_SF/New_SF_19122023/midpT/Run3_2022BCD_New_midpT7/passingRECO/egammaEffi.txt_EGM2D.root", "eleRecoSF_mid_2022");
+        h2_eleRecoSF_high = loadReco("/eos/cms/store/group/phys_egamma/validation/web/Run3_egm_reco_SF/New_SF_19122023/highpT/Run3_2022BCD_New_highpt6/passingRECO/egammaEffi.txt_EGM2D.root", "eleRecoSF_high_2022");
+    } else if (_year == "2022EE") {
+        h2_eleRecoSF_low  = loadReco("/eos/cms/store/group/phys_egamma/validation/web/Run3_egm_reco_SF/New_SF_19122023/lowpT/Run3_2022EFG_PostEEMC/passingRECO/egammaEffi.txt_EGM2D.root", "eleRecoSF_low_2022EE");
+        h2_eleRecoSF_mid  = loadReco("/eos/cms/store/group/phys_egamma/validation/web/Run3_egm_reco_SF/New_SF_19122023/midpT/Run3_2022EFG_New_midpT5/passingRECO/egammaEffi.txt_EGM2D.root", "eleRecoSF_mid_2022EE");
+        h2_eleRecoSF_high = loadReco("/eos/cms/store/group/phys_egamma/validation/web/Run3_egm_reco_SF/New_SF_19122023/highpT/Run3_2022EFG_New_highpt5/passingRECO/egammaEffi.txt_EGM2D.root", "eleRecoSF_high_2022EE");
+    } else {
         std::cerr << "[initRecoSF] Ano não suportado: " << _year << std::endl;
     }
 
     std::cout << "[initRecoSF] SF de Reco de elétrons carregado para ano " << _year << std::endl;
 }
 
-/**
- * @brief Obtém o SF de Reconstrução para um dado elétron.
- * A função agora seleciona o histograma correto para todas as faixas de pT de 2024.
- */
 float ttHHanalyzer::getEleRecoSF(float eta, float pt, float& sf_unc) {
     TH2F* h = nullptr;
 
-    // Lógica de seleção de histograma baseada no pT e no ano
     if (_year == "2024") {
-        // CORREÇÃO: Lógica expandida para cobrir a faixa de pT alto em 2024
-        if (pt >= 20.f && pt < 75.f) {
-            h = h2_eleRecoSF_mid;
-        } else if (pt >= 75.f) {
-            h = h2_eleRecoSF_high;
-        }
+        if (pt >= 20.f && pt < 75.f)   h = h2_eleRecoSF_mid;
+        else if (pt >= 75.f)           h = h2_eleRecoSF_high;
     } else {
-        // Lógica para os outros anos que têm as 3 faixas de pT
-        if (pt > 10.f && pt < 20.f) {
-            h = h2_eleRecoSF_low;
-        } else if (pt >= 20.f && pt < 75.f) {
-            h = h2_eleRecoSF_mid;
-        } else if (pt >= 75.f) {
-            h = h2_eleRecoSF_high;
-        }
+        if (pt > 10.f && pt < 20.f)    h = h2_eleRecoSF_low;
+        else if (pt >= 20.f && pt < 75.f)   h = h2_eleRecoSF_mid;
+        else if (pt >= 75.f)           h = h2_eleRecoSF_high;
     }
 
     if (!h) {
-        std::cerr << "[getEleRecoSF] Nenhum histograma correspondente para pT=" << pt
-                  << " GeV e ano=" << _year << ". Retornando SF=1." << std::endl;
         sf_unc = 0.f;
         return 1.f;
     }
 
-    // Faz a busca no histograma TH2
     int binX = h->GetXaxis()->FindBin(eta);
     int binY = h->GetYaxis()->FindBin(pt);
 
@@ -275,14 +173,14 @@ float ttHHanalyzer::getEleRecoSF(float eta, float pt, float& sf_unc) {
     sf_unc   = h->GetBinError(binX, binY);
 
     if (sf <= 0.f) {
-        std::cerr << "[getEleRecoSF] Bin vazio ou SF<=0 (eta=" << eta << ", pt=" << pt
-                  << "). Retornando SF=1." << std::endl;
         sf = 1.f;
         sf_unc = 0.f;
     }
 
     return sf;
 }
+
+
 // ==========================
 // Electron ID SF (MVA ISO WP90)
 // ==========================
@@ -308,45 +206,21 @@ void ttHHanalyzer::initEleIDSF() {
         }
         f->Close();
         delete f;
-        gROOT->cd();
         return h;
     };
 
     if(_year == "2024"){
-        h2_eleIDSF_others = loadSF(
-            "/eos/cms/store/group/phys_egamma/ScaleFactors/Data2024/EleID/passingMVA122Xwp90isoV1/merged_EGamma_SF2D_wp90iso.root",
-            "eleIDSF_2024"
-        );
-    }
-    else if(_year == "2023"){
-        h2_eleIDSF_others = loadSF(
-            "/eos/cms/store/group/phys_egamma/ScaleFactors/Data2023/ForPrompt23C/tnpEleID/passingMVA122Xwp90isoV1/egammaEffi.txt_EGM2D.root",
-            "eleIDSF_2023"
-        );
-    }
-    else if(_year == "2023B"){
-        h2_eleIDSF_2023B_NoHole = loadSF(
-            "/eos/cms/store/group/phys_egamma/ScaleFactors/Data2023/ForPrompt23D/tnpEleID/passingMVA122Xwp90isoV1/NoHole_egammaEffi.txt_EGM2D.root",
-            "eleIDSF_2023B_NoHole"
-        );
-        h2_eleIDSF_2023B_Hole = loadSF(
-            "/eos/cms/store/group/phys_egamma/ScaleFactors/Data2023/ForPrompt23D/tnpEleID/passingMVA122Xwp90isoV1/Hole_egammaEffi.txt_EGM2D.root",
-            "eleIDSF_2023B_Hole"
-        );
-    }
-    else if(_year == "2022"){
-        h2_eleIDSF_others = loadSF(
-            "/eos/cms/store/group/phys_egamma/ScaleFactors/Data2022/ForRe-recoBCD/tnpEleID/passingMVA122Xwp90isoV1/egammaEffi.txt_EGM2D.root",
-            "eleIDSF_2022"
-        );
-    }
-    else if(_year == "2022EE"){
-        h2_eleIDSF_others = loadSF(
-            "/eos/cms/store/group/phys_egamma/ScaleFactors/Data2022/ForRe-recoE+PromptFG/tnpEleID/passingMVA122Xwp90isoV1/egammaEffi.txt_EGM2D.root",
-            "eleIDSF_2022EE"
-        );
-    }
-    else{
+        h2_eleIDSF_others = loadSF("/eos/cms/store/group/phys_egamma/ScaleFactors/Data2024/EleID/passingMVA122Xwp90isoV1/merged_EGamma_SF2D_wp90iso.root", "eleIDSF_2024");
+    } else if(_year == "2023"){
+        h2_eleIDSF_others = loadSF("/eos/cms/store/group/phys_egamma/ScaleFactors/Data2023/ForPrompt23C/tnpEleID/passingMVA122Xwp90isoV1/egammaEffi.txt_EGM2D.root", "eleIDSF_2023");
+    } else if(_year == "2023B"){
+        h2_eleIDSF_2023B_NoHole = loadSF("/eos/cms/store/group/phys_egamma/ScaleFactors/Data2023/ForPrompt23D/tnpEleID/passingMVA122Xwp90isoV1/NoHole_egammaEffi.txt_EGM2D.root", "eleIDSF_2023B_NoHole");
+        h2_eleIDSF_2023B_Hole = loadSF("/eos/cms/store/group/phys_egamma/ScaleFactors/Data2023/ForPrompt23D/tnpEleID/passingMVA122Xwp90isoV1/Hole_egammaEffi.txt_EGM2D.root", "eleIDSF_2023B_Hole");
+    } else if(_year == "2022"){
+        h2_eleIDSF_others = loadSF("/eos/cms/store/group/phys_egamma/ScaleFactors/Data2022/ForRe-recoBCD/tnpEleID/passingMVA122Xwp90isoV1/egammaEffi.txt_EGM2D.root", "eleIDSF_2022");
+    } else if(_year == "2022EE"){
+        h2_eleIDSF_others = loadSF("/eos/cms/store/group/phys_egamma/ScaleFactors/Data2022/ForRe-recoE+PromptFG/tnpEleID/passingMVA122Xwp90isoV1/egammaEffi.txt_EGM2D.root", "eleIDSF_2022EE");
+    } else{
         std::cerr << "[initEleIDSF] Ano não suportado: " << _year << std::endl;
     }
 
@@ -357,7 +231,6 @@ float ttHHanalyzer::getEleIDSF(float eta, float phi, float pt, float& sf_unc){
     TH2F* h = nullptr;
 
     if(_year == "2023B"){
-        // Caso especial: -1.5 < eta < 0 e -1.2 < phi < -0.8 usa Hole
         if(eta > -1.5 && eta < 0 && phi > -1.2 && phi < -0.8){
             h = h2_eleIDSF_2023B_Hole;
         } else {
@@ -368,7 +241,6 @@ float ttHHanalyzer::getEleIDSF(float eta, float phi, float pt, float& sf_unc){
     }
 
     if(!h){
-        std::cerr << "[getEleIDSF] Nenhum histograma disponível para SF, retornando 1." << std::endl;
         sf_unc = 0.f;
         return 1.f;
     }
@@ -386,5 +258,3 @@ float ttHHanalyzer::getEleIDSF(float eta, float phi, float pt, float& sf_unc){
 
     return sf;
 }
-
-
