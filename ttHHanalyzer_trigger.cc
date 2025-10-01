@@ -100,7 +100,24 @@ void ttHHanalyzer::loop(sysName sysType, bool up) {
             std::exit(EXIT_FAILURE);
         }
     }
+	
+    // =======================================================
+    // --- NOVO BLOCO DE INICIALIZAÇÃO PARA O ARQUIVO .CSV ---
+    // =======================================================
+    if (!_sf_data_csv_file) { // Verifica se o ponteiro do nosso novo arquivo é nulo
+        TString csv_filename = logDir + "/" + _sampleName + "_sf_data.csv";
+        _sf_data_csv_file = std::make_unique<std::ofstream>(csv_filename.Data());
 
+        if (!_sf_data_csv_file->is_open()) {
+            std::cerr << "[ERROR] Failed to open SF data CSV file for writing!" << std::endl;
+            std::exit(EXIT_FAILURE);
+        }
+        
+        // Escreve o cabeçalho do arquivo CSV uma única vez
+        (*_sf_data_csv_file) << "lep_is_ele,lep_pt,lep_eta,sf_trigger,sf_reco,sf_id,sf_iso\n";
+    }
+    // =======================================================
+	
     if (!sf_summary_log_file) {
   //      std::string sf_summary_log_name = logDir + "/sf_summary_log_" + _sampleName + ".txt";
   //      sf_summary_log_file = std::make_unique<std::ofstream>(sf_summary_log_name);
@@ -746,7 +763,6 @@ void ttHHanalyzer::diMotherReco(const TLorentzVector & dPar1p4,const TLorentzVec
 	_bpTHiggs2    = (dPar3p4+dPar4p4).Pt();
     }
 } 
-
 void ttHHanalyzer::analyze(event *thisEvent) {
     // ========================
     // Pega vetores de leptons do evento
@@ -773,18 +789,43 @@ void ttHHanalyzer::analyze(event *thisEvent) {
         idSF      = getEleIDSF(ele->getp4()->Eta(), ele->getp4()->Phi(), ele->getp4()->Pt(), idSF_unc);
         totalSFUnc = std::sqrt(trigSF_unc*trigSF_unc + recoSF_unc*recoSF_unc + idSF_unc*idSF_unc);
         _weight *= (triggerSF * recoSF * idSF);
+
+        // --- Salva os dados do elétron no arquivo de texto .csv ---
+        if (_sf_data_csv_file && _sf_data_csv_file->is_open()) {
+            (*_sf_data_csv_file) << "1," // lep_is_ele = 1 para elétron
+                                 << ele->getp4()->Pt() << ","
+                                 << ele->getp4()->Eta() << ","
+                                 << triggerSF << ","
+                                 << recoSF << ","
+                                 << idSF << ","
+                                 << 1.0 // sf_iso (placeholder para elétrons)
+                                 << "\n";
+        }
+
     } else if (!selectedMuons.empty()) {
         objectLep* mu = selectedMuons[0];
         
         // Pega os SFs de Trigger, ID e Isolação para o múon
         triggerSF = getMuonTrigSF(mu->getp4()->Eta(), mu->getp4()->Pt());
         idSF      = getMuonIDSF(mu->getp4()->Eta(), mu->getp4()->Pt());
-        isoSF     = getMuonIsoSF(mu->getp4()->Eta(), mu->getp4()->Pt()); // <-- NOVA LINHA
+        isoSF     = getMuonIsoSF(mu->getp4()->Eta(), mu->getp4()->Pt());
 
         totalSFUnc = 0.0; // Incertezas para múons ainda não implementadas
         
         // Aplica todos os SFs de múon ao peso do evento
-        _weight *= (triggerSF * idSF * isoSF); // <-- LINHA MODIFICADA
+        _weight *= (triggerSF * idSF * isoSF);
+
+        // --- Salva os dados do múon no arquivo de texto .csv ---
+        if (_sf_data_csv_file && _sf_data_csv_file->is_open()) {
+            (*_sf_data_csv_file) << "0," // lep_is_ele = 0 para múon
+                                 << mu->getp4()->Pt() << ","
+                                 << mu->getp4()->Eta() << ","
+                                 << triggerSF << ","
+                                 << 1.0 << "," // sf_reco (placeholder para múons)
+                                 << idSF << ","
+                                 << isoSF
+                                 << "\n";
+        }
     }
 
     // ========================
@@ -829,7 +870,7 @@ void ttHHanalyzer::analyze(event *thisEvent) {
                                << ", pT = " << mu->getp4()->Pt()
                                << " | Trigger SF = " << triggerSF
                                << " | ID SF = " << idSF
-                               << " | Iso SF = " << isoSF      // <-- NOVA LINHA NO LOG
+                               << " | Iso SF = " << isoSF
                                << " | Weight before = " << weight_before_SFs
                                << " | Weight after = " << _weight
                                << "\n";
@@ -838,7 +879,6 @@ void ttHHanalyzer::analyze(event *thisEvent) {
     }
 
     _entryInLoop++;
-
 
 ///////////////////////////////////////
 
