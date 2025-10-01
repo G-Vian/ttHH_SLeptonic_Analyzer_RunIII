@@ -34,12 +34,13 @@ void SFTreeWriter::setSampleName(const std::string& name) {
 }
 
 // Função para preencher a TTree
+
 void SFTreeWriter::fill(float pt, float eta, float sf_trigger, float sf_reco, float sf_id, float sf_iso, int is_ele) {
-    // Inicialização "preguiçosa": cria o arquivo e a TTree na primeira vez que 'fill' é chamado
+    // Inicialização "preguiçosa"
     if (!_isInitialized) {
         if (_sampleName.empty()) {
             std::cerr << "ERRO: O nome da amostra (sampleName) não foi definido para o SFTreeWriter!" << std::endl;
-            _isInitialized = true; // Evita repetir o erro
+            _isInitialized = true;
             return;
         }
         std::string filename = _sampleName + "_sf_ntuple.root";
@@ -63,7 +64,10 @@ void SFTreeWriter::fill(float pt, float eta, float sf_trigger, float sf_reco, fl
         _lep_eta = eta;
         _sf_trigger = sf_trigger;
         _sf_reco = sf_reco;
-        _sf_id = id;
+        // ===========================================
+        // --- CORREÇÃO AQUI ---
+        _sf_id = sf_id; // Estava como 'id', o correto é 'sf_id'
+        // ===========================================
         _sf_iso = sf_iso;
         _lep_is_ele = is_ele;
         _sf_tree->Fill();
