@@ -80,31 +80,36 @@ void ttHHanalyzer::loop(sysName sysType, bool up) {
         }
     }
 
+    // =======================================================
+    // --- MODIFICAÇÃO AQUI: Define o novo diretório base no EOS ---
+    // =======================================================
+    TString baseDir = "/eos/user/g/gvian/job/";
+    TString logDir = baseDir + _sampleName + "_SFs";
+    // =======================================================
+
+    if (gSystem->AccessPathName(logDir)) {
+        if (gSystem->mkdir(logDir, kTRUE) != 0) {
+            std::cerr << "[ERROR] Failed to create directory: " << logDir << std::endl;
+            std::exit(EXIT_FAILURE);
+        }
+    }
+
     // Inicializa os arquivos de log, se ainda não foram criados
     if (!event_log_file || !sf_log_file) {
-      //  std::string log1_name = logDir + "/event_selection_log_" + _sampleName + ".txt";
-      //  std::string log2_name = logDir + "/log_trigger_sf_" + _sampleName + ".txt";
-		TString log1_name = logDir + "/event_selection_log_" + _sampleName + ".txt";
-		TString log2_name = logDir + "/log_applied_sf_" + _sampleName + ".txt";
+        TString log1_name = logDir + "/event_selection_log.txt";
+        TString log2_name = logDir + "/log_applied_sf.txt";
 
- //       event_log_file = std::make_unique<std::ofstream>(log1_name);
-  //      sf_log_file    = std::make_unique<std::ofstream>(log2_name);
-		event_log_file = std::make_unique<std::ofstream>(log1_name.Data());
-		sf_log_file    = std::make_unique<std::ofstream>(log2_name.Data());
-
-
-
-		
+        event_log_file = std::make_unique<std::ofstream>(log1_name.Data());
+        sf_log_file    = std::make_unique<std::ofstream>(log2_name.Data());
+        
         if (!event_log_file->is_open() || !sf_log_file->is_open()) {
             std::cerr << "[ERROR] Failed to open log files for writing!" << std::endl;
             std::exit(EXIT_FAILURE);
         }
     }
-	
-    // =======================================================
-    // --- NOVO BLOCO DE INICIALIZAÇÃO PARA O ARQUIVO .CSV ---
-    // =======================================================
-    if (!_sf_data_csv_file) { // Verifica se o ponteiro do nosso novo arquivo é nulo
+    
+    // Inicializa o arquivo .csv para os dados de SF
+    if (!_sf_data_csv_file) {
         TString csv_filename = logDir + "/" + _sampleName + "_sf_data.csv";
         _sf_data_csv_file = std::make_unique<std::ofstream>(csv_filename.Data());
 
@@ -116,7 +121,7 @@ void ttHHanalyzer::loop(sysName sysType, bool up) {
         // Escreve o cabeçalho do arquivo CSV uma única vez
         (*_sf_data_csv_file) << "lep_is_ele,lep_pt,lep_eta,sf_trigger,sf_reco,sf_id,sf_iso\n";
     }
-    // =======================================================
+
 	
     if (!sf_summary_log_file) {
   //      std::string sf_summary_log_name = logDir + "/sf_summary_log_" + _sampleName + ".txt";
