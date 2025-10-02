@@ -7,12 +7,10 @@
 #include <cmath>
 #include <cstdlib>
 
-// --- DEFINIÇÃO DAS VARIÁVEIS GLOBAIS DE SF ---
+// --- DEFINIÇÃO DAS VARIÁVEIS GLOBAIS DE SF (SIMPLIFICADO) ---
+// Apenas as variáveis para os arquivos de pT médio são necessárias agora
 json muonTrigSFJson;
-json muonHighPtTrigSFJson;
-json muonLowPtIDSFJson;
-json muonMediumPtIDSFJson;
-json muonHighPtIDSFJson;
+json muonIDSFJson;
 json muonIsoSFJson;
 
 /**
@@ -43,63 +41,81 @@ json loadSFJson(const TString& filePath) {
 }
 
 // =================================================================================
-//          FUNÇÕES PARA MUON TRIGGER SCALE FACTORS
+//          FUNÇÕES PARA MUON TRIGGER SCALE FACTORS (SIMPLIFICADO)
 // =================================================================================
 
 void ttHHanalyzer::initMuonHLTriggerSF() {
-    TString sfMediumPtFilePath;
-    TString sfHighPtFilePath;
+    TString sfFilePath;
     TString localDir = "/afs/cern.ch/user/g/gvian/muon_SF/muonefficiencies/Run3/";
 
+    // Carrega apenas o arquivo de Trigger de pT médio
     if (_year == "2022") {
-        sfMediumPtFilePath = localDir + "2022/2022_Z/HLT/json/ScaleFactors_Muon_Z_HLT_2022_eta_pt_schemaV2.json";
-        sfHighPtFilePath = localDir + "2022/2022_HighPt/ScaleFactors_Muon_highPt_RECO_2022_schemaV2.json";
+        sfFilePath = localDir + "2022/2022_Z/HLT/json/ScaleFactors_Muon_Z_HLT_2022_eta_pt_schemaV2.json";
     } else if (_year == "2022EE") {
-        sfMediumPtFilePath = localDir + "2022_EE/2022_Z/HLT/json/ScaleFactors_Muon_Z_HLT_2022_EE_eta_pt_schemaV2.json";
-        sfHighPtFilePath = localDir + "2022_EE/2022_HighPt/ScaleFactors_Muon_highPt_HLT_2022_EE_schemaV2.json";
+        sfFilePath = localDir + "2022_EE/2022_Z/HLT/json/ScaleFactors_Muon_Z_HLT_2022_EE_eta_pt_schemaV2.json";
     } else if (_year == "2023") {
-        sfMediumPtFilePath = localDir + "2023/2023_Z/HLT/json/ScaleFactors_Muon_Z_HLT_2023_eta_pt_schemaV2.json";
-        sfHighPtFilePath = localDir + "2023/2023_HighPt/ScaleFactors_Muon_highPt_HLT_2023_schemaV2.json";
+        sfFilePath = localDir + "2023/2023_Z/HLT/json/ScaleFactors_Muon_Z_HLT_2023_eta_pt_schemaV2.json";
     } else if (_year == "2023B") {
-        sfMediumPtFilePath = localDir + "2023_BPix/2023_Z/HLT/json/ScaleFactors_Muon_Z_HLT_2023_BPix_eta_pt_schemaV2.json";
-        sfHighPtFilePath = localDir + "2023_BPix/2023_HighPt/ScaleFactors_Muon_highPt_HLT_2023_BPix_schemaV2.json";
+        sfFilePath = localDir + "2023_BPix/2023_Z/HLT/json/ScaleFactors_Muon_Z_HLT_2023_BPix_eta_pt_schemaV2.json";
     } else if (_year == "2024") {
-        sfMediumPtFilePath = localDir + "2023_BPix/2023_Z/HLT/json/ScaleFactors_Muon_Z_HLT_2023_BPix_eta_pt_schemaV2.json";
-        sfHighPtFilePath = localDir + "2024/2024_HighPt/ScaleFactors_Muon_highPt_HLT_2024_schemaV2.json";
+        sfFilePath = localDir + "2023_BPix/2023_Z/HLT/json/ScaleFactors_Muon_Z_HLT_2023_BPix_eta_pt_schemaV2.json";
     } else {
         std::cerr << "[initMuonHLTriggerSF] ERRO: Ano não suportado para SF de múons: " << _year << std::endl;
         return;
     }
     
-    muonTrigSFJson = loadSFJson(sfMediumPtFilePath);
-    muonHighPtTrigSFJson = loadSFJson(sfHighPtFilePath);
+    muonTrigSFJson = loadSFJson(sfFilePath);
 
-    // Lógica dos histogramas, se aplicável
-    if (h_sf_muon_vs_pt) { delete h_sf_muon_vs_pt; h_sf_muon_vs_pt = nullptr; }
-    // ... (resto da sua limpeza de histogramas) ...
+    // ==========================================
+    // Limpa histos antigos
+    // ==========================================
+    if (h_sf_muon_vs_pt)       { delete h_sf_muon_vs_pt;       h_sf_muon_vs_pt = nullptr; }
+    if (h_sf_muon_vs_eta)      { delete h_sf_muon_vs_eta;      h_sf_muon_vs_eta = nullptr; }
+    if (h_sf_muon_vs_pt_sum)   { delete h_sf_muon_vs_pt_sum;   h_sf_muon_vs_pt_sum = nullptr; }
+    if (h_sf_muon_vs_pt_count) { delete h_sf_muon_vs_pt_count; h_sf_muon_vs_pt_count = nullptr; }
+    if (h_sf_muon_vs_eta_sum)  { delete h_sf_muon_vs_eta_sum;  h_sf_muon_vs_eta_sum = nullptr; }
+    if (h_sf_muon_vs_eta_count){ delete h_sf_muon_vs_eta_count;h_sf_muon_vs_eta_count = nullptr; }
+    if (h_sf_muon_vs_pt_avg)   { delete h_sf_muon_vs_pt_avg;   h_sf_muon_vs_pt_avg = nullptr; }
+    if (h_sf_muon_vs_eta_avg)  { delete h_sf_muon_vs_eta_avg;  h_sf_muon_vs_eta_avg = nullptr; }
 
-    h_sf_muon_vs_pt = new TH1F("h_sf_muon_vs_pt", "Muon SF vs pT;Muon pT [GeV];SF", 100, 0, 700);
-    // ... (resto da sua criação de histogramas) ...
+    // ==========================================
+    // Cria histos novos
+    // ==========================================
+    h_sf_muon_vs_pt       = new TH1F("h_sf_muon_vs_pt", "Muon SF vs pT;Muon pT [GeV];SF", 100, 0, 700);
+    h_sf_muon_vs_eta      = new TH1F("h_sf_muon_vs_eta", "Muon SF vs Eta;Muon #eta;SF", 100, -5, 5);
+    h_sf_muon_vs_pt_sum   = new TH1F("h_sf_muon_vs_pt_sum", "Sum SF vs pT", 100, 0, 700);
+    h_sf_muon_vs_pt_count = new TH1F("h_sf_muon_vs_pt_count", "Count SF vs pT", 100, 0, 700);
+    h_sf_muon_vs_eta_sum  = new TH1F("h_sf_muon_vs_eta_sum", "Sum SF vs eta", 100, -5, 5);
+    h_sf_muon_vs_eta_count= new TH1F("h_sf_muon_vs_eta_count", "Count SF vs eta", 100, -5, 5);
+    h_sf_muon_vs_pt_avg   = new TH1F("h_sf_muon_vs_pt_avg", "Avg SF vs pT", 100, 0, 700);
+    h_sf_muon_vs_eta_avg  = new TH1F("h_sf_muon_vs_eta_avg", "Avg SF vs eta", 100, -5, 5);
 
-    for (auto& h : {h_sf_muon_vs_pt, h_sf_muon_vs_eta /*, etc */}) {
+    // ==========================================
+    // Sumw2 para incertezas
+    // ==========================================
+    if (h_sf_muon_vs_pt_sum)   h_sf_muon_vs_pt_sum->Sumw2();
+    if (h_sf_muon_vs_pt_count) h_sf_muon_vs_pt_count->Sumw2();
+    if (h_sf_muon_vs_eta_sum)  h_sf_muon_vs_eta_sum->Sumw2();
+    if (h_sf_muon_vs_eta_count)h_sf_muon_vs_eta_count->Sumw2();
+
+    // ==========================================
+    // Protege histos contra "auto-delete" do ROOT
+    // ==========================================
+    std::vector<TH1*> hists = {
+        h_sf_muon_vs_pt, h_sf_muon_vs_eta,
+        h_sf_muon_vs_pt_sum, h_sf_muon_vs_pt_count,
+        h_sf_muon_vs_eta_sum, h_sf_muon_vs_eta_count,
+        h_sf_muon_vs_pt_avg, h_sf_muon_vs_eta_avg
+    };
+    for (auto& h : hists) {
         if (h) h->SetDirectory(0);
     }
 }
 
 float ttHHanalyzer::getMuonTrigSF(float eta, float pt) {
-    const json* sfJson = nullptr;
-    std::string correctionName;
-    float eta_for_lookup;
-
-    if (pt > 200.0) {
-        sfJson = &muonHighPtTrigSFJson;
-        correctionName = "NUM_HLT_DEN_TrkHighPtTightRelIsoProbes";
-        eta_for_lookup = fabs(eta);
-    } else {
-        sfJson = &muonTrigSFJson;
-        correctionName = "NUM_IsoMu24_DEN_CutBasedIdTight_and_PFIsoTight";
-        eta_for_lookup = eta;
-    }
+    const json* sfJson = &muonTrigSFJson;
+    std::string correctionName = "NUM_IsoMu24_DEN_CutBasedIdTight_and_PFIsoTight";
+    float eta_for_lookup = eta;
 
     if (!sfJson || sfJson->empty()) return 1.0;
 
@@ -149,60 +165,37 @@ float ttHHanalyzer::getMuonTrigSF(float eta, float pt) {
 }
 
 // =================================================================================
-//          FUNÇÕES PARA MUON ID SCALE FACTORS
+//          FUNÇÕES PARA MUON ID SCALE FACTORS (SIMPLIFICADO)
 // =================================================================================
 
 void ttHHanalyzer::initMuonIDSF() {
-    TString sfLowPtFilePath, sfMediumPtFilePath, sfHighPtFilePath;
+    TString sfFilePath;
     TString localDir = "/afs/cern.ch/user/g/gvian/muon_SF/muonefficiencies/Run3/";
 
+    // Carrega apenas o arquivo de ID/ISO de pT médio
     if (_year == "2022") {
-        sfLowPtFilePath    = localDir + "2022/2022_Jpsi/ScaleFactors_Muon_Jpsi_ID_2022_schemaV2.json";
-        sfMediumPtFilePath = localDir + "2022/2022_Z/ScaleFactors_Muon_Z_ID_ISO_2022_schemaV2.json";
-        sfHighPtFilePath   = localDir + "2022/2022_HighPt/ScaleFactors_Muon_highPt_IDISO_2022_schemaV2.json";
+        sfFilePath = localDir + "2022/2022_Z/ScaleFactors_Muon_Z_ID_ISO_2022_schemaV2.json";
     } else if (_year == "2022EE") {
-        sfLowPtFilePath    = localDir + "2022_EE/2022_Jpsi/ScaleFactors_Muon_Jpsi_ID_2022_EE_schemaV2.json";
-        sfMediumPtFilePath = localDir + "2022_EE/2022_Z/ScaleFactors_Muon_Z_ID_ISO_2022_EE_schemaV2.json";
-        sfHighPtFilePath   = localDir + "2022_EE/2022_HighPt/ScaleFactors_Muon_highPt_IDISO_2022_EE_schemaV2.json";
+        sfFilePath = localDir + "2022_EE/2022_Z/ScaleFactors_Muon_Z_ID_ISO_2022_EE_schemaV2.json";
     } else if (_year == "2023") {
-        sfLowPtFilePath    = localDir + "2023/2023_JPsi/ScaleFactors_Muon_Jpsi_ID_2023_schemaV2.json";
-        sfMediumPtFilePath = localDir + "2023/2023_Z/ScaleFactors_Muon_Z_ID_ISO_2023_schemaV2.json";
-        sfHighPtFilePath   = localDir + "2023/2023_HighPt/ScaleFactors_Muon_highPt_IDISO_2023_schemaV2.json";
+        sfFilePath = localDir + "2023/2023_Z/ScaleFactors_Muon_Z_ID_ISO_2023_schemaV2.json";
     } else if (_year == "2023B") {
-        sfLowPtFilePath    = localDir + "2023_BPix/2023_JPsi/ScaleFactors_Muon_Jpsi_ID_2023_schemaV2.json";
-        sfMediumPtFilePath = localDir + "2023_BPix/2023_Z/ScaleFactors_Muon_Z_ID_ISO_2023_BPix_schemaV2.json";
-        sfHighPtFilePath   = localDir + "2023_BPix/2023_HighPt/ScaleFactors_Muon_highPt_IDISO_2023_BPix_schemaV2.json";
+        sfFilePath = localDir + "2023_BPix/2023_Z/ScaleFactors_Muon_Z_ID_ISO_2023_BPix_schemaV2.json";
     } else if (_year == "2024") {
-        sfLowPtFilePath    = localDir + "2024/2024_JPsi/ScaleFactors_Muon_Jpsi_ID_2024_schemaV2.json";
-        sfMediumPtFilePath = localDir + "2024/2024_Z/ScaleFactors_Muon_ID_ISO_2024_schemaV2.json";
-        sfHighPtFilePath   = localDir + "2024/2024_HighPt/ScaleFactors_Muon_highPt_IDISO_2024_schemaV2.json";
+        sfFilePath = localDir + "2024/2024_Z/ScaleFactors_Muon_ID_ISO_2024_schemaV2.json";
     }
     
-    muonLowPtIDSFJson = loadSFJson(sfLowPtFilePath);
-    muonMediumPtIDSFJson = loadSFJson(sfMediumPtFilePath);
-    muonHighPtIDSFJson = loadSFJson(sfHighPtFilePath);
+    muonIDSFJson = loadSFJson(sfFilePath);
 }
 
 float ttHHanalyzer::getMuonIDSF(float eta, float pt) {
-    const json* sfJson = nullptr;
-    std::string correctionName;
+    const json* sfJson = &muonIDSFJson;
+    std::string correctionName = "NUM_TightID_DEN_TrackerMuons";
     float eta_for_lookup;
-
-    if (pt < 30.0) {
-        sfJson = &muonLowPtIDSFJson;
-        correctionName = "NUM_TightID_DEN_TrackerMuons";
-        eta_for_lookup = fabs(eta);
-    } else if (pt < 200.0) {
-        sfJson = &muonMediumPtIDSFJson;
-        correctionName = "NUM_TightID_DEN_TrackerMuons";
-        if (_year == "2023" || _year == "2023B" || _year == "2024") {
-            eta_for_lookup = eta;
-        } else {
-            eta_for_lookup = fabs(eta);
-        }
+    
+    if (_year == "2023" || _year == "2023B" || _year == "2024") {
+        eta_for_lookup = eta;
     } else {
-        sfJson = &muonHighPtIDSFJson;
-        correctionName = "NUM_TightID_DEN_GlobalMuonProbes";
         eta_for_lookup = fabs(eta);
     }
     
@@ -253,7 +246,7 @@ float ttHHanalyzer::getMuonIDSF(float eta, float pt) {
 }
 
 // =================================================================================
-//          FUNÇÕES PARA MUON ISO SCALE FACTORS
+//          FUNÇÕES PARA MUON ISO SCALE FACTORS (SIMPLIFICADO)
 // =================================================================================
 
 void ttHHanalyzer::initMuonIsoSF() {
