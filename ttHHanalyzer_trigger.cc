@@ -763,6 +763,7 @@ void ttHHanalyzer::diMotherReco(const TLorentzVector & dPar1p4,const TLorentzVec
 	_bpTHiggs2    = (dPar3p4+dPar4p4).Pt();
     }
 } 
+
 void ttHHanalyzer::analyze(event *thisEvent) {
     // ========================
     // Pega vetores de leptons do evento
@@ -790,16 +791,11 @@ void ttHHanalyzer::analyze(event *thisEvent) {
         totalSFUnc = std::sqrt(trigSF_unc*trigSF_unc + recoSF_unc*recoSF_unc + idSF_unc*idSF_unc);
         _weight *= (triggerSF * recoSF * idSF);
 
-        // --- Salva os dados do elétron no arquivo de texto .csv ---
+        // --- Salva os dados do elétron no arquivo .csv com precisão otimizada ---
         if (_sf_data_csv_file && _sf_data_csv_file->is_open()) {
-            (*_sf_data_csv_file) << "1," // lep_is_ele = 1 para elétron
-                                 << ele->getp4()->Pt() << ","
-                                 << ele->getp4()->Eta() << ","
-                                 << triggerSF << ","
-                                 << recoSF << ","
-                                 << idSF << ","
-                                 << 1.0 // sf_iso (placeholder para elétrons)
-                                 << "\n";
+            (*_sf_data_csv_file) << std::fixed << std::setprecision(4)
+                                 << "1," << ele->getp4()->Pt() << "," << ele->getp4()->Eta() << ","
+                                 << triggerSF << "," << recoSF << "," << idSF << "," << 1.0 << "\n";
         }
 
     } else if (!selectedMuons.empty()) {
@@ -815,16 +811,11 @@ void ttHHanalyzer::analyze(event *thisEvent) {
         // Aplica todos os SFs de múon ao peso do evento
         _weight *= (triggerSF * idSF * isoSF);
 
-        // --- Salva os dados do múon no arquivo de texto .csv ---
+        // --- Salva os dados do múon no arquivo .csv com precisão otimizada ---
         if (_sf_data_csv_file && _sf_data_csv_file->is_open()) {
-            (*_sf_data_csv_file) << "0," // lep_is_ele = 0 para múon
-                                 << mu->getp4()->Pt() << ","
-                                 << mu->getp4()->Eta() << ","
-                                 << triggerSF << ","
-                                 << 1.0 << "," // sf_reco (placeholder para múons)
-                                 << idSF << ","
-                                 << isoSF
-                                 << "\n";
+            (*_sf_data_csv_file) << std::fixed << std::setprecision(4)
+                                 << "0," << mu->getp4()->Pt() << "," << mu->getp4()->Eta() << ","
+                                 << triggerSF << "," << 1.0 << "," << idSF << "," << isoSF << "\n";
         }
     }
 
