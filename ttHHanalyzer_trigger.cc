@@ -72,22 +72,29 @@ void ttHHanalyzer::loop(sysName sysType, bool up) {
         std::exit(EXIT_FAILURE);
     }
 
-    // --- Define o diretório de saída final no EOS uma única vez ---
-    TString baseDir = "/eos/user/g/gvian/job/";
-    TString logDir = baseDir + _sampleName + "_SFs";
-
-    // Cria a pasta com o nome do processo no EOS, se ela não existir
-    if (gSystem->AccessPathName(logDir)) {   // Se o caminho não existe
-        if (gSystem->mkdir(logDir, kTRUE) != 0) { // kTRUE permite criar diretórios aninhados
-            std::cerr << "[ERROR] Failed to create directory: " << logDir << std::endl;
+    // --- Diretório LOCAL para arquivos de LOG (.txt) ---
+    TString localLogDir = _sampleName + "_sfslogs";
+    if (gSystem->AccessPathName(localLogDir)) { // Se o caminho não existe
+        if (gSystem->mkdir(localLogDir, kTRUE) != 0) {
+            std::cerr << "[ERROR] Failed to create local log directory: " << localLogDir << std::endl;
             std::exit(EXIT_FAILURE);
         }
     }
 
-    // Inicializa os arquivos de log de texto, se ainda não foram criados
+    // --- Diretório no EOS para o arquivo de DADOS (.csv) ---
+    TString eosBaseDir = "/eos/user/g/gvian/job/";
+    TString csvDir = eosBaseDir + _sampleName + "_SFs";
+    if (gSystem->AccessPathName(csvDir)) { // Se o caminho não existe
+        if (gSystem->mkdir(csvDir, kTRUE) != 0) {
+            std::cerr << "[ERROR] Failed to create EOS directory: " << csvDir << std::endl;
+            std::exit(EXIT_FAILURE);
+        }
+    }
+
+    // Inicializa os arquivos de log (.txt) no diretório LOCAL
     if (!event_log_file || !sf_log_file) {
-        TString log1_name = logDir + "/event_selection_log.txt";
-        TString log2_name = logDir + "/log_applied_sf.txt";
+        TString log1_name = localLogDir + "/event_selection_log.txt";
+        TString log2_name = localLogDir + "/log_applied_sf.txt";
 
         event_log_file = std::make_unique<std::ofstream>(log1_name.Data());
         sf_log_file    = std::make_unique<std::ofstream>(log2_name.Data());
@@ -98,9 +105,9 @@ void ttHHanalyzer::loop(sysName sysType, bool up) {
         }
     }
     
-    // Inicializa o arquivo .csv para os dados de SF, se ainda não foi criado
+    // Inicializa o arquivo de dados (.csv) no diretório EOS
     if (!_sf_data_csv_file) {
-        TString csv_filename = logDir + "/" + _sampleName + "_sf_data.csv";
+        TString csv_filename = csvDir + "/" + _sampleName + "_sf_data.csv";
         _sf_data_csv_file = std::make_unique<std::ofstream>(csv_filename.Data());
 
         if (!_sf_data_csv_file->is_open()) {
@@ -112,15 +119,16 @@ void ttHHanalyzer::loop(sysName sysType, bool up) {
         (*_sf_data_csv_file) << "lep_is_ele,lep_pt,lep_eta,sf_trigger,sf_reco,sf_id,sf_iso\n";
     }
 
-    // Inicializa o arquivo de log de resumo, se ainda não foi criado
+    // Inicializa o arquivo de log de resumo (.txt) no diretório LOCAL
     if (!sf_summary_log_file) {
-        TString sf_summary_log_name = logDir + "/sf_summary_log_" + _sampleName + ".txt";
+        TString sf_summary_log_name = localLogDir + "/sf_summary_log_" + _sampleName + ".txt";
         sf_summary_log_file = std::make_unique<std::ofstream>(sf_summary_log_name.Data());
         if (!sf_summary_log_file->is_open()) {
             std::cerr << "[ERROR] Failed to open sf summary log file for writing!" << std::endl;
             std::exit(EXIT_FAILURE);
         }
     }
+
     int nevents = _ev->size();
 
     // helper para imprimir o cutflow (periodicamente e no final)
