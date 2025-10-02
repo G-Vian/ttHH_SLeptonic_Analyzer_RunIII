@@ -790,13 +790,6 @@ void ttHHanalyzer::analyze(event *thisEvent) {
         totalSFUnc = std::sqrt(trigSF_unc*trigSF_unc + recoSF_unc*recoSF_unc + idSF_unc*idSF_unc);
         _weight *= (triggerSF * recoSF * idSF);
 
-        // --- Salva os dados do elétron no arquivo .csv com precisão otimizada ---
-        if (_sf_data_csv_file && _sf_data_csv_file->is_open()) {
-            (*_sf_data_csv_file) << std::fixed << std::setprecision(4)
-                                 << "1," << ele->getp4()->Pt() << "," << ele->getp4()->Eta() << ","
-                                 << triggerSF << "," << recoSF << "," << idSF << "," << 1.0 << "\n";
-        }
-
     } else if (!selectedMuons.empty()) {
         objectLep* mu = selectedMuons[0];
         
@@ -809,67 +802,78 @@ void ttHHanalyzer::analyze(event *thisEvent) {
         
         // Aplica todos os SFs de múon ao peso do evento
         _weight *= (triggerSF * idSF * isoSF);
-
-        // --- Salva os dados do múon no arquivo .csv com precisão otimizada ---
-        if (_sf_data_csv_file && _sf_data_csv_file->is_open()) {
-            (*_sf_data_csv_file) << std::fixed << std::setprecision(4)
-                                 << "0," << mu->getp4()->Pt() << "," << mu->getp4()->Eta() << ","
-                                 << triggerSF << "," << 1.0 << "," << idSF << "," << isoSF << "\n";
-        }
     }
 
     // ========================
-    // Log detalhado (versão corrigida)
+    // Log detalhado e salvamento dos dados em CSV (agrupados sob a mesma condição)
     // ========================
     bool hasLeadLepton = (!selectedElectrons.empty() || !selectedMuons.empty());
-    if (sf_log_file && sf_log_file->is_open() && (_entryInLoop % LOG_INTERVAL == 0 && hasLeadLepton)) {
-        (*sf_log_file) << "=== Entry " << _entryInLoop << " ===\n";
-        size_t nEle = selectedElectrons.size();
-        size_t nMu  = selectedMuons.size();
+    if (hasLeadLepton && (_entryInLoop % LOG_INTERVAL == 0)) {
+        
+        // --- Lógica para o log detalhado em .txt ---
+        if (sf_log_file && sf_log_file->is_open()) {
+            (*sf_log_file) << "=== Entry " << _entryInLoop << " ===\n";
+            size_t nEle = selectedElectrons.size();
+            size_t nMu  = selectedMuons.size();
 
-        (*sf_log_file) << "Number of selected electrons: " << nEle << "\n";
-        (*sf_log_file) << "Number of selected muons: "     << nMu << "\n";
+            (*sf_log_file) << "Number of selected electrons: " << nEle << "\n";
+            (*sf_log_file) << "Number of selected muons: "     << nMu << "\n";
 
-        if (nEle > 0) {
-            size_t nLog = std::min({nEle, _final_electron_pts_before_calib.size(), _final_electron_pts_after_calib.size()});
-            for (size_t i = 0; i < nLog; ++i) {
-                objectLep* ele = selectedElectrons[i];
-                if (!ele) continue;
+            if (nEle > 0) {
+                size_t nLog = std::min({nEle, _final_electron_pts_before_calib.size(), _final_electron_pts_after_calib.size()});
+                for (size_t i = 0; i < nLog; ++i) {
+                    objectLep* ele = selectedElectrons[i];
+                    if (!ele) continue;
 
-                float pt_before = _final_electron_pts_before_calib[i];
-                float pt_after  = _final_electron_pts_after_calib[i];
+                    float pt_before = _final_electron_pts_before_calib[i];
+                    float pt_after  = _final_electron_pts_after_calib[i];
 
-                (*sf_log_file) << "Electron " << i
-                               << " | η = " << ele->getp4()->Eta()
-                               << ", φ = " << ele->getp4()->Phi()
-                               << ", pT before calib = " << pt_before
-                               << ", pT after calib  = " << pt_after
-                               << " | Calibration applied = " << (isMC ? "Smearing (MC)" : "Scale Correction (Data)")
-                               << " | Trigger SF = " << triggerSF
-                               << " | Reco SF = " << recoSF
-                               << " | ID SF = " << idSF
-                               << " | Weight before = " << weight_before_SFs
-                               << " | Weight after = " << _weight
-                               << " | Total SF Uncertainty = " << totalSFUnc
-                               << "\n";
+                    (*sf_log_file) << "Electron " << i
+                                   << " | η = " << ele->getp4()->Eta()
+                                   << ", φ = " << ele->getp4()->Phi()
+                                   << ", pT before calib = " << pt_before
+                                   << ", pT after calib  = " << pt_after
+                                   << " | Calibration applied = " << (isMC ? "Smearing (MC)" : "Scale Correction (Data)")
+                                   << " | Trigger SF = " << triggerSF
+                                   << " | Reco SF = " << recoSF
+                                   << " | ID SF = " << idSF
+                                   << " | Weight before = " << weight_before_SFs
+                                   << " | Weight after = " << _weight
+                                   << " | Total SF Uncertainty = " << totalSFUnc
+                                   << "\n";
+                }
+            } else if (nMu > 0) {
+                objectLep* mu = selectedMuons[0];
+                if (mu) {
+                    (*sf_log_file) << "Muon | η = " << mu->getp4()->Eta()
+                                   << ", pT = " << mu->getp4()->Pt()
+                                   << " | Trigger SF = " << triggerSF
+                                   << " | ID SF = " << idSF
+                                   << " | Iso SF = " << isoSF
+                                   << " | Weight before = " << weight_before_SFs
+                                   << " | Weight after = " << _weight
+                                   << "\n";
+                }
             }
-        } else if (nMu > 0) {
-            objectLep* mu = selectedMuons[0];
-            if (mu) {
-                (*sf_log_file) << "Muon | η = " << mu->getp4()->Eta()
-                               << ", pT = " << mu->getp4()->Pt()
-                               << " | Trigger SF = " << triggerSF
-                               << " | ID SF = " << idSF
-                               << " | Iso SF = " << isoSF
-                               << " | Weight before = " << weight_before_SFs
-                               << " | Weight after = " << _weight
-                               << "\n";
+        }
+        
+        // --- Lógica para salvar os dados no arquivo .csv ---
+        if (_sf_data_csv_file && _sf_data_csv_file->is_open()) {
+            if (!selectedElectrons.empty()) {
+                objectLep* ele = selectedElectrons[0];
+                (*_sf_data_csv_file) << std::fixed << std::setprecision(4)
+                                     << "1," << ele->getp4()->Pt() << "," << ele->getp4()->Eta() << ","
+                                     << triggerSF << "," << recoSF << "," << idSF << "," << 1.0 << "\n";
+            } else if (!selectedMuons.empty()) {
+                objectLep* mu = selectedMuons[0];
+                (*_sf_data_csv_file) << std::fixed << std::setprecision(4)
+                                     << "0," << mu->getp4()->Pt() << "," << mu->getp4()->Eta() << ","
+                                     << triggerSF << "," << 1.0 << "," << idSF << "," << isoSF << "\n";
             }
         }
     }
 
     _entryInLoop++;
-
 ///////////////////////////////////////
 
 	
