@@ -115,6 +115,9 @@ void ttHHanalyzer::loop(sysName sysType, bool up) {
             std::exit(EXIT_FAILURE);
         }
         
+        // --- CORREÇÃO: Garante que o separador decimal seja um ponto (.) ---
+        _sf_data_csv_file->imbue(std::locale::classic());
+        
         // Escreve o cabeçalho do arquivo CSV uma única vez
         (*_sf_data_csv_file) << "lep_is_ele,lep_pt,lep_eta,sf_trigger,sf_reco,sf_id,sf_iso\n";
     }
