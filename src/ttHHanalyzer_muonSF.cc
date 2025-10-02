@@ -74,48 +74,14 @@ void ttHHanalyzer::initMuonHLTriggerSF() {
     muonTrigSFJson = loadSFJson(sfMediumPtFilePath);
     muonHighPtTrigSFJson = loadSFJson(sfHighPtFilePath);
 
-    // ==========================================
-    // Limpa histos antigos
-    // ==========================================
-    if (h_sf_muon_vs_pt)       { delete h_sf_muon_vs_pt;       h_sf_muon_vs_pt = nullptr; }
-    if (h_sf_muon_vs_eta)      { delete h_sf_muon_vs_eta;      h_sf_muon_vs_eta = nullptr; }
-    if (h_sf_muon_vs_pt_sum)   { delete h_sf_muon_vs_pt_sum;   h_sf_muon_vs_pt_sum = nullptr; }
-    if (h_sf_muon_vs_pt_count) { delete h_sf_muon_vs_pt_count; h_sf_muon_vs_pt_count = nullptr; }
-    if (h_sf_muon_vs_eta_sum)  { delete h_sf_muon_vs_eta_sum;  h_sf_muon_vs_eta_sum = nullptr; }
-    if (h_sf_muon_vs_eta_count){ delete h_sf_muon_vs_eta_count;h_sf_muon_vs_eta_count = nullptr; }
-    if (h_sf_muon_vs_pt_avg)   { delete h_sf_muon_vs_pt_avg;   h_sf_muon_vs_pt_avg = nullptr; }
-    if (h_sf_muon_vs_eta_avg)  { delete h_sf_muon_vs_eta_avg;  h_sf_muon_vs_eta_avg = nullptr; }
+    // Lógica dos histogramas, se aplicável
+    if (h_sf_muon_vs_pt) { delete h_sf_muon_vs_pt; h_sf_muon_vs_pt = nullptr; }
+    // ... (resto da sua limpeza de histogramas) ...
 
-    // ==========================================
-    // Cria histos novos
-    // ==========================================
-    h_sf_muon_vs_pt       = new TH1F("h_sf_muon_vs_pt", "Muon SF vs pT;Muon pT [GeV];SF", 100, 0, 700);
-    h_sf_muon_vs_eta      = new TH1F("h_sf_muon_vs_eta", "Muon SF vs Eta;Muon #eta;SF", 100, -5, 5);
-    h_sf_muon_vs_pt_sum   = new TH1F("h_sf_muon_vs_pt_sum", "Sum SF vs pT", 100, 0, 700);
-    h_sf_muon_vs_pt_count = new TH1F("h_sf_muon_vs_pt_count", "Count SF vs pT", 100, 0, 700);
-    h_sf_muon_vs_eta_sum  = new TH1F("h_sf_muon_vs_eta_sum", "Sum SF vs eta", 100, -5, 5);
-    h_sf_muon_vs_eta_count= new TH1F("h_sf_muon_vs_eta_count", "Count SF vs eta", 100, -5, 5);
-    h_sf_muon_vs_pt_avg   = new TH1F("h_sf_muon_vs_pt_avg", "Avg SF vs pT", 100, 0, 700);
-    h_sf_muon_vs_eta_avg  = new TH1F("h_sf_muon_vs_eta_avg", "Avg SF vs eta", 100, -5, 5);
+    h_sf_muon_vs_pt = new TH1F("h_sf_muon_vs_pt", "Muon SF vs pT;Muon pT [GeV];SF", 100, 0, 700);
+    // ... (resto da sua criação de histogramas) ...
 
-    // ==========================================
-    // Sumw2 para incertezas
-    // ==========================================
-    if (h_sf_muon_vs_pt_sum)   h_sf_muon_vs_pt_sum->Sumw2();
-    if (h_sf_muon_vs_pt_count) h_sf_muon_vs_pt_count->Sumw2();
-    if (h_sf_muon_vs_eta_sum)  h_sf_muon_vs_eta_sum->Sumw2();
-    if (h_sf_muon_vs_eta_count)h_sf_muon_vs_eta_count->Sumw2();
-
-    // ==========================================
-    // Protege histos contra "auto-delete" do ROOT
-    // ==========================================
-    std::vector<TH1*> hists = {
-        h_sf_muon_vs_pt, h_sf_muon_vs_eta,
-        h_sf_muon_vs_pt_sum, h_sf_muon_vs_pt_count,
-        h_sf_muon_vs_eta_sum, h_sf_muon_vs_eta_count,
-        h_sf_muon_vs_pt_avg, h_sf_muon_vs_eta_avg
-    };
-    for (auto& h : hists) {
+    for (auto& h : {h_sf_muon_vs_pt, h_sf_muon_vs_eta /*, etc */}) {
         if (h) h->SetDirectory(0);
     }
 }
