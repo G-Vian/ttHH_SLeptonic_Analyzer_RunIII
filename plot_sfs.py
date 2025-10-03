@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import matplotlib
-matplotlib.use('Agg') # Essencial para rodar em servidores sem interface grafica
+matplotlib.use('Agg')
 
 import pandas as pd
 import numpy as np
@@ -11,65 +11,45 @@ import os
 import sys
 
 def create_plots(df, lepton_type, sf_name, title, x_var, bins, output_dir, process_name):
-    """
-    Função auxiliar para criar um par de plots: um de dispersão e um de média.
-    """
+    # ... (esta função auxiliar não precisa de alterações) ...
     if df.empty: return
 
     # --- PLOT 1: Scatter Plot ---
     fig, ax = plt.subplots(figsize=(12, 8))
-    
     ax.scatter(df[x_var], df[sf_name], alpha=0.5, s=5, color='blue', label='Individual Events')
-    
     ax.set_title(f"{process_name} - {title} vs. {x_var.replace('lep_', '').upper()} (Scatter)", fontsize=16)
     ax.set_xlabel(f"{lepton_type} {x_var.replace('lep_', '')}", fontsize=12)
     ax.set_ylabel("Scale Factor Value", fontsize=12)
     ax.grid(True, linestyle='--')
-
-    # ===================================================================
-    # --- MODIFICAÇÃO: Textos movidos para as bordas x=0.0 e x=1.0 ---
-    # ===================================================================
     ax.text(0.0, 1.05, "CMS Private Work", transform=ax.transAxes, fontsize=12, fontweight='bold', va='bottom', ha='left')
     ax.text(1.0, 1.05, r"2024 year, 108.96 fb$^{-1}$ (13.6 TeV)", transform=ax.transAxes, fontsize=12, ha='right', va='bottom')
-
     if x_var == 'lep_pt':
         ax.set_xlim(bins[0], bins[-1])
     else: # eta
         ax.set_xlim(bins[0], bins[-1])
-    
     ax.legend(loc='lower right')
-    
     output_filename = os.path.join(output_dir, f"{lepton_type.lower()}_{sf_name}_vs_{x_var.replace('lep_', '')}_scatter.jpeg")
     fig.savefig(output_filename, bbox_inches='tight')
     plt.close(fig)
     print(f" -> Salvo: {output_filename}")
 
     # --- PLOT 2: Mean Profile Plot ---
-    df['bin'] = pd.cut(df[x_var], bins=bins)
+    df.loc[:, 'bin'] = pd.cut(df[x_var], bins=bins)
     stats = df.groupby('bin')[sf_name].agg(['mean', 'std']).dropna()
     bin_centers = [b.mid for b in stats.index]
-    
     fig, ax = plt.subplots(figsize=(12, 8))
-    
     ax.errorbar(bin_centers, stats['mean'], yerr=stats['std'], fmt='o', color='red', capsize=5, label='Mean +/- Std. Dev.')
-    
     ax.set_title(f"{process_name} - {title} vs. {x_var.replace('lep_', '').upper()} (Mean)", fontsize=16)
     ax.set_xlabel(f"{lepton_type} {x_var.replace('lep_', '')}", fontsize=12)
     ax.set_ylabel("Mean Scale Factor", fontsize=12)
     ax.grid(True, linestyle='--')
     ax.legend(loc='lower right')
-
-    # ===================================================================
-    # --- MODIFICAÇÃO: Textos movidos para as bordas x=0.0 e x=1.0 ---
-    # ===================================================================
     ax.text(0.0, 1.05, "CMS Private Work", transform=ax.transAxes, fontsize=12, fontweight='bold', va='bottom', ha='left')
     ax.text(1.0, 1.05, r"2024 year, 108.96 fb$^{-1}$ (13.6 TeV)", transform=ax.transAxes, fontsize=12, ha='right', va='bottom')
-
     if x_var == 'lep_pt':
         ax.set_xlim(bins[0], bins[-1])
     else: # eta
         ax.set_xlim(bins[0], bins[-1])
-
     output_filename = os.path.join(output_dir, f"{lepton_type.lower()}_{sf_name}_vs_{x_var.replace('lep_', '')}_mean.jpeg")
     fig.savefig(output_filename, bbox_inches='tight')
     plt.close(fig)
@@ -92,8 +72,26 @@ def make_sf_plots(process_name):
         print(f"Diretorio de saida para plots criado em: '{output_dir_plots}' (no diretorio atual)")
 
     print(f"Lendo dados de '{input_file}'...")
-    df = pd.read_csv(input_file)
-    print(f"Dados carregados com sucesso: {len(df)} leptons encontrados.")
+    try:
+        df = pd.read_csv(input_file, error_bad_lines=False, warn_bad_lines=True)
+    except Exception as e:
+        print(f"Ocorreu um erro ao ler o arquivo CSV: {e}")
+        return
+
+    # ===================================================================
+    # --- NOVO PASSO: Limpeza e Conversão de Dados ---
+    # ===================================================================
+    sf_columns = ['sf_trigger', 'sf_reco', 'sf_id', 'sf_iso']
+    for col in sf_columns:
+        # Força a coluna a ser numérica. Qualquer valor que não puder ser convertido
+        # se tornará 'NaN' (Not a Number) e será ignorado nos cálculos.
+        df[col] = pd.to_numeric(df[col], errors='coerce')
+
+    # Remove qualquer linha onde as colunas essenciais tenham valores inválidos (NaN)
+    df.dropna(subset=sf_columns, inplace=True)
+    # ===================================================================
+
+    print(f"Dados carregados e limpos com sucesso: {len(df)} leptons validos encontrados.")
 
     electrons = df[df['lep_is_ele'] == 1].copy()
     muons = df[df['lep_is_ele'] == 0].copy()
@@ -128,7 +126,6 @@ if __name__ == "__main__":
     for name in process_names:
         make_sf_plots(process_name=name)
         print("-" * 60)
-        
 ##
 #     How to use : python3 plot_sfs.py <process name>
 ##
