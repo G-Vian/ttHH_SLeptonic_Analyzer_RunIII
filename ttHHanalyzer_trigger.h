@@ -1044,7 +1044,7 @@ public:
 
 class ttHHanalyzer {
 public:
-    static const int LOG_INTERVAL = 100;
+    static const int LOG_INTERVAL = 10000;
     enum sysName { kJES, kJER, kbTag, noSys };
 
     // Construtor
