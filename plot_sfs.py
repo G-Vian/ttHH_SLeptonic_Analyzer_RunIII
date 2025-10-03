@@ -11,7 +11,9 @@ import os
 import sys
 
 def create_plots(df, lepton_type, sf_name, title, x_var, bins, output_dir, process_name):
-    # ... (esta função auxiliar não precisa de alterações) ...
+    """
+    Função auxiliar para criar um par de plots: um de dispersão e um de média.
+    """
     if df.empty: return
 
     # --- PLOT 1: Scatter Plot ---
@@ -35,10 +37,11 @@ def create_plots(df, lepton_type, sf_name, title, x_var, bins, output_dir, proce
 
     # --- PLOT 2: Mean Profile Plot ---
     df.loc[:, 'bin'] = pd.cut(df[x_var], bins=bins)
-    stats = df.groupby('bin')[sf_name].agg(['mean', 'std']).dropna()
+    stats = df.groupby('bin', observed=False)[sf_name].agg(['mean', 'std']).dropna()
     bin_centers = [b.mid for b in stats.index]
+    
     fig, ax = plt.subplots(figsize=(12, 8))
-    ax.errorbar(bin_centers, stats['mean'], yerr=stats['std'], fmt='o', color='red', capsize=5, label='Mean +/- Std. Dev.')
+    ax.errorbar(bin_centers, stats['mean'].to_numpy(), yerr=stats['std'].to_numpy(), fmt='o', color='red', capsize=5, label='Mean +/- Std. Dev.')
     ax.set_title(f"{process_name} - {title} vs. {x_var.replace('lep_', '').upper()} (Mean)", fontsize=16)
     ax.set_xlabel(f"{lepton_type} {x_var.replace('lep_', '')}", fontsize=12)
     ax.set_ylabel("Mean Scale Factor", fontsize=12)
@@ -57,6 +60,10 @@ def create_plots(df, lepton_type, sf_name, title, x_var, bins, output_dir, proce
 
 
 def make_sf_plots(process_name):
+    """
+    Le o arquivo .csv com os dados de SF, gera graficos de dispersao
+    e graficos separados para a media do SF por bin.
+    """
     print(f"--- Iniciando processo para a amostra: {process_name} ---")
 
     base_dir_input = f"/eos/user/g/gvian/job/{process_name}_SFs"
@@ -71,27 +78,32 @@ def make_sf_plots(process_name):
         os.makedirs(output_dir_plots)
         print(f"Diretorio de saida para plots criado em: '{output_dir_plots}' (no diretorio atual)")
 
+    # ===================================================================
+    # --- CORREÇÃO: Lógica de leitura manual para ignorar linhas com erro ---
+    # ===================================================================
     print(f"Lendo dados de '{input_file}'...")
-    try:
-        df = pd.read_csv(input_file, error_bad_lines=False, warn_bad_lines=True)
-    except Exception as e:
-        print(f"Ocorreu um erro ao ler o arquivo CSV: {e}")
-        return
-
+    
+    data = []
+    columns = []
+    with open(input_file, 'r') as f:
+        columns = f.readline().strip().split(',')
+        num_columns = len(columns)
+        for i, line in enumerate(f):
+            fields = line.strip().split(',')
+            if len(fields) == num_columns:
+                try:
+                    # Tenta converter todos os campos para float
+                    data.append([float(field) for field in fields])
+                except ValueError:
+                    print(f"AVISO: Nao foi possivel converter a linha {i+2} para numeros. Linha ignorada: {line.strip()}")
+            else:
+                # Se o numero de colunas estiver errado, avisa e ignora a linha
+                print(f"AVISO: Numero incorreto de colunas na linha {i+2}. Esperava {num_columns}, encontrou {len(fields)}. Linha ignorada: {line.strip()}")
+    
+    df = pd.DataFrame(data, columns=columns)
     # ===================================================================
-    # --- NOVO PASSO: Limpeza e Conversão de Dados ---
-    # ===================================================================
-    sf_columns = ['sf_trigger', 'sf_reco', 'sf_id', 'sf_iso']
-    for col in sf_columns:
-        # Força a coluna a ser numérica. Qualquer valor que não puder ser convertido
-        # se tornará 'NaN' (Not a Number) e será ignorado nos cálculos.
-        df[col] = pd.to_numeric(df[col], errors='coerce')
 
-    # Remove qualquer linha onde as colunas essenciais tenham valores inválidos (NaN)
-    df.dropna(subset=sf_columns, inplace=True)
-    # ===================================================================
-
-    print(f"Dados carregados e limpos com sucesso: {len(df)} leptons validos encontrados.")
+    print(f"Dados carregados com sucesso: {len(df)} leptons validos encontrados.")
 
     electrons = df[df['lep_is_ele'] == 1].copy()
     muons = df[df['lep_is_ele'] == 0].copy()
@@ -126,6 +138,7 @@ if __name__ == "__main__":
     for name in process_names:
         make_sf_plots(process_name=name)
         print("-" * 60)
+        
 ##
 #     How to use : python3 plot_sfs.py <process name>
 ##
@@ -133,3 +146,4 @@ if __name__ == "__main__":
 ##
 ##    python3 -m pip uninstall pandas
 ##    python3 -m pip install --ignore-installed --no-cache-dir pandas
+##    python3 -m pip install "numpy<2"
