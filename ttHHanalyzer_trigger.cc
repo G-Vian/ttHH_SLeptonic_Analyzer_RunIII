@@ -785,6 +785,7 @@ void ttHHanalyzer::analyze(event *thisEvent) {
     float triggerSF = 1.0, recoSF = 1.0, idSF = 1.0, isoSF = 1.0, totalSFUnc = 0.0;
     float trigSF_unc = 0.0, recoSF_unc = 0.0, idSF_unc = 0.0;
 
+    // --- APLICAÇÃO DOS SFs ---
     if (!selectedElectrons.empty()) {
         objectLep* ele = selectedElectrons[0];
         triggerSF = getEleTrigSF(ele->getp4()->Eta(), ele->getp4()->Pt(), trigSF_unc);
@@ -808,12 +809,34 @@ void ttHHanalyzer::analyze(event *thisEvent) {
     }
 
     // ========================
-    // Log detalhado e salvamento dos dados em CSV (agrupados sob a mesma condição)
+    // Salvamento dos dados em CSV (para TODOS os eventos com lépton)
     // ========================
     bool hasLeadLepton = (!selectedElectrons.empty() || !selectedMuons.empty());
+    if (hasLeadLepton) {
+        if (_sf_data_csv_file && _sf_data_csv_file->is_open()) {
+            if (!selectedElectrons.empty()) {
+                objectLep* ele = selectedElectrons[0];
+                (*_sf_data_csv_file) << std::fixed << std::setprecision(4)
+                                     << "1," << ele->getp4()->Pt() << "," << ele->getp4()->Eta() << ","
+                                     << triggerSF << "," << recoSF << "," << idSF << "," << 1.0 << "\n";
+            } else if (!selectedMuons.empty()) {
+                objectLep* mu = selectedMuons[0];
+                (*_sf_data_csv_file) << std::fixed << std::setprecision(4)
+                                     << "0," << mu->getp4()->Pt() << "," << mu->getp4()->Eta() << ","
+                                     << triggerSF << "," << 1.0 << "," << idSF << "," << isoSF << "\n";
+            }
+        }
+
+        // Garante que os dados sejam gravados no disco periodicamente para evitar perda de dados
+        if ((_entryInLoop % 1000 == 0) && _sf_data_csv_file && _sf_data_csv_file->is_open()) {
+            _sf_data_csv_file->flush();
+        }
+    }
+    
+    // ========================
+    // Log detalhado (APENAS A CADA LOG_INTERVAL)
+    // ========================
     if (hasLeadLepton && (_entryInLoop % LOG_INTERVAL == 0)) {
-        
-        // --- Lógica para o log detalhado em .txt ---
         if (sf_log_file && sf_log_file->is_open()) {
             (*sf_log_file) << "=== Entry " << _entryInLoop << " ===\n";
             size_t nEle = selectedElectrons.size();
@@ -857,21 +880,6 @@ void ttHHanalyzer::analyze(event *thisEvent) {
                                    << " | Weight after = " << _weight
                                    << "\n";
                 }
-            }
-        }
-        
-        // --- Lógica para salvar os dados no arquivo .csv ---
-        if (_sf_data_csv_file && _sf_data_csv_file->is_open()) {
-            if (!selectedElectrons.empty()) {
-                objectLep* ele = selectedElectrons[0];
-                (*_sf_data_csv_file) << std::fixed << std::setprecision(4)
-                                     << "1," << ele->getp4()->Pt() << "," << ele->getp4()->Eta() << ","
-                                     << triggerSF << "," << recoSF << "," << idSF << "," << 1.0 << "\n";
-            } else if (!selectedMuons.empty()) {
-                objectLep* mu = selectedMuons[0];
-                (*_sf_data_csv_file) << std::fixed << std::setprecision(4)
-                                     << "0," << mu->getp4()->Pt() << "," << mu->getp4()->Eta() << ","
-                                     << triggerSF << "," << 1.0 << "," << idSF << "," << isoSF << "\n";
             }
         }
     }
