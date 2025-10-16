@@ -452,7 +452,7 @@ int Ploter_all() {
             {
                 // Format: {histName, title, xTitle, saveName, {xMin,xMax}, {useFixedBins, fixedBinCount, rebinFactor}}
                 {"lepCharge1", "Lepton Charge 1", "Charge", "lepCharge1", {0, 0}, {false, 10, 1}},
-                {"lepCharge2", "Lepton Charge 2", "Charge", "lepCharge2", {0, 0}, {false, 10, 1}},
+              //  {"lepCharge2", "Lepton Charge 2", "Charge", "lepCharge2", {0, 0}, {false, 10, 1}},
                 {"LepNumber", "Lepton Number", "Number of Leptons", "LepNumber", {0, 0}, {false, 5, 1}},
                 {"ElecNumber", "Electron Number", "Number of Electrons", "ElecNumber", {0, 0}, {false, 10, 1}},
                 {"MuonNumber", "Muon Number", "Number of Muons", "MuonNumber", {0, 0}, {false, 5, 1}},
@@ -516,7 +516,7 @@ int Ploter_all() {
 	    {"maxPTmassjbb", "Mass jbb (max pT)", "Mass [GeV]", "maxPTmassjbb", {0, 100}, {true, 10, 1}},
 	    {"maxPTmassjjj", "Mass jjj (max pT)", "Mass [GeV]", "maxPTmassjjj", {0, 100}, {true, 10, 1}},
 	    {"jetAvgMass", "Average Jet Mass", "Mass [GeV]", "jetAvgMass", {0, 60}, {true, 10, 1}},
-	    {"jetBAvgMass", "Average B-Jet Mass", "Mass [GeV]", "jetBAvgMass", {0, 1000}, {true, 10, 1}},
+	    {"jetBAvgMass", "Average B-Jet Mass", "Mass [GeV]", "jetBAvgMass", {0, 250}, {true, 10, 1}},
 	    {"higgsHadAvgMass", "Average Hadronic Higgs Mass", "Mass [GeV]", "higgsHadAvgMass", {0, 60}, {true, 10, 1}},
 	    {"jetLightAvgMass", "Average Light Jet Mass", "Mass [GeV]", "jetLightAvgMass", {0, 60}, {true, 10, 1}},
 	    {"jetBAvgMassSqr", "Average B-Jet Mass Sqr", "Mass^2 [GeV^2]", "jetBAvgMassSqr", {0, 2500}, {true, 10, 1}},
