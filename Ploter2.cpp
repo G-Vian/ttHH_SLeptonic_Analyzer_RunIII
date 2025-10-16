@@ -356,8 +356,7 @@ void DrawStackedHistograms(const vector<pair<TH1*, ProcessInfo>>& histograms, co
     delete canvas;
 }
 
-void Iteration_Directories_And_Histograms(const unordered_map<string, ProcessInfo>& processes, const unordered_map<string, vector<HistogramSetting>>& histogramSettings) {
-    for (const auto& histSettingPair : histogramSettings) {
+void Iteration_Directories_And_Histograms(const vector<pair<string, ProcessInfo>>& processes, const unordered_map<string, vector<HistogramSetting>>& histogramSettings) {    for (const auto& histSettingPair : histogramSettings) {
         const string& channelName = histSettingPair.first;
         const vector<HistogramSetting>& settings = histSettingPair.second;
 
@@ -426,18 +425,19 @@ void Iteration_Directories_And_Histograms(const unordered_map<string, ProcessInf
 }
 
 int Ploter2() {
-    unordered_map<string, ProcessInfo> processes = {
-        {"TTSL", {"/eos/user/g/gvian/root_files/TTSL.root", false, kOrange+1, "TTSL"}},
-        {"TT4b", {"/eos/user/g/gvian/root_files/TT4b.root", false, kSpring+3, "TT4b"}},
-        {"TTbb", {"/eos/user/g/gvian/root_files/TTbb.root", false, kViolet+1, "TTbb"}},
-         {"TTH", {"/eos/user/g/gvian/root_files/TTH.root", false, kPink+1, "TTH"}},
-        {"TTZZ", {"/eos/user/g/gvian/root_files/TTZZ.root", false, kRed+1, "TTZZ"}},
-        {"TTZH", {"/eos/user/g/gvian/root_files/TTZH.root", false, kTeal+1, "TTZH"}},
-        {"TTHH", {"/eos/user/g/gvian/root_files/TTHH.root", true, kBlack, "TTHH"}}
-
-
-        // Add other processes as needed
-    };
+// Substitua a sua definição de 'processes' por esta:
+vector<pair<string, ProcessInfo>> processes = {
+    // Backgrounds na ordem de empilhamento desejada (de baixo para cima)
+    {"TTZZ", {"/eos/user/g/gvian/root_files/TTZZ.root", false, kRed+1, "TTZZ"}},
+    {"TTZH", {"/eos/user/g/gvian/root_files/TTZH.root", false, kTeal+1, "TTZH"}},
+    {"TTH", {"/eos/user/g/gvian/root_files/TTH.root", false, kPink+1, "TTH"}},
+    {"TTbb", {"/eos/user/g/gvian/root_files/TTbb.root", false, kViolet+1, "TTbb"}},
+    {"TT4b", {"/eos/user/g/gvian/root_files/TT4b.root", false, kSpring+3, "TT4b"}},
+    {"TTSL", {"/eos/user/g/gvian/root_files/TTSL.root", false, kOrange+1, "TTSL"}},
+    
+    // Sinal (geralmente processado por último e não adicionado ao stack)
+    {"TTHH", {"/eos/user/g/gvian/root_files/TTHH.root", true, kBlack, "TTHH"}}
+};
 
     // Define histogram settings with binning options
     unordered_map<string, vector<HistogramSetting>> histogramSettings = {
