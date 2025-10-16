@@ -45,7 +45,7 @@ struct HistogramSetting {
 };
 
 const string plotExtension = ".png"; // save file extension
-const string savePath = "Norm_plots";
+const string savePath = "Plots_all_norm";
 
 // Function to create the directory if it does not exist
 void CreateDirectoryIfNotExists(const string& path) {
@@ -591,4 +591,4 @@ vector<pair<string, ProcessInfo>> processes = {
     return 0;
 }
 //to run use: cmssw-el7  cmsenv  root -l -b -q Plotter_all_norm.cpp
-// to run use root -l -b -q Ploter_Norm.cpp
+// to run use root -l -b -q Plotter_all_norm.cpp
