@@ -466,115 +466,172 @@ int Ploter_all() {
         },
          
 		 {"jet", {
-	    {"jetPT1", "Jet PT 1", "pT [GeV]", "jetPT1", {0, 1500}, {true, 10, 1}},
-	    {"jetPT2", "Jet PT 2", "pT [GeV]", "jetPT2", {0, 1500}, {true, 10, 1}},
-	    {"jetPT3", "Jet PT 3", "pT [GeV]", "jetPT3", {0, 1000}, {true, 10, 1}},
-	    {"jetPT4", "Jet PT 4", "pT [GeV]", "jetPT4", {0, 500}, {true, 10, 1}},
-	    {"jetPT5", "Jet PT 5", "pT [GeV]", "jetPT5", {0, 500}, {true, 10, 1}},
-	    {"jetPT6", "Jet PT 6", "pT [GeV]", "jetPT6", {0, 400}, {true, 10, 1}},
-	    {"lightJetPT1", "Light Jet PT 1", "pT [GeV]", "LjetPT1", {0, 400}, {true, 10, 1}},
-	    {"lightJetPT2", "Light Jet PT 2", "pT [GeV]", "LjetPT2", {0, 400}, {true, 10, 1}},
-	    {"lightJetPT3", "Light Jet PT 3", "pT [GeV]", "LjetPT3", {0, 400}, {true, 10, 1}},
-	    {"lightJetPT4", "Light Jet PT 4", "pT [GeV]", "LjetPT4", {0, 400}, {true, 10, 1}},
-	    {"lightJetPT5", "Light Jet PT 5", "pT [GeV]", "LjetPT5", {0, 400}, {true, 10, 1}},
-	    {"lightJetPT6", "Light Jet PT 6", "pT [GeV]", "LjetPT6", {0, 400}, {true, 10, 1}},
-	    {"bjetPT1", "B-Jet PT 1", "pT [GeV]", "bjetPT1", {0, 1500}, {true, 10, 1}},
-	    {"bjetPT2", "B-Jet PT 2", "pT [GeV]", "bjetPT2", {0, 1500}, {true, 10, 1}},
-	    {"bjetPT3", "B-Jet PT 3", "pT [GeV]", "bjetPT3", {0, 1000}, {true, 10, 1}},
-	    {"bjetPT4", "B-Jet PT 4", "pT [GeV]", "bjetPT4", {0, 400}, {true, 10, 1}},
-	    {"bjetPT5", "B-Jet PT 5", "pT [GeV]", "bjetPT5", {0, 300}, {true, 10, 1}},
-	    {"bjetPT6", "B-Jet PT 6", "pT [GeV]", "bjetPT6", {0, 200}, {true, 10, 1}},
-	    {"jetHT", "Jet HT", "HT [GeV]", "jetHT", {0, 3500}, {false, 10, 1}},
-	    {"jetBHT", "B-Jet HT", "HT [GeV]", "jetBHT", {0, 3500}, {false, 10, 1}},
-	    {"jetLightHT", "Light Jet HT", "HT [GeV]", "jetLHT", {0, 1200}, {false, 10, 1}},
-	    {"jetNumber", "Jet Number", "Number of Jets", "jetNumber", {2, 15}, {false, 10, 1}},
-	    {"jetBNumber", "B-Jet Number", "Number of B-Jets", "jetBNumber", {2, 10}, {false, 10, 1}},
-	    {"invMass_HH1Matched", "Invariant Mass HH1 Matched", "Mass [GeV]", "invMass_HH1Matched", {0, 500}, {true, 10, 1}},
-	    {"invMass_HH2Matched", "Invariant Mass HH2 Matched", "Mass [GeV]", "invMass_HH2Matched", {0, 500}, {true, 10, 1}},
-	    {"invMass_HH1NotMatched", "Invariant Mass HH1 Not Matched", "Mass [GeV]", "invMass_HH1NotMatched", {0, 500}, {true, 10, 1}},
-	    {"invMass_Higgs1_mChi", "Invariant Mass H1 min(chi2)", "Mass [GeV]", "invMass_Higgs1_mChi", {0, 500}, {true, 10, 1}},
-	    {"invMass_Higgs2_mChi", "Invariant Mass H2 min(chi2)", "Mass [GeV]", "invMass_Higgs2_mChi", {0, 500}, {true, 10, 1}},
-	    {"lightJetBTagDisc", "Light Jet btagDisc", "btagDisc", "lightJetBTagDisc", {0, 1}, {false, 10, 1}},
-	    {"deltaRavgjj", "Avg Delta R jj", "#DeltaR_{jj}^{avg}", "deltaRavgjj", {0, 5}, {true, 10, 1}},
-	    {"deltaRavgbb", "Avg Delta R bb", "#DeltaR_{bb}^{avg}", "deltaRavgbb", {0, 5}, {true, 10, 1}},
-	    {"deltaRavgbj", "Avg Delta R bj", "#DeltaR_{bj}^{avg}", "deltaRavgbj", {0, 5}, {true, 10, 1}},
-	    {"deltaEtaavgjj", "Avg Delta Eta jj", "#Delta#eta_{jj}^{avg}", "deltaEtaavgjj", {0, 3}, {true, 10, 1}},
-	    {"deltaEtaavgbb", "Avg Delta Eta bb", "#Delta#eta_{bb}^{avg}", "deltaEtaavgbb", {0, 3}, {true, 10, 1}},
-	    {"deltaEtaavgbj", "Avg Delta Eta bj", "#Delta#eta_{bj}^{avg}", "deltaEtaavgbj", {0, 3}, {true, 10, 1}},
-	    {"deltaRminjj", "Min Delta R jj", "#DeltaR_{jj}^{min}", "deltaRminjj", {0, 3}, {true, 10, 1}},
-	    {"deltaRminbb", "Min Delta R bb", "#DeltaR_{bb}^{min}", "deltaRminbb", {0, 3}, {true, 10, 1}},
-	    {"deltaRminbj", "Min Delta R bj", "#DeltaR_{bj}^{min}", "deltaRminbj", {0, 3}, {true, 10, 1}},
-	    {"pTdeltaRminjj", "pT Min Delta R jj", "pT [GeV]", "pTdeltaRminjj", {0, 600}, {true, 10, 1}},
-	    {"pTdeltaRminbb", "pT Min Delta R bb", "pT [GeV]", "pTdeltaRminbb", {0, 600}, {true, 10, 1}},
-	    {"pTdeltaRminbj", "pT Min Delta R bj", "pT [GeV]", "pTdeltaRminbj", {0, 600}, {true, 10, 1}},
-	    {"massDeltaRminjj", "Mass Min Delta R jj", "Mass [GeV]", "massDeltaRminjj", {0, 100}, {true, 10, 1}},
-	    {"massDeltaRminbb", "Mass Min Delta R bb", "Mass [GeV]", "massDeltaRminbb", {0, 100}, {true, 10, 1}},
-	    {"massDeltaRminbj", "Mass Min Delta R bj", "Mass [GeV]", "massDeltaRminbj", {0, 100}, {true, 10, 1}},
-	    {"deltaEtamaxbb", "Max Delta Eta bb", "#Delta#eta_{bb}^{max}", "deltaEtamaxbb", {0, 5}, {true, 10, 1}},
-	    {"deltaEtamaxjj", "Max Delta Eta jj", "#Delta#eta_{jj}^{max}", "deltaEtamaxjj", {0, 5}, {true, 10, 1}},
-	    {"deltaEtamaxbj", "Max Delta Eta bj", "#Delta#eta_{bj}^{max}", "deltaEtamaxbj", {0, 5}, {true, 10, 1}},
-	    {"maxPTmassjbb", "Mass jbb (max pT)", "Mass [GeV]", "maxPTmassjbb", {0, 100}, {true, 10, 1}},
-	    {"maxPTmassjjj", "Mass jjj (max pT)", "Mass [GeV]", "maxPTmassjjj", {0, 100}, {true, 10, 1}},
-	    {"jetAvgMass", "Average Jet Mass", "Mass [GeV]", "jetAvgMass", {0, 60}, {true, 10, 1}},
-	    {"jetBAvgMass", "Average B-Jet Mass", "Mass [GeV]", "jetBAvgMass", {0, 250}, {true, 10, 1}},
-	    {"higgsHadAvgMass", "Average Hadronic Higgs Mass", "Mass [GeV]", "higgsHadAvgMass", {0, 60}, {true, 10, 1}},
-	    {"jetLightAvgMass", "Average Light Jet Mass", "Mass [GeV]", "jetLightAvgMass", {0, 60}, {true, 10, 1}},
-	    {"jetBAvgMassSqr", "Average B-Jet Mass Sqr", "Mass^2 [GeV^2]", "jetBAvgMassSqr", {0, 2500}, {true, 10, 1}},
-	    {"higgsHadSoftDropMass1", "Hadronic Higgs SoftDrop Mass 1", "Mass [GeV]", "higgsHadSoftDropMass1", {0, 400}, {true, 10, 1}},
-	    {"higgsHadSoftDropMass2", "Hadronic Higgs SoftDrop Mass 2", "Mass [GeV]", "higgsHadSoftDropMass2", {0, 300}, {true, 10, 1}},
-	    {"jetHadronicHiggsHT", "Hadronic Higgs HT", "HT [GeV]", "jetHadronicHiggsHT", {0, 4000}, {false, 10, 1}},
-	    {"jetHadronicHiggsNumber", "Hadronic Higgs Number", "Number of Had. Higgs", "jetHadronicHiggsNumber", {2, 10}, {false, 10, 1}},
-	    {"jetLightNumber", "Light Jet Number", "Number of Light Jets", "jetLightNumber", {0, 10}, {false, 10, 1}},
-	    {"invMass_hadW", "Invariant Mass Hadronic W", "Mass [GeV]", "invMass_hadW", {0, 400}, {true, 10, 1}},
-	    {"invMass_Z1", "Invariant Mass Z1", "Mass [GeV]", "invMass_Z1", {0, 400}, {true, 10, 1}},
-	    {"invMass_Z2", "Invariant Mass Z2", "Mass [GeV]", "invMass_Z2", {0, 400}, {true, 10, 1}},
-	    {"invMass_Higgs1", "Invariant Mass H1", "Mass [GeV]", "invMass_Higgs1", {0, 500}, {true, 10, 1}},
-	    {"invMass_Higgs2", "Invariant Mass H2", "Mass [GeV]", "invMass_Higgs2", {0, 500}, {true, 10, 1}},
-	    {"pT_Higgs1", "pT H1", "pT [GeV]", "pT_Higgs1", {0, 500}, {true, 10, 1}},
-	    {"pT_Higgs2", "pT H2", "pT [GeV]", "pT_Higgs2", {0, 500}, {true, 10, 1}},
-	    {"invMass_HiggsZ1", "Invariant Mass HZ1", "Mass [GeV]", "invMass_HiggsZ1", {0, 500}, {true, 10, 1}},
-	    {"invMass_HiggsZ2", "Invariant Mass HZ2", "Mass [GeV]", "invMass_HiggsZ2", {0, 500}, {true, 10, 1}},
-	    {"chi2Higgs", "chi2 HH", "#chi^{2}_{HH}", "chi2Higgs", {0, 5000}, {true, 10, 1}},
-	    {"chi2Z", "chi2 ZZ", "#chi^{2}_{ZZ}", "chi2Z", {0, 5000}, {true, 10, 1}},
-	    {"chi2HiggsZ", "chi2 HZ", "#chi^{2}_{HZ}", "chi2HiggsZ", {0, 5000}, {true, 10, 1}},
-	    {"invMass_HiggsMatched", "Invariant Mass H Matched", "Mass [GeV]", "invMass_HiggsMatched", {0, 500}, {true, 10, 1}},
-	    {"invMass_HiggsNotMatched", "Invariant Mass H Not Matched", "Mass [GeV]", "invMass_HiggsNotMatched", {0, 500}, {true, 10, 1}},
-	    {"chi2HiggsNotMatched", "chi2 H Not Matched", "#chi^{2}_{H,unmatched}", "chi2HiggsNotMatched", {0, 10}, {true, 10, 1}},
-	    {"chi2HiggsMatched", "chi2 H Matched", "#chi^{2}_{H,matched}", "chi2HiggsMatched", {0, 10}, {true, 10, 1}},
-	    {"invMass_HH2NotMatched", "Invariant Mass HH2 Not Matched", "Mass [GeV]", "invMass_HH2NotMatched", {0, 500}, {true, 10, 1}},
-	    {"chi2HHNotMatched", "chi2 HH Not Matched", "#chi^{2}_{HH,unmatched}", "chi2HHNotMatched", {0, 10}, {true, 10, 1}},
-	    {"chi2HHMatched", "chi2 HH Matched", "#chi^{2}_{HH,matched}", "chi2HHMatched", {0, 10}, {true, 10, 1}},
-	    {"aplanarity", "Aplanarity", "A", "aplanarity", {0, 0.5}, {true, 10, 1}},
-	    {"sphericity", "Sphericity", "S", "sphericity", {0, 1}, {true, 10, 1}},
-	    {"transSphericity", "Transverse Sphericity", "S_{#perp}", "transSphericity", {0, 1}, {true, 10, 1}},
-	    {"C", "C value", "C value", "C", {0, 1}, {true, 10, 1}},
-	    {"D", "D value", "D value", "D", {0, 1}, {true, 10, 1}},
-	    {"centralityjb", "Centrality jb", "centrality_{jb}", "centralityjb", {0, 1}, {true, 10, 1}},
-	    {"centralityjl", "Centrality jl", "centrality_{jl}", "centralityjl", {0, 1}, {true, 10, 1}},
-	    {"H0", "H0", "H_{0}", "H0", {0.2, 0.45}, {true, 10, 1}},
-	    {"H1", "H1", "H_{1}", "H1", {-0.2, 0.45}, {true, 10, 1}},
-	    {"H2", "H2", "H_{2}", "H2", {-0.2, 0.3}, {true, 10, 1}},
-	    {"H3", "H3", "H_{3}", "H3", {-0.2, 0.3}, {true, 10, 1}},
-	    {"H4", "H4", "H_{4}", "H4", {-0.2, 0.3}, {true, 10, 1}},
-	    {"R1", "R1", "R_{1}", "R1", {0, 1}, {true, 10, 1}},
-	    {"R2", "R2", "R_{2}", "R2", {0, 1}, {true, 10, 1}},
-	    {"R3", "R3", "R_{3}", "R3", {0, 1}, {true, 10, 1}},
-	    {"R4", "R4", "R_{4}", "R4", {0, 1}, {true, 10, 1}},
-	    {"H0_bjet", "H0 bjet", "H_{0,bjet}", "H0_bjet", {-0.2, 0.45}, {true, 10, 1}},
-	    {"H1_bjet", "H1 bjet", "H_{1,bjet}", "H1_bjet", {-0.2, 0.45}, {true, 10, 1}},
-	    {"H2_bjet", "H2 bjet", "H_{2,bjet}", "H2_bjet", {-0.2, 0.3}, {true, 10, 1}},
-	    {"H3_bjet", "H3 bjet", "H_{3,bjet}", "H3_bjet", {-0.2, 0.3}, {true, 10, 1}},
-	    {"H4_bjet", "H4 bjet", "H_{4,bjet}", "H4_bjet", {-0.2, 0.3}, {true, 10, 1}},
-	    {"R1_bjet", "R1 bjet", "R_{1,bjet}", "R1_bjet", {0, 1}, {true, 10, 1}},
-	    {"R2_bjet", "R2 bjet", "R_{2,bjet}", "R2_bjet", {0, 1}, {true, 10, 1}},
-	    {"R3_bjet", "R3 bjet", "R_{3,bjet}", "R3_bjet", {0, 1}, {true, 10, 1}},
-	    {"R4_bjet", "R4 bjet", "R_{4,bjet}", "R4_bjet", {0, 1}, {true, 10, 1}},
-	    {"aplanarity_bjet", "Aplanarity bjet", "A_{bjet}", "aplanarity_bjet", {0, 0.5}, {true, 10, 1}},
-	    {"sphericity_bjet", "Sphericity bjet", "S_{bjet}", "sphericity_bjet", {0, 1}, {true, 10, 1}},
-	    {"transSphericity_bjet", "Transverse Sphericity bjet", "S_{#perp, bjet}", "transSphericity_bjet", {0, 1}, {true, 10, 1}},
-	    {"C_bjet", "C value bjet", "C value_{bjet}", "C_bjet", {0, 1}, {true, 10, 1}},
-	    {"D_bjet", "D value bjet", "D value_{bjet}", "D_bjet", {0, 1}, {true, 10, 1}}
-	}}
+    // --- Jatos Gerais (1-8) ---
+    {"jetPT1", "Jet PT 1", "pT [GeV]", "jetPT1", {0, 1500}, {true, 10, 1}},
+    {"jetEta1", "Jet Eta 1", "#eta", "jetEta1", {-3, 3}, {false, 10, 1}},         // ADICIONADO
+    {"jetBTagDisc1", "Jet 1 btagDisc", "btagDisc", "jetBTagDisc1", {0, 1}, {false, 10, 1}}, // ADICIONADO
+    {"jetPT2", "Jet PT 2", "pT [GeV]", "jetPT2", {0, 1500}, {true, 10, 1}},
+    {"jetEta2", "Jet Eta 2", "#eta", "jetEta2", {-3, 3}, {false, 10, 1}},         // ADICIONADO
+    {"jetBTagDisc2", "Jet 2 btagDisc", "btagDisc", "jetBTagDisc2", {0, 1}, {false, 10, 1}}, // ADICIONADO
+    {"jetPT3", "Jet PT 3", "pT [GeV]", "jetPT3", {0, 1000}, {true, 10, 1}},
+    {"jetEta3", "Jet Eta 3", "#eta", "jetEta3", {-3, 3}, {false, 10, 1}},         // ADICIONADO
+    {"jetBTagDisc3", "Jet 3 btagDisc", "btagDisc", "jetBTagDisc3", {0, 1}, {false, 10, 1}}, // ADICIONADO
+    {"jetPT4", "Jet PT 4", "pT [GeV]", "jetPT4", {0, 500}, {true, 10, 1}},
+    {"jetEta4", "Jet Eta 4", "#eta", "jetEta4", {-3, 3}, {false, 10, 1}},         // ADICIONADO
+    {"jetBTagDisc4", "Jet 4 btagDisc", "btagDisc", "jetBTagDisc4", {0, 1}, {false, 10, 1}}, // ADICIONADO
+    {"jetPT5", "Jet PT 5", "pT [GeV]", "jetPT5", {0, 500}, {true, 10, 1}},
+    {"jetEta5", "Jet Eta 5", "#eta", "jetEta5", {-3, 3}, {false, 10, 1}},         // ADICIONADO
+    {"jetBTagDisc5", "Jet 5 btagDisc", "btagDisc", "jetBTagDisc5", {0, 1}, {false, 10, 1}}, // ADICIONADO
+    {"jetPT6", "Jet PT 6", "pT [GeV]", "jetPT6", {0, 400}, {true, 10, 1}},
+    {"jetEta6", "Jet Eta 6", "#eta", "jetEta6", {-3, 3}, {false, 10, 1}},         // ADICIONADO
+    {"jetBTagDisc6", "Jet 6 btagDisc", "btagDisc", "jetBTagDisc6", {0, 1}, {false, 10, 1}}, // ADICIONADO
+    {"jetPT7", "Jet PT 7", "pT [GeV]", "jetPT7", {0, 400}, {true, 10, 1}},         // ADICIONADO
+    {"jetEta7", "Jet Eta 7", "#eta", "jetEta7", {-3, 3}, {false, 10, 1}},         // ADICIONADO
+    {"jetBTagDisc7", "Jet 7 btagDisc", "btagDisc", "jetBTagDisc7", {0, 1}, {false, 10, 1}}, // ADICIONADO
+    {"jetPT8", "Jet PT 8", "pT [GeV]", "jetPT8", {0, 400}, {true, 10, 1}},         // ADICIONADO
+    {"jetEta8", "Jet Eta 8", "#eta", "jetEta8", {-3, 3}, {false, 10, 1}},         // ADICIONADO
+    {"jetBTagDisc8", "Jet 8 btagDisc", "btagDisc", "jetBTagDisc8", {0, 1}, {false, 10, 1}}, // ADICIONADO
+
+    // --- Jatos Leves (1-6) ---
+    {"lightJetPT1", "Light Jet PT 1", "pT [GeV]", "lightJetPT1", {0, 400}, {true, 10, 1}},
+    {"lightJetEta1", "Light Jet Eta 1", "#eta", "lightJetEta1", {-3, 3}, {false, 10, 1}}, // ADICIONADO
+    {"lightJetBTagDisc1", "Light Jet 1 btagDisc", "btagDisc", "lightJetBTagDisc1", {0, 1}, {false, 10, 1}}, // CORRIGIDO
+    {"lightJetPT2", "Light Jet PT 2", "pT [GeV]", "lightJetPT2", {0, 400}, {true, 10, 1}},
+    {"lightJetEta2", "Light Jet Eta 2", "#eta", "lightJetEta2", {-3, 3}, {false, 10, 1}}, // ADICIONADO
+    {"lightJetBTagDisc2", "Light Jet 2 btagDisc", "btagDisc", "lightJetBTagDisc2", {0, 1}, {false, 10, 1}}, // ADICIONADO
+    {"lightJetPT3", "Light Jet PT 3", "pT [GeV]", "lightJetPT3", {0, 400}, {true, 10, 1}},
+    {"lightJetEta3", "Light Jet Eta 3", "#eta", "lightJetEta3", {-3, 3}, {false, 10, 1}}, // ADICIONADO
+    {"lightJetBTagDisc3", "Light Jet 3 btagDisc", "btagDisc", "lightJetBTagDisc3", {0, 1}, {false, 10, 1}}, // ADICIONADO
+    {"lightJetPT4", "Light Jet PT 4", "pT [GeV]", "lightJetPT4", {0, 400}, {true, 10, 1}},
+    {"lightJetEta4", "Light Jet Eta 4", "#eta", "lightJetEta4", {-3, 3}, {false, 10, 1}}, // ADICIONADO
+    {"lightJetBTagDisc4", "Light Jet 4 btagDisc", "btagDisc", "lightJetBTagDisc4", {0, 1}, {false, 10, 1}}, // ADICIONADO
+    {"lightJetPT5", "Light Jet PT 5", "pT [GeV]", "lightJetPT5", {0, 400}, {true, 10, 1}},
+    {"lightJetEta5", "Light Jet Eta 5", "#eta", "lightJetEta5", {-3, 3}, {false, 10, 1}}, // ADICIONADO
+    {"lightJetBTagDisc5", "Light Jet 5 btagDisc", "btagDisc", "lightJetBTagDisc5", {0, 1}, {false, 10, 1}}, // ADICIONADO
+    {"lightJetPT6", "Light Jet PT 6", "pT [GeV]", "lightJetPT6", {0, 400}, {true, 10, 1}},
+    {"lightJetEta6", "Light Jet Eta 6", "#eta", "lightJetEta6", {-3, 3}, {false, 10, 1}}, // ADICIONADO
+    {"lightJetBTagDisc6", "Light Jet 6 btagDisc", "btagDisc", "lightJetBTagDisc6", {0, 1}, {false, 10, 1}}, // ADICIONADO
+
+    // --- B-Jets (1-6) ---
+    {"bjetPT1", "B-Jet PT 1", "pT [GeV]", "bjetPT1", {0, 1500}, {true, 10, 1}},
+    {"bjetEta1", "B-Jet Eta 1", "#eta", "bjetEta1", {-3, 3}, {false, 10, 1}},         // ADICIONADO
+    {"bjetBTagDisc1", "B-Jet 1 btagDisc", "btagDisc", "bjetBTagDisc1", {0, 1}, {false, 10, 1}}, // ADICIONADO
+    {"bjetPT2", "B-Jet PT 2", "pT [GeV]", "bjetPT2", {0, 1500}, {true, 10, 1}},
+    {"bjetEta2", "B-Jet Eta 2", "#eta", "bjetEta2", {-3, 3}, {false, 10, 1}},         // ADICIONADO
+    {"bjetBTagDisc2", "B-Jet 2 btagDisc", "btagDisc", "bjetBTagDisc2", {0, 1}, {false, 10, 1}}, // ADICIONADO
+    {"bjetPT3", "B-Jet PT 3", "pT [GeV]", "bjetPT3", {0, 1000}, {true, 10, 1}},
+    {"bjetEta3", "B-Jet Eta 3", "#eta", "bjetEta3", {-3, 3}, {false, 10, 1}},         // ADICIONADO
+    {"bjetBTagDisc3", "B-Jet 3 btagDisc", "btagDisc", "bjetBTagDisc3", {0, 1}, {false, 10, 1}}, // ADICIONADO
+    {"bjetPT4", "B-Jet PT 4", "pT [GeV]", "bjetPT4", {0, 400}, {true, 10, 1}},
+    {"bjetEta4", "B-Jet Eta 4", "#eta", "bjetEta4", {-3, 3}, {false, 10, 1}},         // ADICIONADO
+    {"bjetBTagDisc4", "B-Jet 4 btagDisc", "btagDisc", "bjetBTagDisc4", {0, 1}, {false, 10, 1}}, // ADICIONADO
+    {"bjetPT5", "B-Jet PT 5", "pT [GeV]", "bjetPT5", {0, 300}, {true, 10, 1}},
+    {"bjetEta5", "B-Jet Eta 5", "#eta", "bjetEta5", {-3, 3}, {false, 10, 1}},         // ADICIONADO
+    {"bjetBTagDisc5", "B-Jet 5 btagDisc", "btagDisc", "bjetBTagDisc5", {0, 1}, {false, 10, 1}}, // ADICIONADO
+    {"bjetPT6", "B-Jet PT 6", "pT [GeV]", "bjetPT6", {0, 200}, {true, 10, 1}},
+    {"bjetEta6", "B-Jet Eta 6", "#eta", "bjetEta6", {-3, 3}, {false, 10, 1}},         // ADICIONADO
+    {"bjetBTagDisc6", "B-Jet 6 btagDisc", "btagDisc", "bjetBTagDisc6", {0, 1}, {false, 10, 1}}, // ADICIONADO
+
+    // --- Variáveis Globais do Evento ---
+    {"met", "Missing E_T", "MET [GeV]", "met", {0, 1000}, {false, 10, 1}}, // ADICIONADO
+    {"jetHT", "Jet HT", "HT [GeV]", "jetHT", {0, 3500}, {false, 10, 1}},
+    {"jetBHT", "B-Jet HT", "HT [GeV]", "jetBHT", {0, 3500}, {false, 10, 1}},
+    {"jetLightHT", "Light Jet HT", "HT [GeV]", "jetLightHT", {0, 1200}, {false, 10, 1}},
+    {"jetHadronicHiggsHT", "Hadronic Higgs HT", "HT [GeV]", "jetHadronicHiggsHT", {0, 4000}, {false, 10, 1}},
+
+    // --- Contagens de Objetos ---
+    {"jetNumber", "Jet Number", "Number of Jets", "jetNumber", {0, 20}, {false, 10, 1}},
+    {"jetBNumber", "B-Jet Number", "Number of B-Jets", "jetBNumber", {0, 15}, {false, 10, 1}},
+    {"jetLightNumber", "Light Jet Number", "Number of Light Jets", "jetLightNumber", {0, 15}, {false, 10, 1}},
+    {"jetHadronicHiggsNumber", "Hadronic Higgs Number", "Number of Had. Higgs", "jetHadronicHiggsNumber", {0, 10}, {false, 10, 1}},
+
+    // --- Massas e Reconstrução ---
+    {"invMass_HH1Matched", "Invariant Mass HH1 Matched", "Mass [GeV]", "invMass_HH1Matched", {0, 500}, {true, 10, 1}},
+    {"invMass_HH2Matched", "Invariant Mass HH2 Matched", "Mass [GeV]", "invMass_HH2Matched", {0, 500}, {true, 10, 1}},
+    {"invMass_HH1NotMatched", "Invariant Mass HH1 Not Matched", "Mass [GeV]", "invMass_HH1NotMatched", {0, 500}, {true, 10, 1}},
+    {"invMass_HH2NotMatched", "Invariant Mass HH2 Not Matched", "Mass [GeV]", "invMass_HH2NotMatched", {0, 500}, {true, 10, 1}},
+    {"invMass_Higgs1_mChi", "Invariant Mass H1 min(chi2)", "Mass [GeV]", "invMass_Higgs1_mChi", {0, 500}, {true, 10, 1}},
+    {"invMass_Higgs2_mChi", "Invariant Mass H2 min(chi2)", "Mass [GeV]", "invMass_Higgs2_mChi", {0, 500}, {true, 10, 1}},
+    {"invMass_hadW", "Invariant Mass Hadronic W", "Mass [GeV]", "invMass_hadW", {0, 400}, {true, 10, 1}},
+    {"invMass_Z1", "Invariant Mass Z1", "Mass [GeV]", "invMass_Z1", {0, 400}, {true, 10, 1}},
+    {"invMass_Z2", "Invariant Mass Z2", "Mass [GeV]", "invMass_Z2", {0, 400}, {true, 10, 1}},
+    {"invMass_Higgs1", "Invariant Mass H1", "Mass [GeV]", "invMass_Higgs1", {0, 500}, {true, 10, 1}},
+    {"invMass_Higgs2", "Invariant Mass H2", "Mass [GeV]", "invMass_Higgs2", {0, 500}, {true, 10, 1}},
+    {"invMass_HiggsZ1", "Invariant Mass HZ1", "Mass [GeV]", "invMass_HiggsZ1", {0, 500}, {true, 10, 1}},
+    {"invMass_HiggsZ2", "Invariant Mass HZ2", "Mass [GeV]", "invMass_HiggsZ2", {0, 500}, {true, 10, 1}},
+    {"invMass_HiggsMatched", "Invariant Mass H Matched", "Mass [GeV]", "invMass_HiggsMatched", {0, 500}, {true, 10, 1}},
+    {"invMass_HiggsNotMatched", "Invariant Mass H Not Matched", "Mass [GeV]", "invMass_HiggsNotMatched", {0, 500}, {true, 10, 1}},
+    {"pT_Higgs1", "pT H1", "pT [GeV]", "pT_Higgs1", {0, 500}, {true, 10, 1}},
+    {"pT_Higgs2", "pT H2", "pT [GeV]", "pT_Higgs2", {0, 500}, {true, 10, 1}},
+    {"chi2Higgs", "chi2 HH", "#chi^{2}_{HH}", "chi2Higgs", {0, 5000}, {true, 10, 1}},
+    {"chi2Z", "chi2 ZZ", "#chi^{2}_{ZZ}", "chi2Z", {0, 5000}, {true, 10, 1}},
+    {"chi2HiggsZ", "chi2 HZ", "#chi^{2}_{HZ}", "chi2HiggsZ", {0, 5000}, {true, 10, 1}},
+    {"chi2HiggsNotMatched", "chi2 H Not Matched", "#chi^{2}_{H,unmatched}", "chi2HiggsNotMatched", {0, 10}, {true, 10, 1}},
+    {"chi2HiggsMatched", "chi2 H Matched", "#chi^{2}_{H,matched}", "chi2HiggsMatched", {0, 10}, {true, 10, 1}},
+    {"chi2HHNotMatched", "chi2 HH Not Matched", "#chi^{2}_{HH,unmatched}", "chi2HHNotMatched", {0, 10}, {true, 10, 1}},
+    {"chi2HHMatched", "chi2 HH Matched", "#chi^{2}_{HH,matched}", "chi2HHMatched", {0, 10}, {true, 10, 1}},
+    {"jetAvgMass", "Average Jet Mass", "Mass [GeV]", "jetAvgMass", {0, 60}, {true, 10, 1}},
+    {"jetBAvgMass", "Average B-Jet Mass", "Mass [GeV]", "jetBAvgMass", {0, 250}, {true, 10, 1}},
+    {"higgsHadAvgMass", "Average Hadronic Higgs Mass", "Mass [GeV]", "higgsHadAvgMass", {0, 60}, {true, 10, 1}},
+    {"jetLightAvgMass", "Average Light Jet Mass", "Mass [GeV]", "jetLightAvgMass", {0, 60}, {true, 10, 1}},
+    {"jetBAvgMassSqr", "Average B-Jet Mass Sqr", "Mass^2 [GeV^2]", "jetBAvgMassSqr", {0, 2500}, {true, 10, 1}},
+    {"higgsHadSoftDropMass1", "Hadronic Higgs SoftDrop Mass 1", "Mass [GeV]", "higgsHadSoftDropMass1", {0, 400}, {true, 10, 1}},
+    {"higgsHadSoftDropMass2", "Hadronic Higgs SoftDrop Mass 2", "Mass [GeV]", "higgsHadSoftDropMass2", {0, 300}, {true, 10, 1}},
+    {"maxPTmassjbb", "Mass jbb (max pT)", "Mass [GeV]", "maxPTmassjbb", {0, 100}, {true, 10, 1}},
+    {"maxPTmassjjj", "Mass jjj (max pT)", "Mass [GeV]", "maxPTmassjjj", {0, 100}, {true, 10, 1}},
+
+    // --- Variáveis Angulares ---
+    {"deltaRavgjj", "Avg Delta R jj", "#DeltaR_{jj}^{avg}", "deltaRavgjj", {0, 5}, {true, 10, 1}},
+    {"deltaRavgbb", "Avg Delta R bb", "#DeltaR_{bb}^{avg}", "deltaRavgbb", {0, 5}, {true, 10, 1}},
+    {"deltaRavgbj", "Avg Delta R bj", "#DeltaR_{bj}^{avg}", "deltaRavgbj", {0, 5}, {true, 10, 1}},
+    {"deltaEtaavgjj", "Avg Delta Eta jj", "#Delta#eta_{jj}^{avg}", "deltaEtaavgjj", {0, 3}, {true, 10, 1}},
+    {"deltaEtaavgbb", "Avg Delta Eta bb", "#Delta#eta_{bb}^{avg}", "deltaEtaavgbb", {0, 3}, {true, 10, 1}},
+    {"deltaEtaavgbj", "Avg Delta Eta bj", "#Delta#eta_{bj}^{avg}", "deltaEtaavgbj", {0, 3}, {true, 10, 1}},
+    {"deltaRminjj", "Min Delta R jj", "#DeltaR_{jj}^{min}", "deltaRminjj", {0, 3}, {true, 10, 1}},
+    {"deltaRminbb", "Min Delta R bb", "#DeltaR_{bb}^{min}", "deltaRminbb", {0, 3}, {true, 10, 1}},
+    {"deltaRminbj", "Min Delta R bj", "#DeltaR_{bj}^{min}", "deltaRminbj", {0, 3}, {true, 10, 1}},
+    {"pTdeltaRminjj", "pT Min Delta R jj", "pT [GeV]", "pTdeltaRminjj", {0, 600}, {true, 10, 1}},
+    {"pTdeltaRminbb", "pT Min Delta R bb", "pT [GeV]", "pTdeltaRminbb", {0, 600}, {true, 10, 1}},
+    {"pTdeltaRminbj", "pT Min Delta R bj", "pT [GeV]", "pTdeltaRminbj", {0, 600}, {true, 10, 1}},
+    {"massDeltaRminjj", "Mass Min Delta R jj", "Mass [GeV]", "massDeltaRminjj", {0, 100}, {true, 10, 1}},
+    {"massDeltaRminbb", "Mass Min Delta R bb", "Mass [GeV]", "massDeltaRminbb", {0, 100}, {true, 10, 1}},
+    {"massDeltaRminbj", "Mass Min Delta R bj", "Mass [GeV]", "massDeltaRminbj", {0, 100}, {true, 10, 1}},
+    {"deltaEtamaxbb", "Max Delta Eta bb", "#Delta#eta_{bb}^{max}", "deltaEtamaxbb", {0, 5}, {true, 10, 1}},
+    {"deltaEtamaxjj", "Max Delta Eta jj", "#Delta#eta_{jj}^{max}", "deltaEtamaxjj", {0, 5}, {true, 10, 1}},
+    {"deltaEtamaxbj", "Max Delta Eta bj", "#Delta#eta_{bj}^{max}", "deltaEtamaxbj", {0, 5}, {true, 10, 1}},
+
+    // --- Formato do Evento (Event Shape) ---
+    {"aplanarity", "Aplanarity", "A", "aplanarity", {0, 0.5}, {true, 10, 1}},
+    {"sphericity", "Sphericity", "S", "sphericity", {0, 1}, {true, 10, 1}},
+    {"transSphericity", "Transverse Sphericity", "S_{#perp}", "transSphericity", {0, 1}, {true, 10, 1}},
+    {"C", "C value", "C value", "C", {0, 1}, {true, 10, 1}},
+    {"D", "D value", "D value", "D", {0, 1}, {true, 10, 1}},
+    {"centralityjb", "Centrality jb", "centrality_{jb}", "centralityjb", {0, 1}, {true, 10, 1}},
+    {"centralityjl", "Centrality jl", "centrality_{jl}", "centralityjl", {0, 1}, {true, 10, 1}},
+    {"H0", "H0", "H_{0}", "H0", {0.2, 0.45}, {true, 10, 1}},
+    {"H1", "H1", "H_{1}", "H1", {-0.2, 0.45}, {true, 10, 1}},
+    {"H2", "H2", "H_{2}", "H2", {-0.2, 0.3}, {true, 10, 1}},
+    {"H3", "H3", "H_{3}", "H3", {-0.2, 0.3}, {true, 10, 1}},
+    {"H4", "H4", "H_{4}", "H4", {-0.2, 0.3}, {true, 10, 1}},
+    {"R1", "R1", "R_{1}", "R1", {0, 1}, {true, 10, 1}},
+    {"R2", "R2", "R_{2}", "R2", {0, 1}, {true, 10, 1}},
+    {"R3", "R3", "R_{3}", "R3", {0, 1}, {true, 10, 1}},
+    {"R4", "R4", "R_{4}", "R4", {0, 1}, {true, 10, 1}},
+    {"H0_bjet", "H0 bjet", "H_{0,bjet}", "H0_bjet", {-0.2, 0.45}, {true, 10, 1}},
+    {"H1_bjet", "H1 bjet", "H_{1,bjet}", "H1_bjet", {-0.2, 0.45}, {true, 10, 1}},
+    {"H2_bjet", "H2 bjet", "H_{2,bjet}", "H2_bjet", {-0.2, 0.3}, {true, 10, 1}},
+    {"H3_bjet", "H3 bjet", "H_{3,bjet}", "H3_bjet", {-0.2, 0.3}, {true, 10, 1}},
+    {"H4_bjet", "H4 bjet", "H_{4,bjet}", "H4_bjet", {-0.2, 0.3}, {true, 10, 1}},
+    {"R1_bjet", "R1 bjet", "R_{1,bjet}", "R1_bjet", {0, 1}, {true, 10, 1}},
+    {"R2_bjet", "R2 bjet", "R_{2,bjet}", "R2_bjet", {0, 1}, {true, 10, 1}},
+    {"R3_bjet", "R3 bjet", "R_{3,bjet}", "R3_bjet", {0, 1}, {true, 10, 1}},
+    {"R4_bjet", "R4 bjet", "R_{4,bjet}", "R4_bjet", {0, 1}, {true, 10, 1}},
+    {"aplanarity_bjet", "Aplanarity bjet", "A_{bjet}", "aplanarity_bjet", {0, 0.5}, {true, 10, 1}},
+    {"sphericity_bjet", "Sphericity bjet", "S_{bjet}", "sphericity_bjet", {0, 1}, {true, 10, 1}},
+    {"transSphericity_bjet", "Transverse Sphericity bjet", "S_{#perp, bjet}", "transSphericity_bjet", {0, 1}, {true, 10, 1}},
+    {"C_bjet", "C value bjet", "C value_{bjet}", "C_bjet", {0, 1}, {true, 10, 1}},
+    {"D_bjet", "D value bjet", "D value_{bjet}", "D_bjet", {0, 1}, {true, 10, 1}}
+}}
     };
     
     
