@@ -458,22 +458,25 @@ vector<pair<string, ProcessInfo>> processes = {
                 {"cutflow_w", "Cutflow Weighted", "Cuts", "cutflow_w", {0, 0}, {false, 10, 1}}          
             }
         },
-        {"Lepton", 
-            {
-                // Format: {histName, title, xTitle, saveName, {xMin,xMax}, {useFixedBins, fixedBinCount, rebinFactor}}
-                {"lepCharge1", "Lepton Charge 1", "Charge", "lepCharge1", {0, 0}, {false, 10, 1}},
-          //      {"lepCharge2", "Lepton Charge 2", "Charge", "lepCharge2", {0, 0}, {false, 10, 1}},
-                {"LepNumber", "Lepton Number", "Number of Leptons", "LepNumber", {0, 0}, {false, 5, 1}},
-                {"ElecNumber", "Electron Number", "Number of Electrons", "ElecNumber", {0, 0}, {false, 10, 1}},
-                {"MuonNumber", "Muon Number", "Number of Muons", "MuonNumber", {0, 0}, {false, 5, 1}},
-                {"elePT1", "Electron PT 1", "pT [GeV]", "elePT1", {0, 800}, {true, 10, 1}},
-                {"elePT2", "Electron PT 2", "pT [GeV]", "elePT2", {0, 300}, {true, 10, 1}},
-                {"muonPT1", "Muon PT 1", "pT [GeV]", "muonPT1", {0, 800}, {true, 10, 1}},
-                {"muonPT2", "Muon PT 2", "pT [GeV]", "muonPT2", {0, 300}, {true, 10, 1}},
-                {"leptonHT", "Lepton HT", "HT [GeV]", "leptonHT", {0, 3500}, {false, 10, 1}},
-		{"leptonPT1", "Lepton PT 1", "pT [GeV]", "leptonPT1", {0, 800}, {false, 10, 1}}
-            }
-        },
+{"Lepton", 
+    {
+        // Format: {histName, title, xTitle, saveName, {xMin,xMax}, {useFixedBins, fixedBinCount, rebinFactor}}
+        {"lepCharge1", "Lepton Charge 1", "Charge", "lepCharge1", {0, 0}, {false, 10, 1}},
+        {"lepCharge2", "Lepton Charge 2", "Charge", "lepCharge2", {0, 0}, {false, 10, 1}},
+        {"LepNumber", "Lepton Number", "Number of Leptons", "LepNumber", {0, 0}, {false, 5, 1}},
+        {"ElecNumber", "Electron Number", "Number of Electrons", "ElecNumber", {0, 0}, {false, 10, 1}},
+        {"MuonNumber", "Muon Number", "Number of Muons", "MuonNumber", {0, 0}, {false, 5, 1}},
+        {"ST", "Scalar Transverse Momentum", "ST [GeV]", "ST", {0, 2000}, {false, 10, 1}},                  // ADICIONADO
+        {"leptonPT1", "Lepton PT 1", "pT [GeV]", "leptonPT1", {0, 800}, {false, 10, 1}},
+        {"leptonEta1", "Lepton Eta 1", "#eta", "leptonEta1", {-3, 3}, {false, 10, 1}},                       // ADICIONADO
+        {"elePT1", "Electron PT 1", "pT [GeV]", "elePT1", {0, 800}, {true, 10, 1}},
+        {"eleEta1", "Electron Eta 1", "#eta", "eleEta1", {-3, 3}, {false, 10, 1}},                           // ADICIONADO
+        {"elePT2", "Electron PT 2", "pT [GeV]", "elePT2", {0, 300}, {true, 10, 1}},
+        {"muonPT1", "Muon PT 1", "pT [GeV]", "muonPT1", {0, 800}, {true, 10, 1}},
+        {"muonEta1", "Muon Eta 1", "#eta", "muonEta1", {-3, 3}, {false, 10, 1}},                           // ADICIONADO
+        {"muonPT2", "Muon PT 2", "pT [GeV]", "muonPT2", {0, 300}, {true, 10, 1}},
+        {"leptonHT", "Lepton HT", "HT [GeV]", "leptonHT", {0, 3500}, {false, 10, 1}}
+    }        },
 	{"jet", {
     // --- Jatos Gerais (1-8) ---
     {"jetPT1", "Jet PT 1", "pT [GeV]", "jetPT1", {0, 1500}, {true, 10, 1}},
